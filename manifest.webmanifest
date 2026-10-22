@@ -1,0 +1,18 @@
+{
+  "name": "La’Bella Hair Company — Demonstração",
+  "short_name": "La’Bella",
+  "description": "Protótipo demonstrativo de aplicativo para salão de beleza",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#100d0d",
+  "theme_color": "#151010",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
