@@ -59,7 +59,7 @@ alter table public.lb_bookings enable row level security;
 
 create or replace function public.lb_is_staff()
 returns boolean
-language sql stable security definer set search_path=public
+language sql stable security definer set search_path=public,pg_temp
 as $$ select exists(select 1 from public.lb_staff where user_id=auth.uid()) $$;
 revoke all on function public.lb_is_staff() from public;
 grant execute on function public.lb_is_staff() to authenticated;
@@ -78,7 +78,7 @@ grant select on public.lb_staff to authenticated;
 
 create or replace function public.lb_slots(p_service_id uuid,p_day date,p_professional_id uuid default null)
 returns table(slot_start text,slot_end text,state text)
-language plpgsql stable security definer set search_path=public
+language plpgsql stable security definer set search_path=public,pg_temp
 as $$
 declare
   v_prof uuid;
@@ -127,7 +127,7 @@ create or replace function public.lb_reserve(
   p_service_id uuid,p_day date,p_start text,
   p_name text,p_phone text,p_professional_id uuid default null
 ) returns uuid
-language plpgsql security definer set search_path=public
+language plpgsql security definer set search_path=public,pg_temp
 as $$
 declare
   v_prof uuid;
@@ -156,7 +156,7 @@ begin
     select 1 from public.lb_slots(p_service_id,p_day,v_prof) sl
     where sl.slot_start=p_start and sl.state='livre'
   ) then raise exception 'Horário ocupado ou fora do expediente'; end if;
-  v_start := (p_day::timestamp + p_start::time) at time zone 'America/Sao_Paulo';
+  v_start := (p_day + p_start::time) at time zone 'America/Sao_Paulo';
   -- Limite simples por telefone; colocar CAPTCHA/rate limit na borda antes de abrir ao público.
   if (select count(*) from public.lb_bookings b where b.customer_phone=regexp_replace(p_phone,'\D','','g')
     and b.created_at>now()-interval '24 hours' and b.status='confirmed')>=3 then
