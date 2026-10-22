@@ -5,8 +5,8 @@
 <meta name="theme-color" content="#0b0909">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<title>La’Bella Hair Company • Valinhos | Identidade e fotos recebidas V4</title>
-<meta name="application-version" content="4.0">
+<title>La’Bella Hair Company | Apresentação aprovada V5</title>
+<meta name="application-version" content="5.0">
 <style>
 :root { --bg:#0a0909; --ink:#f7ecdb; --muted:#bdada1; --gold:#dfae79; --champagne:#f0d1aa; --border:rgba(220,170,118,.32); --panel:#201c1a; --serif:Georgia,'Times New Roman',serif; }
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#17120f;color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
@@ -93,6 +93,38 @@ svg{vertical-align:middle}.ic{width:22px;height:22px;fill:none;stroke:currentCol
 .service-card.choice{width:100%;display:block;text-align:left;color:inherit;cursor:pointer;font:inherit}
 .service-card.choice:focus-visible{outline:2px solid var(--champagne);outline-offset:3px}
 @media(max-height:690px){.overlay-panel{max-height:79dvh}}
+
+/* V5: aplicação do layout aprovado, preservando arquivos de imagem originais */
+:root { --bg:#0b090b; --ink:#f8efe8; --gold:#d9ae94; --champagne:#e4b797 }
+#app{background:#0b090b}
+.approved-brand-panel{background:#000;display:flex;align-items:center;justify-content:center;min-height:225px;padding:9px 12px 0}
+.approved-brand-panel img{width:min(300px,88vw);height:auto;display:block;object-fit:contain}
+.approved-content{padding:0 25px 28px}
+.approved-line{height:1px;background:#382a29;margin:0 0 15px}
+.approved-headline{font:normal clamp(28px,7.3vw,36px)/1.13 Georgia,'Times New Roman',serif;text-align:center;letter-spacing:-.55px;color:#f8eee8;margin:0}
+.approved-kicker{text-align:center;color:#cf9b8e;font-size:10px;letter-spacing:.5px;margin:14px 0 20px}
+.approved-book{display:flex;align-items:center;justify-content:space-between;padding:15px 19px;background:#e4b797;color:#261812;font-size:16px;font-weight:700;border-radius:40px;text-decoration:none;min-height:51px}
+.approved-book span:first-child{margin:auto;text-align:center}
+.approved-book span:last-child{font-size:25px;line-height:1;min-width:24px}
+.approved-book:hover,.approved-book:focus-visible{background:#f2c7ac}
+.approved-gallery{padding:25px 0 0}
+.approved-gallery h2{color:#f8eee8;font:normal 29px/1.15 Georgia,'Times New Roman',serif;margin:0 0 8px}
+.approved-muted{color:#bcaea7;font-size:12px;margin:0 0 11px}
+.approved-photos{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:84px 76px;gap:10px}
+.approved-image{border:0;border-radius:16px;padding:0;overflow:hidden;background:#201b1d;min-width:0}
+.approved-image-main{grid-row:span 2}
+.approved-image img{width:100%;height:100%;object-fit:cover;display:block}
+.approved-categories{margin:16px 0 17px;color:#e7c8b7;font-size:13px}
+.approved-separator{height:1px;background:#3a2c2b}
+.approved-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding-top:18px}
+.approved-shortcuts button{min-width:0;border:1px solid #73514d;background:#1d1819;border-radius:12px;min-height:76px;color:#f8eee8;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 2px 10px;gap:8px;font-size:11px}
+.approved-shortcuts .ic{width:20px;height:20px;stroke:#d9ae94}
+.approved-fineprint{margin:21px 0 5px;font-size:10px;line-height:1.55;color:#96837d}
+.dock{background:#181315;border-top-color:#6c4b40}
+.dock button.active{background:#c99581;border-radius:13px;color:#231310;font-weight:700}
+.dock button.active .ic{stroke:#231310}
+@media(min-width:460px){.approved-photos{grid-template-rows:90px 82px}.approved-shortcuts button{min-height:82px}}
+@media(max-width:355px){.approved-content{padding-left:17px;padding-right:17px}.approved-headline{font-size:28px}.approved-gallery h2{font-size:26px}}
 </style>
 </head><body><div id="app">
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden"><defs>
@@ -108,25 +140,43 @@ svg{vertical-align:middle}.ic{width:22px;height:22px;fill:none;stroke:currentCol
 <symbol id="ico-back" viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7M8 12h13"/></symbol>
 <symbol id="ico-more" viewBox="0 0 24 24"><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="20" cy="12" r="1.2" fill="currentColor" stroke="none"/></symbol>
 </defs></svg>
-<section class="page active" id="home"><div class="home-stage"><div class="hero-photos" aria-label="Mosaico de fotos extraídas das capturas enviadas do salão">
-<img src="assets/foto_01.webp" alt="" decoding="async">
-<img src="assets/foto_05.webp" alt="" decoding="async">
-<img src="assets/foto_03.webp" alt="" decoding="async">
-<img src="assets/foto_06.webp" alt="" decoding="async">
-<img src="assets/foto_04.webp" alt="" decoding="async">
-<img src="assets/foto_09.webp" alt="" decoding="async"></div><header class="header"><button aria-label="Abrir menu" onclick="openOverlay('menu')"><svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="brand"><img src="assets/logo_labella.webp" alt="La’Bella Hair Company, by Jessica Almeida" width="238" height="211"></div><button aria-label="Sobre esta demonstração" onclick="openOverlay('news')"><svg class="ic"><use href="#ico-bell"/></svg></button></header>
-<div class="hero-bottom"><div class="hero-edition">IMAGENS DO SALÃO · VALINHOS <b>V4</b></div><h1 class="hero-title">Beleza, cuidado<br>e autoestima</h1><p class="hero-sub">em um só lugar.</p><div class="rule"></div><button class="action" onclick="go('booking')"><svg class="ic left"><use href="#ico-calendar"/></svg><span>Agendar meu horário</span><svg class="ic chev"><use href="#ico-arrow"/></svg></button><div class="shortcuts"><button class="quick" onclick="go('services')"><span class="bubble"><svg class="ic"><use href="#ico-scissors"/></svg></span>Serviços</button><button class="quick" onclick="go('gallery')"><span class="bubble"><svg class="ic"><use href="#ico-photo"/></svg></span>Galeria</button><button class="quick" onclick="go('club')"><span class="bubble"><svg class="ic"><use href="#ico-star"/></svg></span>Fidelidade</button><button class="quick" onclick="openOverlay('contact')"><span class="bubble"><svg class="ic"><use href="#ico-chat"/></svg></span>Contato</button></div></div></div><div class="home-preview" aria-label="Explorar a prévia atualizada">
-<div class="eyebrow">Descubra a experiência</div>
-<h2>Um espaço de beleza no centro de Valinhos.</h2>
-<p class="preview-copy">Conheça uma experiência digital inspirada na La’Bella Hair Company. Entre em contato com a equipe e descubra os cuidados divulgados pelo salão.</p>
-<div class="preview-choices">
-<button onclick="go('booking')"><svg class="ic"><use href="#ico-calendar"/></svg><span><strong>Agendamento guiado</strong><small>Escolha serviço, data e período</small></span><span class="arrow">›</span></button>
-<button onclick="go('services')"><svg class="ic"><use href="#ico-scissors"/></svg><span><strong>Catálogo de serviços</strong><small>Navegue por categorias e cuidados</small></span><span class="arrow">›</span></button>
-<button onclick="openOverlay('contact')"><svg class="ic"><use href="#ico-chat"/></svg><span><strong>Fale com a La’Bella</strong><small>WhatsApp, endereço e localização</small></span><span class="arrow">›</span></button>
+<section class="page active" id="home">
+<div class="approved-brand-panel">
+  <img src="assets/logo_labella.webp" alt="Logotipo original La’Bella Hair Company by Jessica Almeida" width="664" height="590">
 </div>
-<div class="local-card"><div class="eyebrow">Venha conhecer</div><strong>La’Bella Hair Company</strong><p>Rua Senador Feijó, 31 · sala 1, sobreloja<br>Centro · Valinhos/SP</p><div class="local-actions"><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=Rua%20Senador%20Feij%C3%B3%2C%2031%2C%20Centro%2C%20Valinhos%20SP">Ver no mapa ↗</a><a target="_blank" rel="noopener noreferrer" href="https://wa.me/5519998579358?text=Ol%C3%A1%2C%20La%E2%80%99Bella%21%20Gostaria%20de%20consultar%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis.">WhatsApp ↗</a></div></div>
-<p class="preview-footnote">V4 — Logotipo e fotos extraídos das capturas que você forneceu. Como são recortes de telas, a resolução é reduzida. Validar com o salão o uso comercial, endereço, WhatsApp e serviços. Agendamento e clube permanecem demonstrativos.</p>
-</div></section>
+<div class="approved-content">
+  <div class="approved-line"></div>
+  <h1 class="approved-headline">Beleza que revela sua essência.</h1>
+  <p class="approved-kicker">SEU MOMENTO DE CUIDADO</p>
+  <a class="approved-book" href="https://wa.me/5519998579358?text=Ol%C3%A1%2C%20La%E2%80%99Bella%21%20Gostaria%20de%20consultar%20os%20servi%C3%A7os%20e%20hor%C3%A1rios%20dispon%C3%ADveis." target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp para consultar agendamento">
+    <span>Agendar pelo WhatsApp</span><span aria-hidden="true">↗</span>
+  </a>
+  <section class="approved-gallery" aria-labelledby="approved-gallery-title">
+    <h2 id="approved-gallery-title">Galeria de trabalhos</h2>
+    <p class="approved-muted">Fotos fornecidas nas capturas do salão</p>
+    <div class="approved-photos">
+      <button class="approved-image approved-image-main" onclick="go('gallery')" aria-label="Abrir galeria de trabalhos, fotografia 1">
+        <img src="assets/foto_01.webp" alt="Trabalho de cabelo ondulado em tons castanhos fotografado no salão" loading="eager" width="228" height="229">
+      </button>
+      <button class="approved-image" onclick="go('gallery')" aria-label="Abrir galeria de trabalhos, fotografia 2">
+        <img src="assets/foto_06.webp" alt="Cabelo longo com mechas iluminadas" loading="eager" width="227" height="227">
+      </button>
+      <button class="approved-image" onclick="go('gallery')" aria-label="Abrir galeria de trabalhos, fotografia 3">
+        <img src="assets/foto_08.webp" alt="Cabelo liso com mechas e brilho" loading="eager" width="227" height="226">
+      </button>
+    </div>
+    <p class="approved-categories">Transformações • Cor • Finalização</p>
+  </section>
+  <div class="approved-separator" aria-hidden="true"></div>
+  <div class="approved-shortcuts">
+    <button onclick="go('services')"><svg class="ic"><use href="#ico-scissors"/></svg><span>Serviços</span></button>
+    <button onclick="go('gallery')"><svg class="ic"><use href="#ico-photo"/></svg><span>Galeria</span></button>
+    <button onclick="go('club')"><svg class="ic"><use href="#ico-star"/></svg><span>Fidelidade</span></button>
+    <button onclick="openOverlay('contact')"><svg class="ic"><use href="#ico-chat"/></svg><span>Contato</span></button>
+  </div>
+  <p class="approved-fineprint">Demonstração visual não oficial. Fotos extraídas das capturas fornecidas; confirme os dados e o uso comercial com o salão. O agendamento abre uma conversa no WhatsApp, sem reservar horários automaticamente.</p>
+</div>
+</section>
 <section class="page" id="services"><header class="subhead"><button aria-label="Voltar" onclick="go('home')"><svg class="ic"><use href="#ico-back"/></svg></button><strong>Serviços</strong><div></div></header><div class="inner"><div class="tabs"><button class="tab on" onclick="filterServices('Todos',this)">Todos</button><button class="tab" onclick="filterServices('Cabelos',this)">Cabelos</button><button class="tab" onclick="filterServices('Tratamentos',this)">Tratamentos</button><button class="tab" onclick="filterServices('Finalização',this)">Finalização</button></div><div id="services-container"></div><p class="details">Alisamento capilar aparece em publicações atribuídas à La’Bella. As outras categorias são sugestões para consulta; serviços, preços e disponibilidade precisam ser confirmados com a equipe.</p></div></section>
 <section class="page" id="booking"><header class="subhead"><button aria-label="Voltar" onclick="go('home')"><svg class="ic"><use href="#ico-back"/></svg></button><strong>Agendamento</strong><div></div></header><div class="inner"><div class="booking-steps"><div class="step"><b>1</b>Serviço</div><div class="step-line"></div><div class="step"><b>2</b>Data e período</div><div class="step-line"></div><div class="step"><b>3</b>Confirmação</div></div><h1 class="section-title" style="font-size:27px">Escolha seu serviço</h1><p class="demo-note">Agendamento demonstrativo — sem envio ao salão ou reserva de horário.</p><div id="booking-choices"></div><form id="booking-form"><label class="label">Seu nome<input id="customer" maxlength="60" placeholder="Como podemos chamar você?" required></label><label class="label">Serviço selecionado<select id="selected-service" required></select></label><label class="label">Data de preferência<input type="date" id="selected-date" required></label><label class="label">Período de preferência<select id="selected-period" required><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Qualquer período">Qualquer período</option></select></label><button class="action" style="min-height:54px" type="submit"><span>Ver resumo ilustrativo</span><svg class="ic"><use href="#ico-arrow"/></svg></button></form><p id="booking-feedback" class="feedback" aria-live="polite"></p><p class="details">Simulação visual. Nenhum horário será reservado ou enviado ao salão.</p></div></section>
 <section class="page" id="gallery"><header class="subhead"><button aria-label="Voltar" onclick="go('home')"><svg class="ic"><use href="#ico-back"/></svg></button><strong>Galeria</strong><div></div></header><div class="inner"><div class="tabs"><button class="tab on" onclick="filterGallery('Todas',this)">Todas</button><button class="tab" onclick="filterGallery('Cabelos',this)">Cabelos</button><button class="tab" onclick="filterGallery('Espaço',this)">Espaço</button></div><div class="real-gallery-header"><svg class="ic"><use href="#ico-photo"/></svg> Fotos recuperadas das capturas enviadas</div><div class="gallery-grid" id="gallery-container"></div><p class="details">Imagens recortadas de capturas de publicações da página do salão fornecidas nesta conversa. A resolução é limitada; estas miniaturas não substituem os arquivos originais nem comprovam autorização da empresa para uso comercial. Solicitar originais e confirmação antes da apresentação definitiva.</p></div></section>
