@@ -1,0 +1,67 @@
+
+/* La'Bella — gestão demonstrativa V2, sem estilos externos */
+.page .subheading{margin-top:12px}
+.v2-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:14px 0 18px}
+.v2-daynav{display:flex;align-items:end;gap:8px}
+.v2-daynav label{display:block;margin:0 0 5px;font-size:11px;color:#d0b49f;font-weight:700}
+.v2-daynav input{min-height:42px;padding:10px 9px;background:#140f0f;border:1px solid #866049;color:#f7e0c7;border-radius:10px;color-scheme:dark;width:170px}
+.v2-daynav button{min-width:40px;min-height:42px;font-size:20px}
+.v2-summary{display:flex;flex-wrap:wrap;gap:8px}
+.v2-grid{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(255px,.78fr);gap:16px;align-items:start}
+.v2-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 18px}
+.v2-metric{padding:18px;background:linear-gradient(130deg,#32231e,#211717);border:1px solid #71513e;border-radius:15px;min-height:120px}
+.v2-metric small{display:block;color:#cdb4a2;font-size:11px;line-height:1.5}
+.v2-metric strong{font:normal 29px Georgia,serif;color:#ffe7ca;display:block;margin:12px 0 5px;overflow-wrap:anywhere}
+.v2-metric em{font-style:normal;font-size:10px;color:#bfa590}
+.v2-dayline{display:grid;gap:5px;max-height:1020px;overflow:auto;padding:3px 3px 3px 0}
+.v2-timecell{display:grid;grid-template-columns:52px minmax(0,1fr);gap:9px;min-height:48px}
+.v2-clock{font-size:12px;color:#c9b09d;padding-top:14px;font-weight:750}
+.v2-slot{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:9px;border:1px solid #50775a;background:#182a20;color:#bfddc4;border-radius:11px;padding:9px 11px}
+.v2-slot strong{display:block;font-size:12px}.v2-slot small{display:block;font-size:10px;opacity:.85;margin-top:3px}
+.v2-slot.booked{background:linear-gradient(125deg,#483222,#30231e);border-color:#b48c60;color:#f6d4ab}
+.v2-slot.continuation{background:#302520;border-color:#66574b;color:#c8b5a9}
+.v2-slot button{border:1px solid #80a88b;background:#284633;color:#c9ebd0;font-size:10px;padding:7px 10px;border-radius:9px;font-weight:800;white-space:nowrap}
+.v2-slot.booked button{background:#503629;border-color:#b38a68;color:#f8dab8}
+.v2-badges{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;margin:12px 0 15px}.v2-badges .free{color:#a6d7ae}.v2-badges .busy{color:#e9c094}.v2-badges .follow{color:#ac9d94}
+.v2-panel{background:linear-gradient(130deg,#291d1a,#1d1615);border:1px solid #644536;border-radius:17px;padding:19px;margin-bottom:16px;min-width:0}
+.v2-panel h3{font:normal 23px Georgia,serif;color:#f5d5b4;margin:0 0 7px}.v2-panel p{font-size:12px;line-height:1.5;color:#cbb2a2}
+.v2-field{display:grid;gap:6px;margin:12px 0}
+.v2-field label{font-weight:750;font-size:12px;color:#f0d4bb}
+.v2-field input,.v2-field select,.v2-field textarea{width:100%;max-width:100%;border:1px solid #80604e;background:#171110;color:#f5dec7;padding:11px;border-radius:10px;min-height:42px}
+.v2-field textarea{min-height:95px;resize:vertical;line-height:1.5}
+.v2-dual{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.v2-action{min-height:43px;padding:10px 14px;border-radius:11px;border:1px solid #d5ae88;background:linear-gradient(110deg,#efd0a7,#cfa075);color:#26170f;font-weight:800;font-size:12px}
+.v2-action.outline{background:#30231d;border-color:#846247;color:#f2d3aa}
+.v2-action.subtle{background:#2b231f;border-color:#715647;color:#f0cda6;padding:6px 9px;min-height:30px;font-size:10px}
+.v2-full{width:100%}.v2-action:disabled{opacity:.48}
+.v2-note{border:1px dashed #96734e;border-radius:11px;background:#32261c;padding:11px;font-size:11px;line-height:1.55;color:#dfc0a0;margin:12px 0}
+.v2-tablewrap{overflow:auto}.v2-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.v2-table th{color:#b99c89;text-transform:uppercase;letter-spacing:.7px;font-size:10px;white-space:nowrap;padding:12px 9px;border-bottom:1px solid #665040}
+.v2-table td{padding:11px 9px;border-bottom:1px solid #4e3931;vertical-align:middle}
+.v2-table td:first-child{font-weight:700;color:#f5d6b9}
+.v2-table td .v2-small{display:block;color:#af9a8d;font-weight:400;font-size:10px;margin-top:4px}
+.v2-actions{display:flex;flex-wrap:wrap;gap:6px;min-width:135px}
+.v2-status{display:inline-block;border-radius:50px;border:1px solid #927050;padding:5px 8px;color:#e8c09f;font-size:10px;white-space:nowrap}
+.v2-status.done{border-color:#58936d;color:#bbdfc0}.v2-status.warn{border-color:#ba8e50;color:#f4d29c}
+.v2-log{display:grid;gap:9px;max-height:220px;overflow:auto;margin-top:12px}
+.v2-logitem{padding:10px;border-bottom:1px solid #604637;font-size:11px;color:#d6b6a1;line-height:1.6}
+.v2-logitem strong{color:#f0d1b0}.v2-muted{font-size:12px;color:#c1a99b;line-height:1.6}
+.v2-offer{border:1px solid #ba8c60;border-radius:18px;padding:23px;background:radial-gradient(circle at 95% 0,#694532,#30211a 64%);}
+.v2-offer h3{font:normal 27px Georgia,serif;margin:10px 0;color:#ffe2bf}
+.v2-offer .v2-price{display:block;font:normal 34px Georgia,serif;color:#fbe0b7;margin:8px 0}
+.v2-offer del{color:#bda99a;font-size:13px}.v2-offer-cta{margin-top:18px;background:#ebbf91;color:#29190f;text-align:center;border-radius:10px;padding:12px;font-size:12px;font-weight:800}
+.v2-push{border-radius:14px;border:1px solid #826653;padding:14px;margin-top:15px;background:#3a2d27;font-size:12px}
+.v2-push p{white-space:pre-wrap}
+.v2-profile{padding:15px;border:1px solid #856145;background:#35241e;border-radius:12px;margin-top:12px}
+.v2-profile h4{font:normal 24px Georgia,serif;color:#f4d4b0;margin:0 0 9px}
+.v2-line{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #5f4839;padding:10px 0;font-size:12px;color:#cfb6a1}
+.v2-line strong{color:#f4d4b0;text-align:right}.v2-line:last-child{border:0}
+.v2-chip{display:inline-block;border-radius:50px;padding:6px 9px;color:#f3d4b4;border:1px solid #917355;font-size:10px}
+.v2-finbody .v2-metric strong{font-size:26px}
+.v2-finbody .v2-table{min-width:540px}
+.v2-promo-area .v2-metric strong{font-size:28px}
+.v2-history{display:grid;gap:7px;margin-top:12px}
+.v2-history div{border:1px solid #60473b;padding:11px;border-radius:11px;color:#dec2b0;font-size:12px}
+.v2-stat-caption{font-size:11px;color:#ab9989}
+@media(max-width:1140px){.v2-grid{grid-template-columns:1fr}.v2-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:730px){.v2-panel{padding:15px}.v2-toolbar{align-items:stretch}.v2-daynav{width:100%;justify-content:space-between}.v2-daynav input{width:100%;min-width:0}.v2-cards{gap:9px}.v2-metric{min-height:105px;padding:13px}.v2-metric strong{font-size:24px}.v2-timecell{grid-template-columns:46px minmax(0,1fr);gap:7px}.v2-slot{padding:8px 9px}.v2-dual{grid-template-columns:1fr}.v2-profile{padding:11px}}
