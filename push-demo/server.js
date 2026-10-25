@@ -253,6 +253,16 @@ const app = http.createServer(async(req,res)=>{
     return adminError(res,404,'Rota administrativa não encontrada',origin);
   }
 
+  if (req.method === 'GET' && req.url === '/health/database') {
+    // Só mostra conectividade, nunca assinaturas, chaves ou contagens.
+    if (!db.enabled) return send(res,503,{ok:false,storage:'not-configured'},origin);
+    try {
+      await db.devices();
+      return send(res,200,{ok:true,storage:'supabase',databaseReachable:true},origin);
+    } catch (_) {
+      return send(res,503,{ok:false,storage:'supabase',databaseReachable:false},origin);
+    }
+  }
   if (req.method === 'GET' && req.url === '/health') return send(res,200,{ok:true,kind:'web-push-demo',database:db.enabled?'supabase':'memoria',delaySeconds:DELAY_MS/1000},origin);
   if (req.method === 'GET' && req.url === '/public-config') {
     if (origin!==ORIGIN) return send(res,403,{error:'Origem não autorizada'},origin);
