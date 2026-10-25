@@ -62,7 +62,11 @@ async function requestJSON(req) {
     if (size>MAX_REQUEST_BYTES) throw Error('Corpo maior que o permitido');
     body += chunk.toString('utf8');
   }
-  try {return JSON.parse(body)}catch(_) {throw Error('JSON inválido')}
+  try {
+    const data=JSON.parse(body);
+    if (!data || typeof data!=='object' || Array.isArray(data)) throw Error('Estrutura inválida');
+    return data;
+  } catch (_) {throw Error('JSON inválido: envie um objeto de dados válido')}
 }
 function messageValue(data) {
   if (typeof data.message !== 'string') return null;
