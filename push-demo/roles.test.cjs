@@ -20,6 +20,24 @@ test('Perfil cliente não contém formulário de administração de horários',(
  dom.window.close();
 });
 
+
+test('Tela do cliente inicializa scripts e agenda demonstrativa sem abas administrativas',()=>{
+ const errors=[];
+ const dom=new JSDOM(client,{
+   url:'https://felipebuen89.github.io/labella-app/',
+   runScripts:'dangerously',
+   beforeParse(w){
+     w.addEventListener('error',event=>errors.push(String(event.message)));
+     w.scrollTo=()=>{};
+   }
+ });
+ try{
+   assert.deepEqual(errors,[],errors.join('; '));
+   assert.ok(dom.window.document.querySelectorAll('#agenda-service option').length>0);
+   assert.ok(dom.window.document.querySelectorAll('#agenda-slots button').length>0);
+ }finally{dom.window.close()}
+});
+
 test('Perfil proprietário tem acesso distinto do administrador técnico',()=>{
  const dom=new JSDOM(owner,{url:'https://felipebuen89.github.io/labella-app/proprietario.html'});
  const d=dom.window.document;
