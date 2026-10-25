@@ -35,7 +35,8 @@ const loginAttempts = new Map();
 const registeredDevices = new Map();
 const adminSendTimes = [];
 const campaignJobs = new Map(); // Só diagnóstico temporário; não guarda dados pessoais.
-const CAMPAIGN_DELAY_MS = 30000;
+// Somente no runner automatizado reduzimos a espera; produção mantém 30s.
+const CAMPAIGN_DELAY_MS = process.env.NODE_ENV === 'test' ? 75 : 30000;
 const ADMIN_SESSION_MS = 2 * 60 * 60 * 1000;
 const MAX_DEMO_DEVICES = 5;
 function hash(value) { return createHash('sha256').update(String(value)).digest('hex'); }
