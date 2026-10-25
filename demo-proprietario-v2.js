@@ -334,6 +334,21 @@ const financeMarkup=String.raw`
 $('agenda').innerHTML=agendaMarkup;
 $('clientes').innerHTML=clientsMarkup;
 $('campanhas').innerHTML=campaignsMarkup;
+
+const loyaltyMarkup=String.raw`
+<div class="eyebrow">CLUBE DE VANTAGENS</div><h1 class="pagetitle">Fidelidade La’Bella</h1>
+<p class="lead">Acompanhe pontos de exemplo, benefícios e recompensas. Nada é contabilizado no clube real.</p>
+<div class="v2-grid"><div class="v2-panel"><h3>Benefícios ilustrativos</h3>
+<div class="reward"><div><strong>Hidratação especial</strong><p>Recompensa de demonstração</p></div><span class="points">150 pontos</span></div>
+<div class="reward"><div><strong>Finalização premium</strong><p>Recompensa de demonstração</p></div><span class="points">220 pontos</span></div>
+<div class="reward"><div><strong>Presente de aniversário</strong><p>Benefício de exemplo</p></div><span class="points">Surpresa</span></div>
+<div class="v2-note">Ninguém acumula ou resgata benefícios reais nesta apresentação.</div></div>
+<div class="v2-panel"><h3>Simular fidelidade</h3><p>Escolha uma cliente fictícia e teste o acúmulo de pontos.</p>
+<div class="v2-field"><label for="v2-loyalty-client">Cliente fictícia</label><select id="v2-loyalty-client"></select></div>
+<div class="v2-line"><span>Saldo de exemplo</span><strong id="loyalty-balance">120 pontos</strong></div>
+<button class="v2-action v2-full" style="margin-top:17px" id="add-points">+ Simular 20 pontos</button>
+<p class="v2-note">Pontos ficam apenas nesta tela e somem ao atualizar.</p></div></div>`;
+$('fidelidade').innerHTML=loyaltyMarkup;
 const financePage=elem('section','page');financePage.id='financeiro';financePage.innerHTML=financeMarkup;
 $('fidelidade').insertAdjacentElement('beforebegin',financePage);
 const menu=document.querySelector('nav[aria-label="Seções da demonstração"]');
