@@ -62,6 +62,36 @@ function hasSession(req,sessions) {
 }
 function isAdmin(req){return hasSession(req,adminSessions)}
 function isOwner(req){return hasSession(req,ownerSessions)}
+
+async function isSupabaseOwner(req){
+ const auth=req.headers.authorization||'';
+ if(!auth.startsWith('Bearer '))return false;
+ const jwt=auth.slice(7);
+ if(jwt.length<40||jwt.length>8000 || !/^[A-Za-z0-9._-]+$/.test(jwt))return false;
+ const base=(process.env.PUSH_DB_URL||'').replace(/\/+$/,'');
+ const apiKey=process.env.PUSH_DB_PUBLISHABLE_KEY||'';
+ if(!base||!apiKey)return false;
+ const ctrl=new AbortController();
+ const timer=setTimeout(()=>ctrl.abort(),14000);
+ try{
+  const headers={apikey:apiKey,Authorization:'Bearer '+jwt,Accept:'application/json'};
+  const userResp=await fetch(base+'/auth/v1/user',{headers,signal:ctrl.signal});
+  if(!userResp.ok)return false;
+  const user=await userResp.json();
+  if(!user?.id||!/^[a-f0-9-]{36}$/i.test(user.id))return false;
+  // A função só aceita o papel salvo na tabela protegida por RLS;
+  // app_metadata/user_metadata nunca podem escolher "proprietario".
+  const profiles=await fetch(base+'/rest/v1/lb_profiles?select=role&id=eq.'+
+    encodeURIComponent(user.id),{headers,signal:ctrl.signal});
+  if(!profiles.ok)return false;
+  const rows=await profiles.json();
+  return Array.isArray(rows)&&rows.length===1&&rows[0].role==='proprietario';
+ }catch(err){
+  console.warn('Falha na validação da conta da proprietária:',String(err?.message||'').slice(0,90));
+  return false;
+ }finally{clearTimeout(timer)}
+}
+
 async function requestJSON(req) {
   let body='', size=0;
   for await (const chunk of req) {
@@ -178,7 +208,7 @@ const app = http.createServer(async(req,res)=>{
       (ownerRoute?ownerSessions:adminSessions).set(hash(token),now+ADMIN_SESSION_MS);
       return send(res,200,{ok:true,token,expiresIn:ADMIN_SESSION_MS/1000},origin);
     }
-    if (!(ownerRoute?isOwner(req):isAdmin(req))) return adminError(res,401,'Faça login para continuar',origin);
+    if (!(ownerRoute?(isOwner(req)||await isSupabaseOwner(req)):isAdmin(req))) return adminError(res,401,'Faça login para continuar',origin);
     if (req.method==='GET' && apiPath==='/admin/me') return send(res,200,{ok:true,mode:ownerRoute?'proprietario-demo':'administrador-tecnico',maxDevices:MAX_DEMO_DEVICES},origin);
     if (req.method==='POST' && apiPath==='/admin/logout') {
       (ownerRoute?ownerSessions:adminSessions).delete(hash((req.headers.authorization||'').slice(7)));
