@@ -8,7 +8,7 @@
 const http = require('http');
 const webpush = require('web-push');
 const { URL } = require('url');
-const { randomUUID } = require('crypto');
+const { randomUUID, randomBytes, createHash, timingSafeEqual } = require('crypto');
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE;
@@ -24,6 +24,56 @@ const tries = new Map();
 const pending = new Map();
 const MAX_REQUEST_BYTES = 8192;
 
+
+/* Painel de homologação Move Digital: acesso protegido e inscrições opt-in.
+ * Usuários/celulares em memória (desaparecem no reinício do Render Free).
+ * Nenhum usuário real deve ser cadastrado nesta versão.
+ */
+const ADMIN_PASSWORD_SHA256 = process.env.ADMIN_PASSWORD_SHA256 || '';
+const adminSessions = new Map();
+const loginAttempts = new Map();
+const registeredDevices = new Map();
+const adminSendTimes = [];
+const ADMIN_SESSION_MS = 2 * 60 * 60 * 1000;
+const MAX_DEMO_DEVICES = 5;
+function hash(value) { return createHash('sha256').update(String(value)).digest('hex'); }
+function equalsHex(left,right) {
+  if (left.length !== 64 || right.length !== 64) return false;
+  return timingSafeEqual(Buffer.from(left,'hex'),Buffer.from(right,'hex'));
+}
+function getIP(req) {
+  return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim().slice(0,100);
+}
+function isAdmin(req) {
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Bearer ')) return false;
+  const key = hash(auth.slice(7));
+  const until = adminSessions.get(key) || 0;
+  if (until < Date.now()) {adminSessions.delete(key);return false;}
+  return true;
+}
+async function requestJSON(req) {
+  let body='', size=0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size>MAX_REQUEST_BYTES) throw Error('Corpo maior que o permitido');
+    body += chunk.toString('utf8');
+  }
+  try {return JSON.parse(body)}catch(_) {throw Error('JSON inválido')}
+}
+function messageValue(data) {
+  if (typeof data.message !== 'string') return null;
+  let body = data.message.replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+  if (body.length<8||body.length>160) return null;
+  return body;
+}
+function notificationFor(kind,body) {
+  const titles = {lembrete:'Lembrete de agendamento',promocao:'Promoção da semana'};
+  if (!Object.prototype.hasOwnProperty.call(titles,kind)) return null;
+  return {title:titles[kind],body,tag:'labella-admin-'+randomUUID()};
+}
+function adminError(res,code,reason,origin){return send(res,code,{ok:false,error:reason},origin)}
+
 function send(res, code, obj, origin = '') {
   res.writeHead(code,{
     'Content-Type':'application/json; charset=utf-8',
@@ -31,7 +81,7 @@ function send(res, code, obj, origin = '') {
     'X-Content-Type-Options':'nosniff',
     'Access-Control-Allow-Origin':origin === ORIGIN ? ORIGIN : 'null',
     'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers':'Content-Type',
+    'Access-Control-Allow-Headers':'Content-Type, Authorization',
     'Vary':'Origin'
   });
   res.end(JSON.stringify(obj));
@@ -57,6 +107,84 @@ function isSubValid(s) {
 }
 const app = http.createServer(async(req,res)=>{
   const origin = req.headers.origin || '';
+
+  if (req.url?.startsWith('/admin/')) {
+    if (origin !== ORIGIN) return adminError(res,403,'Origem não autorizada',origin);
+    if (!ADMIN_PASSWORD_SHA256) return adminError(res,503,'Login ainda não configurado',origin);
+    const ip = getIP(req);
+    const now = Date.now();
+    if (req.method==='POST' && req.url==='/admin/login') {
+      const tries=(loginAttempts.get(ip)||[]).filter(t=>now-t<15*60*1000);
+      if (tries.length>=6) return adminError(res,429,'Aguarde 15 minutos para tentar novamente',origin);
+      let data;
+      try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
+      const given = data && typeof data.password==='string' ? data.password : '';
+      const good = given.length>=16 && given.length<=200 && equalsHex(hash(given),ADMIN_PASSWORD_SHA256);
+      if (!good) {tries.push(now);loginAttempts.set(ip,tries);return adminError(res,401,'Senha incorreta',origin)}
+      loginAttempts.delete(ip);
+      const token = randomBytes(32).toString('base64url');
+      adminSessions.set(hash(token),now+ADMIN_SESSION_MS);
+      return send(res,200,{ok:true,token,expiresIn:ADMIN_SESSION_MS/1000},origin);
+    }
+    if (!isAdmin(req)) return adminError(res,401,'Faça login para continuar',origin);
+    if (req.method==='GET' && req.url==='/admin/me') return send(res,200,{ok:true,mode:'homologacao',maxDevices:MAX_DEMO_DEVICES},origin);
+    if (req.method==='POST' && req.url==='/admin/logout') {
+      adminSessions.delete(hash((req.headers.authorization||'').slice(7)));
+      return send(res,200,{ok:true},origin);
+    }
+    if (req.method==='GET' && req.url==='/admin/devices') {
+      const devices=[...registeredDevices.entries()].map(([id,x])=>({id,label:x.label,createdAt:x.createdAt}));
+      return send(res,200,{ok:true,devices,maxDevices:MAX_DEMO_DEVICES,persistent:false},origin);
+    }
+    if (req.method==='POST' && req.url==='/admin/register') {
+      let data;
+      try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
+      const label = typeof data.label==='string'?data.label.trim().slice(0,45):'';
+      if (label.length<2||label.length>45 || !isSubValid(data.subscription)) return adminError(res,400,'Nome ou assinatura de aparelho inválido',origin);
+      const id=hash(data.subscription.endpoint).slice(0,24);
+      if (!registeredDevices.has(id) && registeredDevices.size>=MAX_DEMO_DEVICES) return adminError(res,409,'Limite de aparelhos demonstrativos atingido',origin);
+      registeredDevices.set(id,{label,subscription:data.subscription,createdAt:new Date().toISOString()});
+      return send(res,201,{ok:true,id,label},origin);
+    }
+    if (req.method==='POST' && req.url==='/admin/remove-device') {
+      let data;
+      try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
+      if (!data || typeof data.id!=='string') return adminError(res,400,'Identificador inválido',origin);
+      return send(res,200,{ok:true,removed:registeredDevices.delete(data.id)},origin);
+    }
+    if (req.method==='POST' && req.url==='/admin/send') {
+      let data;
+      try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
+      const body=messageValue(data);
+      const notice=body&&notificationFor(data.kind,body);
+      if (!notice) return adminError(res,400,'Selecione o tipo e digite de 8 a 160 caracteres',origin);
+      if (!Array.isArray(data.deviceIds) || !data.deviceIds.length || data.deviceIds.length>MAX_DEMO_DEVICES) return adminError(res,400,'Escolha os aparelhos de teste',origin);
+      const ids=[...new Set(data.deviceIds)];
+      if (ids.length!==data.deviceIds.length || ids.some(id=>typeof id!=='string'||!registeredDevices.has(id)))
+        return adminError(res,400,'Existe aparelho não autorizado na seleção',origin);
+      const recent=adminSendTimes.filter(t=>now-t<60*60*1000);
+      adminSendTimes.length=0;adminSendTimes.push(...recent);
+      if (adminSendTimes.length>=8) return adminError(res,429,'Limite de oito campanhas por hora nesta demonstração',origin);
+      adminSendTimes.push(now);
+      const targets=ids.map(id=>({id,...registeredDevices.get(id)}));
+      const sendId=randomUUID();
+      const task=setTimeout(async()=>{
+        for (const target of targets) {
+          try {
+            await webpush.sendNotification(target.subscription,JSON.stringify(notice),{TTL:300,urgency:'high'});
+            console.log('Campanha de teste aceita pelo push: '+sendId);
+          } catch(err) {
+            console.error('Falha Web Push demo: '+sendId+' '+String(err.statusCode||err.message).slice(0,80));
+            if (err.statusCode===404||err.statusCode===410) registeredDevices.delete(target.id);
+          }
+        }
+      },DELAY_MS);
+      task.unref();
+      return send(res,202,{ok:true,scheduled:true,delaySeconds:DELAY_MS/1000,recipients:targets.length},origin);
+    }
+    return adminError(res,404,'Rota administrativa não encontrada',origin);
+  }
+
   if (req.method === 'OPTIONS') {
     return send(res, origin===ORIGIN?204:403, {ok:origin===ORIGIN}, origin);
   }
