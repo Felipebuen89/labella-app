@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>La’Bella | Perfil Proprietária</title>
 <link rel="icon" href="./icon-192.png">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://labella-webpush-teste.onrender.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'none'; object-src 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://labella-webpush-teste.onrender.com https://nvydblzdhwqujqkleqcb.supabase.co; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; base-uri 'none'; object-src 'none'; form-action 'self'">
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#0e0c0b;color:#f8efe4}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% -8%,#392514,#0e0c0b 56%);min-height:100dvh;padding:calc(28px + env(safe-area-inset-top)) 18px calc(38px + env(safe-area-inset-bottom))}
@@ -39,6 +39,17 @@ button:disabled{opacity:.5;cursor:not-allowed}
 [hidden]{display:none!important}
 .note{border-left:3px solid #d7ae7e;padding-left:12px;margin:25px 0;color:#c7ad90}
 a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
+
+body{background:radial-gradient(ellipse at 90% 0%,#513026,transparent 34%),#100b0c}
+main{max-width:1040px}.brand{font:italic 30px Georgia,serif;letter-spacing:.1px}
+.topbar h1{font-size:clamp(32px,5vw,49px);letter-spacing:-1px}
+.card{border-color:#855f4c;background:linear-gradient(135deg,#291b19,#171113);padding:clamp(20px,3vw,29px);box-shadow:0 16px 48px #0003}
+.preview{padding:17px;background:#30221e;border-color:#84614c;min-height:102px}.preview-title{font:normal 18px Georgia,serif;margin-bottom:9px}
+.owner-navigation{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}.owner-navigation a{background:#34251e;border:1px solid #8d674e;border-radius:11px;padding:12px 15px;text-decoration:none;font-size:13px;font-weight:700}
+.owner-signin{display:block;padding:16px;text-align:center;border-radius:13px;text-decoration:none;background:linear-gradient(115deg,#f3d8ae,#d5a47a);color:#21150e;font-weight:800}
+#demo-auth{margin-top:20px}#demo-auth summary{padding:12px 0;cursor:pointer;color:#ceb59e}
+#login-section{max-width:550px;margin:34px auto}
+html{scroll-behavior:smooth}
 </style>
 </head>
 <body><main>
@@ -51,15 +62,15 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <section id="login-section" class="card" hidden>
 <h2>Entrar como proprietária</h2>
 <p>Esta área é exclusiva da proprietária. Use a senha individual de demonstração, validada no servidor. Os clientes não precisam dela.</p>
-<form id="login-form">
+<a class="owner-signin" href="./acesso.html?perfil=proprietario">Entrar com e-mail ou conta Google</a><details id="demo-auth"><summary>Entrar com senha antiga de demonstração</summary><form id="login-form">
 <label for="password">Senha de acesso</label>
 <input id="password" type="password" required autocomplete="current-password" minlength="16">
 <div class="actions"><button type="submit">Entrar no painel</button></div>
-</form>
+</form></details>
 </section>
 
-<section id="dashboard" hidden>
-<section class="card" aria-label="Resumo da gestão">
+<section id="dashboard" hidden><nav class="owner-navigation" aria-label="Menu de gestão"><a href="#resumo">Visão geral</a><a href="#aparelhos">Público</a><a href="#campanhas">Campanhas</a><a href="./index.html">Visão da cliente</a></nav>
+<section class="card" id="resumo" aria-label="Resumo da gestão">
  <h2>Visão geral</h2>
  <div class="columns" style="gap:10px">
    <div class="preview"><div class="preview-title">Clientes interessados</div><p class="hint">Aparelhos que autorizaram receber campanhas. Veja abaixo.</p></div>
@@ -70,7 +81,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 </section>
 <p class="hint"><a href="./index.html?v=perfilcliente1">Visualizar a experiência do cliente</a></p>
 <div class="columns">
-<section class="card" style="margin:15px 0">
+<section class="card" id="aparelhos" style="margin:15px 0">
 <h2>Celulares de clientes autorizados</h2>
 <p>Apenas aparelhos que aceitaram receber notificações aparecem aqui. O cadastro é persistente no Supabase; ainda não existe cadastro de clientes por nome nesta demonstração.</p>
 <div id="device-hint" role="status" aria-live="polite">Verificando se há aparelhos autorizados no Supabase…</div>
@@ -82,7 +93,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <div class="actions"><button id="register-device" type="button">Cadastrar este iPhone</button></div>
 <p class="hint" id="device-instructions">No iPhone, abra o La’Bella pelo ícone instalado na Tela de Início e permita as notificações. No Android, abra pelo Chrome.</p>
 </section>
-<section class="card" style="margin:15px 0">
+<section class="card" id="campanhas" style="margin:15px 0">
 <h2>Promoções e lembretes</h2>
 <label for="kind">Tipo de notificação</label>
 <select id="kind"><option value="lembrete">Lembrete de agendamento</option><option value="promocao">Promoção da semana</option></select>
@@ -101,6 +112,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 </section>
 <p class="hint"><a href="./">← Voltar ao La’Bella · Perfil cliente</a></p>
 </main>
+<script src="./auth-config.js"></script><script src="./auth-core.js"></script>
 <script>
 (function(){
 'use strict';
@@ -108,6 +120,7 @@ const API='https://labella-webpush-teste.onrender.com';
 const $=id=>document.getElementById(id);
 const msg=s=>{$('feedback').textContent=s};
 let token=sessionStorage.getItem('labella_owner_session')||'';
+let usingSupabaseJWT=false;
 let devices=[];
 let locked=false;
 let lastJobId=localStorage.getItem('labella_owner_last_job') || '';
@@ -130,6 +143,12 @@ function toKey(base64String) {
  return Uint8Array.from([...text].map(x=>x.charCodeAt(0)));
 }
 async function api(path,method='GET',data,auth=true){
+ if(auth&&usingSupabaseJWT){
+  const db=await window.LaBellaAuth.getClient();
+  const {data:session}=await db.auth.getSession();
+  if(!session?.session?.access_token)throw Error('Sua sessão expirou. Entre novamente.');
+  token=session.session.access_token;
+ }
  const headers={};if(data)headers['Content-Type']='application/json';
  if(auth&&token)headers.Authorization='Bearer '+token;
  const ctrl=new AbortController();
@@ -203,8 +222,10 @@ $('login-form').addEventListener('submit',async e=>{
  finally{locked=false;}
 });
 $('logout').onclick=async()=>{
- try{await api('/proprietario/logout','POST',{});}catch(_){}
- token='';sessionStorage.removeItem('labella_owner_session');devices=[];screen(false);msg('Sessão encerrada.');
+ if(usingSupabaseJWT){try{await window.LaBellaAuth.signOut()}catch(_){}}
+ else{try{await api('/proprietario/logout','POST',{})}catch(_){}}
+ token='';usingSupabaseJWT=false;sessionStorage.removeItem('labella_owner_session');devices=[];screen(false);
+ location.assign('./acesso.html?perfil=proprietario');
 };
 $('refresh').onclick=async()=>{try{await loadDevices();msg('Lista atualizada.')}catch(e){msg(e.message)}};
 async function registerCurrentDevice(){
@@ -283,10 +304,22 @@ $('send').onclick=async()=>{
 
 (async()=>{
  screen(false);
- if(token) {
-  try{await api('/proprietario/me');await loggedIn();return}catch(_){token='';sessionStorage.removeItem('labella_owner_session')}
+ try{
+  const account=await window.LaBellaAuth.currentAccount();
+  if(account?.profile?.role==='proprietario'){
+   const {data:{session}}=await account.db.auth.getSession();
+   if(session?.access_token){
+    usingSupabaseJWT=true;token=session.access_token;
+    await api('/proprietario/me');await loggedIn();return;
+   }
+  }
+  if(account?.profile?.role==='cliente')msg('Conta ainda não aprovada para gestão. Solicite liberação na página de acesso.');
+ }catch(err){console.warn('Login do salão:',err.message)}
+ if(token){
+  try{usingSupabaseJWT=false;await api('/proprietario/me');await loggedIn();return}
+  catch(_){token='';sessionStorage.removeItem('labella_owner_session')}
  }
- msg('Entre com a senha de demonstração para continuar.');
+ msg('Entre com sua conta aprovada. A senha antiga ainda pode ser usada para demonstração.');
 })();
 })();
 </script>
