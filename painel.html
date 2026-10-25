@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0c0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Move Digital | Painel de notificações — teste</title>
+<link rel="icon" href="./icon-192.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://labella-webpush-teste.onrender.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'none'; object-src 'none'; form-action 'self'">
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#0e0c0b;color:#f8efe4}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% -8%,#392514,#0e0c0b 56%);min-height:100dvh;padding:calc(28px + env(safe-area-inset-top)) 18px calc(38px + env(safe-area-inset-bottom))}
+main{max-width:720px;margin:auto}.brand{font-size:22px;letter-spacing:1.5px;font-weight:600;color:#f8f1e7}.brand span{color:#d8a66d}.tag{display:inline-block;padding:6px 10px;color:#f0cf9c;border:1px solid #9f7651;border-radius:40px;font-size:11px;margin-top:12px}
+h1{font:normal 38px/1.11 Georgia,serif;margin:27px 0 10px}h2{font:normal 25px Georgia,serif;margin:0 0 12px;color:#f3ddbd}
+p{font-size:14px;color:#cfbfaf;line-height:1.6;margin:8px 0}small,.hint{font-size:12px;color:#b6a496;line-height:1.6}
+.card{border:1px solid #755237;border-radius:19px;background:linear-gradient(125deg,#241b16,#151110);padding:22px;margin:18px 0;box-shadow:0 12px 36px #0005}
+label{font-size:13px;font-weight:600;color:#e9cda9;display:block;margin:18px 0 8px}
+input:not([type=checkbox]),textarea,select{width:100%;font:15px -apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#100d0c;color:#fff1df;border:1px solid #846249;border-radius:12px;padding:13px 14px;outline-offset:3px}
+textarea{min-height:108px;resize:vertical;line-height:1.5}
+button{appearance:none;min-height:48px;border-radius:12px;padding:12px 16px;background:linear-gradient(110deg,#f1d4a7,#d4a56d);border:1px solid #cda46f;color:#281910;font-size:14px;font-weight:700;cursor:pointer}
+button.secondary{background:#2a201b;color:#e4c4a0;border-color:#836047}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:16px}
+.actions button{flex:1}.muted{color:#a99684}
+#feedback{border:1px solid #6a543e;background:#15100e;padding:13px 14px;border-radius:13px;white-space:pre-wrap;font-size:13px;line-height:1.5;margin:16px 0;min-height:49px}
+.topbar{display:flex;gap:13px;justify-content:space-between;align-items:center}.topbar button{font-size:12px;min-height:36px}
+.device{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #45342a}
+.device:last-child{border-bottom:0}.device input{accent-color:#d9ae79;width:19px;height:19px;flex-shrink:0}
+.device label{margin:0;flex:1;min-width:0;overflow-wrap:anywhere;color:#e9d9c7;font-size:14px}
+.device button{min-height:34px;padding:7px 10px;font-size:11px}
+.preview{background:#302823;border:1px solid #88725b;padding:14px;border-radius:15px}
+.preview-title{font-weight:700;color:#ffe6bf;font-size:14px}.preview-body{color:#f2e7db;font-size:14px;white-space:pre-wrap}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:17px}@media(max-width:600px){.columns{grid-template-columns:1fr}}
+.counter{text-align:right;color:#bbaa98;font-size:11px;padding-top:4px}
+.note{border-left:3px solid #d7ae7e;padding-left:12px;margin:25px 0;color:#c7ad90}
+a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
+</style>
+</head>
+<body><main>
+<div class="brand">MOVE <span>DIGITAL</span></div>
+<div class="tag">PAINEL DE HOMOLOGAÇÃO • LA’BELLA</div>
+<div class="topbar"><h1>Central de notificações</h1><button class="secondary" id="logout" hidden>Sair</button></div>
+<p>Primeira versão do painel administrativo. Este ambiente não tem cadastro de clientes reais, nem disparos comerciais.</p>
+<div id="feedback" role="status" aria-live="polite">Carregando painel…</div>
+
+<section id="login-section" class="card" hidden>
+<h2>Acesso administrativo</h2>
+<p>Entre com a senha de teste da Move Digital. Ela é verificada pelo servidor, não fica no código público do aplicativo.</p>
+<form id="login-form">
+<label for="password">Senha de acesso</label>
+<input id="password" type="password" required autocomplete="current-password" minlength="16">
+<div class="actions"><button type="submit">Entrar no painel</button></div>
+</form>
+</section>
+
+<section id="dashboard" hidden>
+<div class="columns">
+<section class="card" style="margin:15px 0">
+<h2>Aparelhos autorizados</h2>
+<p>Somente os celulares cadastrados manualmente aqui receberão os testes. Nenhum cliente é incluído automaticamente.</p>
+<div id="device-list"><p>Nenhum aparelho cadastrado.</p></div>
+<button class="secondary" id="refresh" type="button">Atualizar aparelhos</button>
+<hr>
+<label for="device-label">Nome do seu aparelho</label>
+<input id="device-label" maxlength="45" value="Meu iPhone — teste" autocomplete="off">
+<div class="actions"><button id="register-device" type="button">Cadastrar este iPhone</button></div>
+<p class="hint">Abra pelo La’Bella instalado na Tela de Início do iPhone. O iOS precisa autorizar as notificações.</p>
+</section>
+<section class="card" style="margin:15px 0">
+<h2>Preparar campanha</h2>
+<label for="kind">Tipo de notificação</label>
+<select id="kind"><option value="lembrete">Lembrete de agendamento</option><option value="promocao">Promoção da semana</option></select>
+<label for="message">Mensagem para o celular</label>
+<textarea id="message" maxlength="160" rows="5">Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛</textarea>
+<div class="counter" id="counter">0/160 caracteres</div>
+<label>Prévia da notificação</label>
+<div class="preview"><div class="preview-title" id="preview-title">Lembrete de agendamento</div><div class="preview-body" id="preview-body">...</div></div>
+<div class="actions"><button id="send" type="button">Programar teste em 1 minuto</button></div>
+<p class="hint">Marque ao menos um aparelho autorizado na lista. O disparo demora cerca de 65 segundos, dando tempo de fechar o aplicativo.</p>
+</section>
+</div>
+<p class="note"><strong>Limites desta etapa:</strong> até cinco aparelhos autorizados e oito campanhas de demonstração por hora. Os cadastros e sessões ficam só na memória do Render gratuito e podem desaparecer após uma reinicialização. Precisaremos de autenticação e banco persistentes antes de qualquer operação comercial.</p>
+</section>
+<p class="hint"><a href="./notificacoes.html">← Voltar ao teste anterior</a> · <a href="./">Abrir La’Bella</a></p>
+</main>
+<script>
+(function(){
+'use strict';
+const API='https://labella-webpush-teste.onrender.com';
+const $=id=>document.getElementById(id);
+const msg=s=>{$('feedback').textContent=s};
+let token=sessionStorage.getItem('move_demo_token')||'';
+let devices=[];
+let locked=false;
+const installed=window.matchMedia('(display-mode:standalone)').matches || navigator.standalone===true;
+const templates={
+lembrete:'Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛',
+promocao:'✨ Promoção da semana: hidratação + escova com condição especial. Confira!'
+};
+let lastTemplate=templates.lembrete;
+function toKey(base64String) {
+ const padding='='.repeat((4-base64String.length%4)%4);
+ const text=atob((base64String+padding).replace(/-/g,'+').replace(/_/g,'/'));
+ return Uint8Array.from([...text].map(x=>x.charCodeAt(0)));
+}
+async function api(path,method='GET',data,auth=true){
+ const headers={};if(data)headers['Content-Type']='application/json';
+ if(auth&&token)headers.Authorization='Bearer '+token;
+ const ctrl=new AbortController();
+ const timeout=setTimeout(()=>ctrl.abort(),90000);
+ try{
+  const r=await fetch(API+path,{method,headers,body:data?JSON.stringify(data):undefined,cache:'no-store',signal:ctrl.signal});
+  const payload=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error(payload.error||'Erro HTTP '+r.status);e.code=r.status;throw e;}
+  return payload;
+ }finally{clearTimeout(timeout);}
+}
+function screen(authed){
+ $('login-section').hidden=authed;
+ $('dashboard').hidden=!authed;
+ $('logout').hidden=!authed;
+}
+function updatePreview(){
+ const kind=$('kind').value;const body=$('message').value.trim();
+ $('counter').textContent=$('message').value.length+'/160 caracteres';
+ $('preview-title').textContent=kind==='lembrete'?'Lembrete de agendamento':'Promoção da semana';
+ $('preview-body').textContent=body||'Sua mensagem aparecerá aqui.';
+}
+$('kind').addEventListener('change',()=>{
+ if(!$('message').value.trim() || $('message').value.trim()===lastTemplate) $('message').value=templates[$('kind').value];
+ lastTemplate=templates[$('kind').value];updatePreview();
+});
+$('message').addEventListener('input',updatePreview);
+updatePreview();
+function drawDevices(){
+ const box=$('device-list');box.replaceChildren();
+ if(!devices.length){
+  const p=document.createElement('p');p.textContent='Ainda não há aparelhos de teste cadastrados.';
+  box.appendChild(p);return;
+ }
+ for(const item of devices){
+  const row=document.createElement('div');row.className='device';
+  const ck=document.createElement('input');ck.type='checkbox';ck.name='demo-device';ck.value=item.id;ck.checked=true;
+  const label=document.createElement('label');
+  label.textContent=item.label;
+  const remove=document.createElement('button');remove.className='secondary';remove.textContent='Excluir';remove.type='button';
+  remove.onclick=async()=>{
+   if(!confirm('Remover este aparelho da lista de teste?'))return;
+   try{await api('/admin/remove-device','POST',{id:item.id});msg('Aparelho removido.');await loadDevices();}
+   catch(e){msg('Erro ao remover: '+e.message)}
+  };
+  row.append(ck,label,remove);box.append(row);
+ }
+}
+async function loadDevices(){
+ const data=await api('/admin/devices');devices=data.devices||[];drawDevices();
+}
+async function loggedIn(){
+ screen(true);$('password').value='';
+ try{await loadDevices();msg('Painel pronto. Cadastre o iPhone para poder enviar uma mensagem de teste.');}
+ catch(e){msg('Não foi possível consultar aparelhos: '+e.message)}
+}
+$('login-form').addEventListener('submit',async e=>{
+ e.preventDefault();if(locked)return;
+ locked=true;msg('Autenticando acesso…');
+ try{const d=await api('/admin/login','POST',{password:$('password').value},false);
+  token=d.token;sessionStorage.setItem('move_demo_token',token);await loggedIn();
+ }catch(err){msg('Não foi possível entrar: '+err.message)}
+ finally{locked=false;}
+});
+$('logout').onclick=async()=>{
+ try{await api('/admin/logout','POST',{});}catch(_){}
+ token='';sessionStorage.removeItem('move_demo_token');devices=[];screen(false);msg('Sessão encerrada.');
+};
+$('refresh').onclick=async()=>{try{await loadDevices();msg('Lista atualizada.')}catch(e){msg(e.message)}};
+$('register-device').onclick=async()=>{
+ const label=$('device-label').value.trim();
+ if(label.length<2){msg('Dê um nome para o aparelho.');return}
+ if(!installed){msg('Para receber Web Push no iPhone, abra o La’Bella pelo ícone da Tela de Início e entre no painel por dentro dele.');return}
+ if(!('Notification'in window)||!('serviceWorker'in navigator)){msg('Este navegador não oferece Web Push.');return}
+ const btn=$('register-device');btn.disabled=true;
+ try{
+  let permission=Notification.permission;
+  if(permission!=='granted') permission=await Notification.requestPermission();
+  if(permission!=='granted')throw Error('Autorize as notificações no iPhone.');
+  msg('Obtendo assinatura segura do dispositivo…');
+  const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+  const ready=await navigator.serviceWorker.ready;
+  const cfg=await api('/public-config','GET',null,false);
+  let sub=await ready.pushManager.getSubscription();
+  if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:toKey(cfg.vapidPublicKey)});
+  await api('/admin/register','POST',{label,subscription:sub.toJSON()});
+  await loadDevices();
+  msg('✅ Aparelho autorizado para testes. Agora escolha a mensagem e programe o envio.');
+ }catch(err){msg('Não foi possível cadastrar: '+err.message)}
+ finally{btn.disabled=false;}
+};
+$('send').onclick=async()=>{
+ const body=$('message').value.trim().replace(/\s+/g,' ');
+ if(body.length<8||body.length>160){msg('A mensagem deve ter entre 8 e 160 caracteres.');return}
+ const ids=[...document.querySelectorAll('input[name="demo-device"]:checked')].map(x=>x.value);
+ if(!ids.length){msg('Selecione ao menos um aparelho cadastrado.');return}
+ if(!confirm('Enviar notificação de teste para '+ids.length+' aparelho(s) autorizado(s)?'))return;
+ const btn=$('send');btn.disabled=true;
+ try{
+  const d=await api('/admin/send','POST',{kind:$('kind').value,message:body,deviceIds:ids});
+  msg('✅ Teste programado para '+d.recipients+' aparelho(s). Agora bloqueie o iPhone ou feche o La’Bella. O aviso deverá chegar em cerca de '+d.delaySeconds+' segundos; o horário não é garantido.');
+ }catch(e){msg('Não foi possível programar: '+e.message)}
+ finally{btn.disabled=false;}
+};
+(async()=>{
+ screen(false);
+ if(token) {
+  try{await api('/admin/me');await loggedIn();return}catch(_){token='';sessionStorage.removeItem('move_demo_token')}
+ }
+ msg('Entre com a senha de demonstração para continuar.');
+})();
+})();
+</script>
+</body></html>
