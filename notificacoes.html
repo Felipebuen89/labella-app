@@ -169,7 +169,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   el('push-send').addEventListener('click', async () => {
     if (!installed) { status('Este teste funciona abrindo o La’Bella pelo ícone da Tela de Início.'); return; }
     if (Notification.permission !== 'granted') { status('Primeiro, autorize as notificações no iPhone.'); return; }
-    const message = pushMessage.value.trim().replace(/\\s+/g, ' ');
+    const message = pushMessage.value.trim().replace(/\s+/g, ' ');
     if (message.length < 8 || message.length > 160) { status('Escreva uma mensagem entre 8 e 160 caracteres.'); return; }
     const btn = el('push-send');
     btn.disabled = true;
@@ -196,7 +196,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Falha no envio');
-      status('✅ Mensagem personalizada agendada!\\n\\nFeche o La’Bella ou bloqueie o iPhone. A notificação deve chegar em aproximadamente ' + Math.round(result.delaySeconds || 65) + ' segundos.\\n\\nO horário é aproximado e depende da rede e do serviço gratuito.');
+      status('✅ Mensagem personalizada agendada!\n\nFeche o La’Bella ou bloqueie o iPhone. A notificação deve chegar em aproximadamente ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nO horário é aproximado e depende da rede e do serviço gratuito.');
     } catch (error) {
       status('Não foi possível agendar a notificação: ' + (error?.name==='AbortError' ? 'servidor demorou a responder' : error.message));
     } finally {
