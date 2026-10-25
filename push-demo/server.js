@@ -65,12 +65,12 @@ const app = http.createServer(async(req,res)=>{
     if (origin!==ORIGIN) return send(res,403,{error:'Origem não autorizada'},origin);
     return send(res,200,{vapidPublicKey:VAPID_PUBLIC,delaySeconds:DELAY_MS/1000},origin);
   }
-  if (req.method === 'POST' && req.url === '/test-push') {
+  if (req.method === 'POST' && (req.url === '/test-push' || req.url === '/custom-test-push')) {
     if (origin!==ORIGIN) return send(res,403,{error:'Origem não autorizada'},origin);
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
     const now = Date.now();
     const recent = (tries.get(ip)||[]).filter(t=>now-t<60*60*1000);
-    if (recent.length>=3) return send(res,429,{error:'Limite de três testes por hora. Tente mais tarde.'},origin);
+    if (recent.length>=5) return send(res,429,{error:'Limite de cinco testes por hora. Tente mais tarde.'},origin);
     let size=0, body='';
     try {
       for await (const part of req) {
@@ -80,6 +80,27 @@ const app = http.createServer(async(req,res)=>{
       }
       const parsed=JSON.parse(body);
       if (!isSubValid(parsed.subscription)) return send(res,400,{error:'Assinatura de notificação inválida'},origin);
+      // Mensagem livre apenas para teste no próprio aparelho inscrito. Não armazena destinatários.
+      const custom = req.url === '/custom-test-push';
+      const kinds = {'lembrete': 'Lembrete', 'promocao': 'Promoção'};
+      let notification;
+      if (custom) {
+        if (!Object.prototype.hasOwnProperty.call(kinds, parsed.kind)) return send(res,400,{error:'Escolha lembrete ou promoção'},origin);
+        if (typeof parsed.message !== 'string') return send(res,400,{error:'Digite uma mensagem'},origin);
+        const body = parsed.message.replace(/[\\r\\n\\t]+/g,' ').replace(/\\s+/g,' ').trim();
+        if (body.length < 8 || body.length > 160) return send(res,400,{error:'A mensagem deve ter entre 8 e 160 caracteres'},origin);
+        notification = {
+          title: 'La’Bella • ' + kinds[parsed.kind] + ' (teste)',
+          body,
+          tag: 'labella-custom-' + randomUUID()
+        };
+      } else {
+        notification = {
+          title: 'La’Bella • teste com aplicativo fechado',
+          body: '🔔 Funcionou! Esta notificação chegou por Web Push, mesmo com o aplicativo fechado.',
+          tag: 'labella-push-segundo-plano'
+        };
+      }
       recent.push(now); tries.set(ip,recent);
       const jobId=randomUUID();
       const subscription=parsed.subscription;
@@ -87,18 +108,14 @@ const app = http.createServer(async(req,res)=>{
       const timer=setTimeout(async()=>{
         if(!pending.delete(jobId)) return;
         try {
-          await webpush.sendNotification(subscription,JSON.stringify({
-            title:'La’Bella • teste com aplicativo fechado',
-            body:'🔔 Funcionou! Esta notificação chegou por Web Push, mesmo com o aplicativo fechado.',
-            tag:'labella-push-segundo-plano'
-          }),{TTL:300,urgency:'high'});
+          await webpush.sendNotification(subscription,JSON.stringify(notification),{TTL:300,urgency:'high'});
           console.log('Notificação de demonstração enviada ao serviço push. ID:',jobId);
         } catch(err) {
           console.error('Falha no envio push:',jobId,err?.statusCode||'sem código',String(err?.message||err).slice(0,200));
         }
       },DELAY_MS);
       timer.unref(); // aguarde requisições mas mantém o processo livre para spin down.
-      return send(res,202,{ok:true,delaySeconds:DELAY_MS/1000,info:'Enviaremos uma notificação de teste para este aparelho.'},origin);
+      return send(res,202,{ok:true,delaySeconds:DELAY_MS/1000,info:custom?'Mensagem personalizada de demonstração agendada para este aparelho.':'Enviaremos uma notificação de teste para este aparelho.'},origin);
     } catch(err){return send(res,400,{error:'JSON inválido'},origin);}
   }
   return send(res,404,{error:'Rota não encontrada'},origin);
