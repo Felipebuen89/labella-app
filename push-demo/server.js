@@ -32,6 +32,8 @@ const MAX_REQUEST_BYTES = 8192;
  */
 const ADMIN_PASSWORD_SHA256 = process.env.ADMIN_PASSWORD_SHA256 || '';
 const adminSessions = new Map();
+const ownerSessions = new Map();
+const OWNER_PASSWORD_SHA256 = process.env.OWNER_PASSWORD_SHA256 || '';
 const loginAttempts = new Map();
 const registeredDevices = new Map();
 const adminSendTimes = [];
@@ -50,14 +52,16 @@ function equalsHex(left,right) {
 function getIP(req) {
   return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim().slice(0,100);
 }
-function isAdmin(req) {
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Bearer ')) return false;
-  const key = hash(auth.slice(7));
-  const until = adminSessions.get(key) || 0;
-  if (until < Date.now()) {adminSessions.delete(key);return false;}
+function hasSession(req,sessions) {
+  const auth=req.headers.authorization||'';
+  if(!auth.startsWith('Bearer '))return false;
+  const key=hash(auth.slice(7));
+  const until=sessions.get(key)||0;
+  if(until<Date.now()){sessions.delete(key);return false;}
   return true;
 }
+function isAdmin(req){return hasSession(req,adminSessions)}
+function isOwner(req){return hasSession(req,ownerSessions)}
 async function requestJSON(req) {
   let body='', size=0;
   for await (const chunk of req) {
@@ -153,31 +157,34 @@ const app = http.createServer(async(req,res)=>{
     }
   }
 
-  if (req.url?.startsWith('/admin/')) {
+  // Contas e sessões independentes: a senha da proprietária não abre o painel técnico.
+  const ownerRoute = req.url?.startsWith('/proprietario/');
+  const apiPath = ownerRoute ? req.url.replace(/^\/proprietario\//,'/admin/') : req.url;
+  if (apiPath?.startsWith('/admin/')) {
     if (origin !== ORIGIN) return adminError(res,403,'Origem não autorizada',origin);
-    if (!ADMIN_PASSWORD_SHA256) return adminError(res,503,'Login ainda não configurado',origin);
+    if (!(ownerRoute?OWNER_PASSWORD_SHA256:ADMIN_PASSWORD_SHA256)) return adminError(res,503,'Login ainda não configurado',origin);
     const ip = getIP(req);
     const now = Date.now();
-    if (req.method==='POST' && req.url==='/admin/login') {
+    if (req.method==='POST' && apiPath==='/admin/login') {
       const tries=(loginAttempts.get(ip)||[]).filter(t=>now-t<15*60*1000);
       if (tries.length>=6) return adminError(res,429,'Aguarde 15 minutos para tentar novamente',origin);
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       const given = data && typeof data.password==='string' ? data.password : '';
-      const good = given.length>=16 && given.length<=200 && equalsHex(hash(given),ADMIN_PASSWORD_SHA256);
+      const good = given.length>=16 && given.length<=200 && equalsHex(hash(given),ownerRoute?OWNER_PASSWORD_SHA256:ADMIN_PASSWORD_SHA256);
       if (!good) {tries.push(now);loginAttempts.set(ip,tries);return adminError(res,401,'Senha incorreta',origin)}
       loginAttempts.delete(ip);
       const token = randomBytes(32).toString('base64url');
-      adminSessions.set(hash(token),now+ADMIN_SESSION_MS);
+      (ownerRoute?ownerSessions:adminSessions).set(hash(token),now+ADMIN_SESSION_MS);
       return send(res,200,{ok:true,token,expiresIn:ADMIN_SESSION_MS/1000},origin);
     }
-    if (!isAdmin(req)) return adminError(res,401,'Faça login para continuar',origin);
-    if (req.method==='GET' && req.url==='/admin/me') return send(res,200,{ok:true,mode:'homologacao',maxDevices:MAX_DEMO_DEVICES},origin);
-    if (req.method==='POST' && req.url==='/admin/logout') {
-      adminSessions.delete(hash((req.headers.authorization||'').slice(7)));
+    if (!(ownerRoute?isOwner(req):isAdmin(req))) return adminError(res,401,'Faça login para continuar',origin);
+    if (req.method==='GET' && apiPath==='/admin/me') return send(res,200,{ok:true,mode:ownerRoute?'proprietario-demo':'administrador-tecnico',maxDevices:MAX_DEMO_DEVICES},origin);
+    if (req.method==='POST' && apiPath==='/admin/logout') {
+      (ownerRoute?ownerSessions:adminSessions).delete(hash((req.headers.authorization||'').slice(7)));
       return send(res,200,{ok:true},origin);
     }
-    if (req.method==='GET' && req.url==='/admin/devices') {
+    if (req.method==='GET' && apiPath==='/admin/devices') {
       if (db.enabled) {
         try {const devices=await db.devices(); return send(res,200,{ok:true,devices,maxDevices:MAX_DEMO_DEVICES,persistent:true},origin);}
         catch(e){return adminError(res,503,e.message,origin);}
@@ -185,7 +192,7 @@ const app = http.createServer(async(req,res)=>{
       const devices=[...registeredDevices.entries()].map(([id,x])=>({id,label:x.label,createdAt:x.createdAt}));
       return send(res,200,{ok:true,devices,maxDevices:MAX_DEMO_DEVICES,persistent:false},origin);
     }
-    if (req.method==='POST' && req.url==='/admin/register') {
+    if (req.method==='POST' && apiPath==='/admin/register') {
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       const label = typeof data.label==='string'?data.label.trim().slice(0,45):'';
@@ -199,7 +206,7 @@ const app = http.createServer(async(req,res)=>{
       registeredDevices.set(id,{label,subscription:data.subscription,createdAt:new Date().toISOString()});
       return send(res,201,{ok:true,id,label},origin);
     }
-    if (req.method==='POST' && req.url==='/admin/remove-device') {
+    if (req.method==='POST' && apiPath==='/admin/remove-device') {
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       if (!data || typeof data.id!=='string') return adminError(res,400,'Identificador inválido',origin);
@@ -209,9 +216,9 @@ const app = http.createServer(async(req,res)=>{
       }
       return send(res,200,{ok:true,removed:registeredDevices.delete(data.id)},origin);
     }
-    if (req.method==='GET' && req.url.startsWith('/admin/send-status?')) {
+    if (req.method==='GET' && apiPath.startsWith('/admin/send-status?')) {
       let id;
-      try { id = new URL(req.url,'http://localhost').searchParams.get('id') } catch (_) {}
+      try { id = new URL(apiPath,'http://localhost').searchParams.get('id') } catch (_) {}
       if (!id || !/^[0-9a-f-]{36}$/.test(id)) return adminError(res,400,'Identificador inválido',origin);
       if (db.enabled) {
         try {
@@ -224,7 +231,7 @@ const app = http.createServer(async(req,res)=>{
       if (!job) return adminError(res,404,'O envio não existe mais. O servidor gratuito pode ter reiniciado.',origin);
       return send(res,200,{ok:true,status:job.status,details:job.details,recipients:job.recipients,updatedAt:job.updatedAt},origin);
     }
-    if (req.method==='POST' && req.url==='/admin/send') {
+    if (req.method==='POST' && apiPath==='/admin/send') {
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       const body=messageValue(data);
