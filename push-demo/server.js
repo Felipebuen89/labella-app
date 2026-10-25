@@ -35,6 +35,8 @@ const adminSessions = new Map();
 const loginAttempts = new Map();
 const registeredDevices = new Map();
 const adminSendTimes = [];
+const publicSubscriptions = new Map(); // limite por IP em homologação; não contém assinaturas
+
 const campaignJobs = new Map(); // Só diagnóstico temporário; não guarda dados pessoais.
 // Somente no runner automatizado reduzimos a espera; produção mantém 30s.
 const CAMPAIGN_DELAY_MS = process.env.NODE_ENV === 'test' ? 75 : 30000;
@@ -119,6 +121,37 @@ const app = http.createServer(async(req,res)=>{
     return send(res, origin===ORIGIN?204:403, {ok:origin===ORIGIN}, origin);
   }
 
+
+
+  // Inscrição voluntária em Web Push: visitantes nunca precisam da senha administrativa.
+  if (req.url === '/public-subscribe' || req.url === '/public-unsubscribe') {
+    if (req.method !== 'POST') return send(res,405,{ok:false,error:'Método não permitido'},origin);
+    if (origin !== ORIGIN) return send(res,403,{ok:false,error:'Origem não autorizada'},origin);
+    if (!db.enabled) return send(res,503,{ok:false,error:'Cadastro ainda não disponível'},origin);
+    const ip = getIP(req);
+    const now = Date.now();
+    const previous=(publicSubscriptions.get(ip)||[]).filter(t=>now-t<60*60*1000);
+    if (previous.length>=8) return send(res,429,{ok:false,error:'Muitos pedidos neste aparelho. Tente mais tarde.'},origin);
+    let data;
+    try {data=await requestJSON(req)}catch(err){return send(res,400,{ok:false,error:err.message},origin)}
+    if (!isSubValid(data.subscription)) return send(res,400,{ok:false,error:'Inscrição Web Push inválida'},origin);
+    if (req.url==='/public-subscribe' && data.consent!==true)
+      return send(res,400,{ok:false,error:'É necessário autorizar explicitamente o recebimento de notificações'},origin);
+    previous.push(now);publicSubscriptions.set(ip,previous);
+    try {
+      if(req.url==='/public-unsubscribe'){
+        const removed=await db.unsubscribe(data.subscription);
+        return send(res,200,{ok:true,removed},origin);
+      }
+      const name=typeof data.platform==='string'&&data.platform.toLowerCase()==='android'?'Android':
+        typeof data.platform==='string'&&data.platform.toLowerCase()==='ios'?'iPhone':'Celular';
+      const registered=await db.registerConsented(name+' • consentimento',data.subscription);
+      console.log('Cadastro voluntário de dispositivo concluído (sem nome ou telefone).');
+      return send(res,201,{ok:true,registered:true,deviceId:registered.id,persistent:true},origin);
+    }catch(err){
+      return send(res,503,{ok:false,error:'Não foi possível cadastrar no Supabase. Tente novamente.',details:String(err.message||'').slice(0,90)},origin);
+    }
+  }
 
   if (req.url?.startsWith('/admin/')) {
     if (origin !== ORIGIN) return adminError(res,403,'Origem não autorizada',origin);
