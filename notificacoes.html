@@ -21,6 +21,14 @@ button.secondary{background:#2b211c;color:#f0ddc7;border-color:#765a43}
 button:disabled{opacity:.45;cursor:not-allowed}
 #status{border-left:3px solid #e2b583;background:#181210;border-radius:7px;padding:13px 12px;line-height:1.5;font-size:13px;white-space:pre-wrap;min-height:48px}
 .note{border-top:1px solid #624631;padding-top:15px;margin-top:20px}
+.composer{border:1px solid #77543d;background:linear-gradient(160deg,#302118,#1d1511);border-radius:18px;padding:20px 18px;margin:22px 0}
+.composer h2{font:normal 25px Georgia,serif;color:#f9e2c6;margin:0 0 9px}
+.composer label{display:block;font-size:13px;color:#e8c9aa;font-weight:700;margin:16px 0 7px}
+.composer select,.composer textarea{width:100%;padding:13px;color:#f9ead8;background:#130e0c;border:1px solid #816149;border-radius:10px;font:15px/1.5 -apple-system,BlinkMacSystemFont,Arial,sans-serif}
+.composer textarea{resize:vertical;min-height:114px}
+.preview{margin-top:15px;border:1px solid #75523d;background:#14100e;border-radius:13px;padding:12px;font-size:13px;line-height:1.5}
+.preview strong{color:#e9c7a0}.preview p{color:#e1d3c4;white-space:pre-wrap;margin:6px 0 0}
+.counter{text-align:right;font-size:11px;color:#baa58e;margin:4px 0}
 </style>
 </head>
 <body><main>
@@ -36,6 +44,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <p><strong>TESTE COM O APP FECHADO</strong></p>
 <button id="remote" type="button" disabled>🔔 Enviar notificação em 1 minuto</button>
 <p class="small">Depois que o teste for agendado, feche completamente o La’Bella ou bloqueie a tela. Você não precisa ficar com o aplicativo aberto.</p>
+</div>
+<section class="composer" aria-labelledby="composer-title">
+<div class="pill">NOVO • PAINEL DEMONSTRATIVO</div>
+<h2 id="composer-title">Escreva sua notificação</h2>
+<p>Personalize o aviso e envie <strong>somente para este iPhone</strong>. A mensagem será programada para chegar com o aplicativo fechado.</p>
+<label for="push-kind">Tipo de notificação</label>
+<select id="push-kind">
+<option value="lembrete">📅 Lembrete de agendamento</option>
+<option value="promocao">✨ Promoção da semana</option>
+</select>
+<label for="push-message">Mensagem que vai aparecer no celular</label>
+<textarea id="push-message" rows="4" maxlength="160" placeholder="Escreva aqui a notificação">Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛</textarea>
+<div id="push-counter" class="counter">0/160 caracteres</div>
+<div class="preview" aria-label="Prévia da notificação">
+<strong id="push-preview-title">La’Bella • Lembrete (teste)</strong>
+<p id="push-preview-body"></p>
+</div>
+<button id="push-send" type="button" disabled>Enviar mensagem de teste em 1 minuto</button>
+<p class="small">Ao receber a confirmação, feche o aplicativo. Este recurso ainda não é o painel comercial definitivo e não envia nada para outros clientes.</p>
+</section>
+<div class="panel">
 <p id="status" role="status" aria-live="polite">Verificando compatibilidade…</p>
 <p class="small">No iPhone, abra esta tela pelo ícone La’Bella da tela inicial, não numa aba do Safari. Ao permitir, o iOS decide se o alerta aparece como banner, na tela bloqueada ou na Central de Notificações.</p>
 </div>
@@ -58,7 +87,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   if (!supported) {status('Este navegador não disponibilizou notificações. No iPhone, abra o La’Bella instalado na tela inicial.');el('enable').disabled = true;return;}
   regPromise = navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(() => navigator.serviceWorker.ready);
   regPromise.then(() => { status(installed ? 'Pronto para pedir autorização. Toque em “Ativar notificações”.' : 'Abra esta página de dentro do La’Bella instalado na tela inicial. O Safari comum do iPhone não permite Web Push.');}).catch(err=>status('Falha ao registrar o serviço de notificações: '+err.message));
-  function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;el('remote').disabled=!allowed;}
+  function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;el('remote').disabled=!allowed;el('push-send').disabled=!allowed;}
   toggleButtons();
   el('enable').addEventListener('click',async ()=>{
     if (!installed){status('Abra primeiro o La’Bella pelo ícone da tela inicial, depois toque no teste dentro dele.');return;}
@@ -118,6 +147,61 @@ button:disabled{opacity:.45;cursor:not-allowed}
     } catch(err){
       status('Não foi possível agendar o teste remoto: ' + (err?.name==='AbortError' ? 'servidor demorou para responder' : err.message) + '\n\nConfira sua conexão e a permissão de notificações; você pode tentar novamente.');
     } finally { toggleButtons(); }
+  });
+
+  const pushKind = el('push-kind');
+  const pushMessage = el('push-message');
+  const updatePreview = () => {
+    const kindLabel = pushKind.value === 'lembrete' ? 'Lembrete' : 'Promoção';
+    el('push-preview-title').textContent = 'La’Bella • ' + kindLabel + ' (teste)';
+    el('push-preview-body').textContent = pushMessage.value.trim() || 'Sua mensagem aparecerá aqui.';
+    el('push-counter').textContent = pushMessage.value.length + '/160 caracteres';
+  };
+  pushKind.addEventListener('change', () => {
+    pushMessage.value = pushKind.value === 'lembrete'
+      ? 'Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛'
+      : '✨ Promoção desta semana: hidratação + escova com condição especial. Confira!';
+    updatePreview();
+  });
+  pushMessage.addEventListener('input',updatePreview);
+  updatePreview();
+
+  el('push-send').addEventListener('click', async () => {
+    if (!installed) { status('Este teste funciona abrindo o La’Bella pelo ícone da Tela de Início.'); return; }
+    if (Notification.permission !== 'granted') { status('Primeiro, autorize as notificações no iPhone.'); return; }
+    const message = pushMessage.value.trim().replace(/\\s+/g, ' ');
+    if (message.length < 8 || message.length > 160) { status('Escreva uma mensagem entre 8 e 160 caracteres.'); return; }
+    const btn = el('push-send');
+    btn.disabled = true;
+    status('Preparando a notificação personalizada…');
+    try {
+      const reg = await regPromise;
+      if (!reg.pushManager) throw new Error('Este navegador não disponibiliza Web Push');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000);
+      let cfg;
+      try {
+        const resp = await fetch(pushServer + '/public-config', {cache:'no-store',signal:controller.signal});
+        if (!resp.ok) throw new Error('Servidor temporariamente indisponível (HTTP ' + resp.status + ')');
+        cfg = await resp.json();
+      } finally {clearTimeout(timeout);}
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({
+        userVisibleOnly:true, applicationServerKey:urlBase64ToUint8Array(cfg.vapidPublicKey)
+      });
+      const response = await fetch(pushServer + '/custom-test-push', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({subscription:sub.toJSON(),kind:pushKind.value,message})
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Falha no envio');
+      status('✅ Mensagem personalizada agendada!\\n\\nFeche o La’Bella ou bloqueie o iPhone. A notificação deve chegar em aproximadamente ' + Math.round(result.delaySeconds || 65) + ' segundos.\\n\\nO horário é aproximado e depende da rede e do serviço gratuito.');
+    } catch (error) {
+      status('Não foi possível agendar a notificação: ' + (error?.name==='AbortError' ? 'servidor demorou a responder' : error.message));
+    } finally {
+      toggleButtons();
+    }
   });
   el('appointment').addEventListener('click',()=>test('appointment'));
   el('promo').addEventListener('click',()=>test('promo'));
