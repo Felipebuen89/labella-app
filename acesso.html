@@ -37,6 +37,10 @@ label{display:block;font-size:12px;font-weight:700;color:#edd5bc;margin:13px 0 8
 .status{white-space:pre-wrap;font-size:13px;line-height:1.5;background:#291d1a;border:1px solid #946b4c;border-radius:10px;padding:12px;color:#f5d5b5;margin:17px 0 0}.status[hidden],.hidden{display:none!important}
 .subtext{font-size:12px;color:#a99185;line-height:1.65;margin:17px 0 0}.help{font-size:12px;color:#d3af8b;background:none;border:0;text-decoration:underline;padding:10px 0 0}
 .footer{font-size:11px;color:#9f8981;margin-top:33px}.footer a{text-decoration:none}.footlinks{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+.demo-access{border:1px solid #a17b5b;background:linear-gradient(115deg,#34241d,#241919);padding:17px 18px;border-radius:15px;margin:10px 0 25px}
+.demo-access .demo-upper{color:#f2c698;font-size:10px;letter-spacing:1.8px;font-weight:800}.demo-access h3{font:normal 22px Georgia,serif;color:#fff0df;margin:9px 0 7px}.demo-access p{font-size:12px;line-height:1.65;color:#d2b9a9;margin:0 0 13px}
+.demo-access a{display:block;text-align:center;border-radius:11px;border:1px solid #ddb68e;background:linear-gradient(105deg,#f3d7ae,#d7a57b);color:#28180e;font-size:13px;font-weight:800;padding:13px}
+.demo-access small{display:block;margin-top:11px;color:#b8a69a;text-align:center;font-size:11px}
 .approval{margin-top:18px;border:1px solid #795847;background:#291c18;padding:17px;border-radius:15px}.approval h3{margin:0 0 6px;font:normal 22px Georgia,serif}.approval p{font-size:13px;color:#d7bda5;line-height:1.55}.approval button{margin-top:12px}
 @media(max-width:800px){.shell{display:block;border:0}.brand-side{display:none}.login-side{min-height:100dvh;padding:27px max(24px,calc((100vw - 500px)/2)) 36px}.mobile-brand{display:flex;align-items:center;gap:11px;margin:0 0 33px}.mobile-brand img{width:45px;height:45px;border-radius:10px}.mobile-brand span{font:italic 26px Georgia,serif;color:#f3d5b5}.topline{margin-bottom:28px}h2{font-size:33px}}
 @media(min-width:801px) and (max-width:950px){.brand-side{padding:32px}.login-side{padding:32px}}
@@ -58,6 +62,13 @@ label{display:block;font-size:12px;font-weight:700;color:#edd5bc;margin:13px 0 8
   <div class="sectionlabel" id="role-label">ÁREA DA CLIENTE</div>
   <h2 id="heading">Bem-vinda de volta</h2>
   <p class="subtitle" id="description">Entre para ter uma experiência personalizada no La’Bella.</p>
+  <section class="demo-access hidden" id="demo-entry" aria-label="Conhecer o painel da proprietária sem senha">
+   <div class="demo-upper">✧ MODO APRESENTAÇÃO</div>
+   <h3>Conheça a gestão na prática</h3>
+   <p>Explore agenda, clientes, campanhas e fidelidade em um painel interativo com dados fictícios. Nenhuma mensagem ou reserva real será enviada.</p>
+   <a id="open-owner-demo" href="./demo-proprietario.html">Conhecer demonstração — sem senha</a>
+   <small>Acesso livre e seguro • dados ilustrativos</small>
+  </section>
   <div class="switcher" role="tablist" aria-label="Ação de conta">
    <button class="tab" id="tab-login" role="tab" type="button" aria-selected="true">Entrar</button>
    <button class="tab" id="tab-register" role="tab" type="button" aria-selected="false">Criar conta</button>
@@ -113,6 +124,7 @@ function draw(){
  el('password').minLength=register?8:6;
  el('submit').textContent=register?'Criar minha conta':'Entrar na minha conta';
  el('forgot').hidden=register;
+ el('demo-entry').classList.toggle('hidden',!owner);
  el('approval').classList.add('hidden');
  el('notice').textContent=owner?'Acesso de proprietária sujeito à autorização. Criar conta não libera ferramentas administrativas.':'Seus dados e sua conta são protegidos pelo Supabase Auth. Os serviços podem ser explorados sem cadastro.';
  const url=new URL(location.href);url.searchParams.set('perfil',state.role);history.replaceState(null,'',url);
