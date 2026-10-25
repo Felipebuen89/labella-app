@@ -9,6 +9,11 @@ on:
       - 'index.html'
       - 'proprietario.html'
       - 'backend.js'
+      - 'acesso.html'
+      - 'auth-config.js'
+      - 'auth-core.js'
+      - 'minha-conta.html'
+      - 'manifest.webmanifest'
       - '.github/workflows/auditoria-webpush.yml'
   workflow_dispatch:
 
@@ -27,4 +32,4 @@ jobs:
       - name: Preparar ambiente de navegador simulado
         run: npm install --no-save --prefix push-demo jsdom
       - name: Teste funcional seguro e isolado (sem notificação real)
-        run: node --test push-demo/audit.test.cjs push-demo/database.test.cjs push-demo/panel.test.cjs push-demo/optin.test.cjs push-demo/browser-access.test.cjs push-demo/roles.test.cjs
+        run: node --test push-demo/audit.test.cjs push-demo/database.test.cjs push-demo/panel.test.cjs push-demo/optin.test.cjs push-demo/browser-access.test.cjs push-demo/roles.test.cjs push-demo/auth-roles.test.cjs
