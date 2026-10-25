@@ -32,6 +32,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     else home.prepend(note);
   }
 
+  if(!document.getElementById('labella-account-link')){
+    const account=document.createElement('a');
+    account.id='labella-account-link';
+    account.href='./acesso.html?perfil=cliente';
+    account.textContent='♡  Minha conta • Entrar ou cadastrar';
+    account.style.cssText='display:block;text-align:center;padding:13px 10px;margin:15px 0 4px;border-radius:14px;background:linear-gradient(100deg,#ead1b0,#cca17f);color:#22140f;text-decoration:none;font-size:14px;font-weight:800;';
+    const anchor=home.querySelector('.approved-book');
+    if(anchor)anchor.insertAdjacentElement('afterend',account);
+    else home.prepend(account);
+  }
   if(!document.getElementById('notification-demo-link')){
     const link=document.createElement('a');
     link.id='notification-demo-link';
