@@ -107,6 +107,10 @@ function isSubValid(s) {
 }
 const app = http.createServer(async(req,res)=>{
   const origin = req.headers.origin || '';
+  if (req.method === 'OPTIONS') {
+    return send(res, origin===ORIGIN?204:403, {ok:origin===ORIGIN}, origin);
+  }
+
 
   if (req.url?.startsWith('/admin/')) {
     if (origin !== ORIGIN) return adminError(res,403,'Origem não autorizada',origin);
@@ -185,9 +189,6 @@ const app = http.createServer(async(req,res)=>{
     return adminError(res,404,'Rota administrativa não encontrada',origin);
   }
 
-  if (req.method === 'OPTIONS') {
-    return send(res, origin===ORIGIN?204:403, {ok:origin===ORIGIN}, origin);
-  }
   if (req.method === 'GET' && req.url === '/health') return send(res,200,{ok:true,kind:'web-push-demo',delaySeconds:DELAY_MS/1000},origin);
   if (req.method === 'GET' && req.url === '/public-config') {
     if (origin!==ORIGIN) return send(res,403,{error:'Origem não autorizada'},origin);
