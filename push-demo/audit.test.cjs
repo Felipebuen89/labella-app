@@ -75,6 +75,14 @@ test('Auditoria isolada: painel, autenticação, dispositivo, envio e diagnósti
     const origin=await fetchJSON(base,'/admin/devices',{origin:'https://outro-dominio.example'});
     assert.equal(origin.status,403);
   });
+  await t.test('JSON nulo, arrays e payloads malformados retornam erro sem derrubar a API',async()=>{
+    for(const value of [null,[],42,"texto"]) {
+      const x=await fetchJSON(base,'/admin/login',{method:'POST',json:value});
+      assert.equal(x.status,400,'Corpo inválido deve retornar HTTP 400');
+      const live=await fetchJSON(base,'/health');
+      assert.equal(live.status,200,'Servidor continua funcionando');
+    }
+  });
   await t.test('Login inválido falha',async()=>{
     const wrong=await fetchJSON(base,'/admin/login',{method:'POST',json:{password:'SenhaErrada-auditoria'}});
     assert.equal(wrong.status,401);
