@@ -15,7 +15,7 @@ async function eventually(check){
  }
  throw Error('Timeout esperando mudança do painel');
 }
-function setUp({installed=true,existingDevices=[]}={}){
+function setUp({installed=true,existingDevices=[],userAgent='Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'}={}){
  const calls=[];
  const devices=[...existingDevices];
  const subscription={endpoint:'https://web.push.apple.com/browser-mock',
@@ -30,6 +30,7 @@ function setUp({installed=true,existingDevices=[]}={}){
   url:'https://felipebuen89.github.io/labella-app/painel.html',
   runScripts:'dangerously',pretendToBeVisual:true,
   beforeParse(window){
+   Object.defineProperty(window.navigator,'userAgent',{configurable:true,value:userAgent});
    window.matchMedia=()=>({matches:installed});
    window.navigator.standalone=installed;
    window.Notification={permission:'granted',requestPermission:async()=> 'granted'};
@@ -100,5 +101,19 @@ test('Sem modo aplicativo instalado, bloqueia cadastro e mostra motivo legível'
   await eventually(()=>a.w.document.getElementById('send-state').textContent.includes('ÍCON E') || a.w.document.getElementById('send-state').textContent.includes('ÍCONE'));
   assert.equal(a.calls.filter(x=>x==='/admin/register').length,0);
   assert.equal(a.calls.filter(x=>x==='/admin/send').length,0);
+ }finally{a.dom.window.close()}
+});
+
+test('Android Chrome sem instalar PWA cadastra aparelho, agenda e exibe nome correto', {timeout:20000},async()=>{
+ const a=setUp({installed:false,userAgent:'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36'});
+ try{
+  await a.login();
+  assert.equal(a.w.document.getElementById('device-label').value,'Meu Android — teste');
+  assert.match(a.w.document.getElementById('device-instructions').textContent,/Chrome/);
+  a.w.document.getElementById('send').click();
+  await eventually(()=>a.calls.includes('/admin/send'));
+  assert.equal(a.calls.filter(x=>x==='/admin/register').length,1);
+  await eventually(()=>a.w.document.getElementById('send-state').textContent.includes('MENSAGEM PROGRAMADA NO SUPABASE'));
+  assert.equal(a.devices[0].label,'Meu Android — teste');
  }finally{a.dom.window.close()}
 });
