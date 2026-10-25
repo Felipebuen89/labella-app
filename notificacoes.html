@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#100d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="La’Bella">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Teste de notificações | La’Bella</title>
+<style>
+:root {color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#100d0d;color:#f6e9d8}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:linear-gradient(160deg,#22160f,#0c0909 65%);padding:calc(22px + env(safe-area-inset-top)) 22px calc(32px + env(safe-area-inset-bottom))}
+main{max-width:480px;margin:auto}a{color:#e8c49d}.back{display:inline-block;text-decoration:none;font-size:14px;margin:0 0 27px}
+h1{font:normal 34px/1.12 Georgia,serif;margin:0 0 12px;color:#f9e2c6}
+p{line-height:1.58;color:#d8c0aa;font-size:14px}
+.small{font-size:12px;color:#bfa995}.pill{display:inline-block;color:#f4d6ab;border:1px solid #72513b;padding:7px 12px;border-radius:30px;font-size:11px;letter-spacing:.7px;margin-bottom:20px}
+.panel{border:1px solid #77543d;background:#241912;border-radius:18px;padding:20px 18px;margin:25px 0 16px;box-shadow:0 12px 32px #0004}
+button{width:100%;min-height:53px;margin:8px 0;border-radius:12px;border:1px solid #b99168;background:linear-gradient(110deg,#efcfab,#d0a26d);font-size:15px;font-weight:700;color:#23160e;cursor:pointer;padding:12px}
+button.secondary{background:#2b211c;color:#f0ddc7;border-color:#765a43}
+button:disabled{opacity:.45;cursor:not-allowed}
+#status{border-left:3px solid #e2b583;background:#181210;border-radius:7px;padding:13px 12px;line-height:1.5;font-size:13px;white-space:pre-wrap;min-height:48px}
+.note{border-top:1px solid #624631;padding-top:15px;margin-top:20px}
+</style>
+</head>
+<body><main>
+<a class="back" href="./">← Voltar ao aplicativo</a>
+<div class="pill">TESTE GRATUITO • NÃO ENVIA MENSAGENS A CLIENTES</div>
+<h1>Notificações no seu iPhone</h1>
+<p>Vamos verificar se o La’Bella consegue mostrar uma notificação <strong>do sistema do celular</strong>, e não uma mensagem desenhada dentro da página.</p>
+<div class="panel">
+<button id="enable" type="button">1. Ativar notificações</button>
+<button id="appointment" class="secondary" type="button" disabled>2. Testar lembrete de agendamento</button>
+<button id="promo" class="secondary" type="button" disabled>3. Testar promoção da semana</button>
+<p id="status" role="status" aria-live="polite">Verificando compatibilidade…</p>
+<p class="small">No iPhone, abra esta tela pelo ícone La’Bella da tela inicial, não numa aba do Safari. Ao permitir, o iOS decide se o alerta aparece como banner, na tela bloqueada ou na Central de Notificações.</p>
+</div>
+<p class="note small"><strong>Importante:</strong> este é um disparo de teste feito pelo próprio aplicativo quando você toca no botão. Não é uma mensagem remota. Para receber automaticamente com o aplicativo fechado, precisaremos configurar a inscrição Web Push e um serviço de envio. Nenhum dado é transmitido neste teste.</p>
+</main>
+<script>
+(() => {
+  const el = id => document.getElementById(id);
+  const status = msg => {el('status').textContent = msg};
+  const supported = window.isSecureContext && 'serviceWorker' in navigator && 'Notification' in window;
+  const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  let regPromise = null;
+  if (!supported) {status('Este navegador não disponibilizou notificações. No iPhone, abra o La’Bella instalado na tela inicial.');el('enable').disabled = true;return;}
+  regPromise = navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(() => navigator.serviceWorker.ready);
+  regPromise.then(() => { status(installed ? 'Pronto para pedir autorização. Toque em “Ativar notificações”.' : 'Abra esta página de dentro do La’Bella instalado na tela inicial. O Safari comum do iPhone não permite Web Push.');}).catch(err=>status('Falha ao registrar o serviço de notificações: '+err.message));
+  function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;}
+  toggleButtons();
+  el('enable').addEventListener('click',async ()=>{
+    if (!installed){status('Abra primeiro o La’Bella pelo ícone da tela inicial, depois toque no teste dentro dele.');return;}
+    try {
+      // A solicitação é iniciada no gesto do usuário (restrição do iOS).
+      const permission = await Notification.requestPermission();
+      toggleButtons();
+      if(permission==='granted') status('Permissão autorizada! Agora toque em um dos testes abaixo.');
+      else if(permission==='denied') status('Notificações bloqueadas. Verifique Ajustes → Notificações → La’Bella para alterar a permissão.');
+      else status('Permissão ainda não concedida.');
+    } catch(err){status('Não foi possível solicitar a permissão: '+err.message);}
+  });
+  async function test(type) {
+    if(Notification.permission!=='granted'){status('Primeiro, autorize as notificações.');return;}
+    try{
+      const reg = await regPromise;
+      if(typeof reg.showNotification!=='function') throw new Error('O iPhone não expôs o recurso showNotification');
+      const isPromo=type==='promo';
+      await reg.showNotification('La’Bella • DEMONSTRAÇÃO', {
+        body:isPromo?'✨ Promoção da semana: hidratação + escova com condição especial.':'📅 Lembrete de teste: sua visita está marcada para amanhã às 14h.',
+        icon:'./icon-192.png', badge:'./icon-192.png',
+        tag:isPromo?'labella-promocao-teste':'labella-agenda-teste',
+        data:{url:'./'}
+      });
+      status('O iOS aceitou o pedido de notificação. Confira o banner ou a Central de Notificações. Se ela não aparecer, confira Ajustes → Notificações → La’Bella. Este teste não garante envio remoto em segundo plano.');
+    }catch(err){status('O iOS não exibiu o teste local: '+err.message+'\nPara entregar uma notificação remota com o app fechado precisamos completar a configuração Web Push.');}
+  }
+  el('appointment').addEventListener('click',()=>test('appointment'));
+  el('promo').addEventListener('click',()=>test('promo'));
+})();
+</script>
+</body></html>
