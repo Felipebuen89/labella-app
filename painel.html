@@ -58,7 +58,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <div class="columns">
 <section class="card" style="margin:15px 0">
 <h2>Aparelhos autorizados</h2>
-<p>Somente os celulares cadastrados manualmente aqui receberão os testes. Nenhum cliente é incluído automaticamente.</p>
+<p>Somente os celulares cadastrados manualmente aqui receberão os testes. Nenhum cliente é incluído automaticamente. O cadastro é persistente quando a conexão Supabase está ativa.</p>
 <div id="device-list"><p>Nenhum aparelho cadastrado.</p></div>
 <button class="secondary" id="refresh" type="button">Atualizar aparelhos</button>
 <hr>
@@ -81,7 +81,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <p class="hint">Marque ao menos um aparelho autorizado na lista. O envio começa após cerca de 30 segundos. Quando concluir, volte a este painel e consulte o resultado para diferenciar falha no servidor de bloqueio no iPhone.</p>
 </section>
 </div>
-<p class="note"><strong>Limites desta etapa:</strong> até cinco aparelhos autorizados e oito campanhas de demonstração por hora. Os cadastros e sessões ficam só na memória do Render gratuito e podem desaparecer após uma reinicialização. Precisaremos de autenticação e banco persistentes antes de qualquer operação comercial.</p>
+<p class="note"><strong>Homologação:</strong> até cinco aparelhos autorizados e oito campanhas por hora. Aparelhos e campanhas usam o banco Supabase quando conectado; as sessões de login ainda reiniciam junto com o Render. No plano gratuito, o servidor pode adormecer e atrasar avisos programados. Esta não é uma solução de produção.</p>
 </section>
 <p class="hint"><a href="./notificacoes.html">← Voltar ao teste anterior</a> · <a href="./">Abrir La’Bella</a></p>
 </main>
@@ -157,6 +157,7 @@ function drawDevices(){
 }
 async function loadDevices(){
  const data=await api('/admin/devices');devices=data.devices||[];drawDevices();
+ $('refresh').textContent=data.persistent?'Atualizar aparelhos • Supabase ativo':'Atualizar aparelhos • servidor temporário';
 }
 async function loggedIn(){
  screen(true);$('password').value='';
