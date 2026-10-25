@@ -87,7 +87,7 @@ const app = http.createServer(async(req,res)=>{
       if (custom) {
         if (!Object.prototype.hasOwnProperty.call(kinds, parsed.kind)) return send(res,400,{error:'Escolha lembrete ou promoção'},origin);
         if (typeof parsed.message !== 'string') return send(res,400,{error:'Digite uma mensagem'},origin);
-        const body = parsed.message.replace(/[\\r\\n\\t]+/g,' ').replace(/\\s+/g,' ').trim();
+        const body = parsed.message.replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
         if (body.length < 8 || body.length > 160) return send(res,400,{error:'A mensagem deve ter entre 8 e 160 caracteres'},origin);
         notification = {
           title: 'La’Bella • ' + kinds[parsed.kind] + ' (teste)',
