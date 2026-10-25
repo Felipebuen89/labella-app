@@ -34,6 +34,8 @@ const adminSessions = new Map();
 const loginAttempts = new Map();
 const registeredDevices = new Map();
 const adminSendTimes = [];
+const campaignJobs = new Map(); // Só diagnóstico temporário; não guarda dados pessoais.
+const CAMPAIGN_DELAY_MS = 30000;
 const ADMIN_SESSION_MS = 2 * 60 * 60 * 1000;
 const MAX_DEMO_DEVICES = 5;
 function hash(value) { return createHash('sha256').update(String(value)).digest('hex'); }
@@ -156,6 +158,14 @@ const app = http.createServer(async(req,res)=>{
       if (!data || typeof data.id!=='string') return adminError(res,400,'Identificador inválido',origin);
       return send(res,200,{ok:true,removed:registeredDevices.delete(data.id)},origin);
     }
+    if (req.method==='GET' && req.url.startsWith('/admin/send-status?')) {
+      let id;
+      try { id = new URL(req.url,'http://localhost').searchParams.get('id') } catch (_) {}
+      if (!id || !/^[0-9a-f-]{36}$/.test(id)) return adminError(res,400,'Identificador inválido',origin);
+      const job=campaignJobs.get(id);
+      if (!job) return adminError(res,404,'O envio não existe mais. O servidor gratuito pode ter reiniciado.',origin);
+      return send(res,200,{ok:true,status:job.status,details:job.details,recipients:job.recipients,updatedAt:job.updatedAt},origin);
+    }
     if (req.method==='POST' && req.url==='/admin/send') {
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
@@ -172,19 +182,33 @@ const app = http.createServer(async(req,res)=>{
       adminSendTimes.push(now);
       const targets=ids.map(id=>({id,...registeredDevices.get(id)}));
       const sendId=randomUUID();
+      const job={status:'agendado',details:'Aguardando o momento do disparo',recipients:targets.length,updatedAt:new Date().toISOString()};
+      campaignJobs.set(sendId,job);
+      // Limita a memória usada pelo histórico de testes.
+      if (campaignJobs.size>25) campaignJobs.delete(campaignJobs.keys().next().value);
+      console.log('Painel: teste agendado',sendId,'para',targets.length,'dispositivo(s)');
       const task=setTimeout(async()=>{
+        job.status='enviando';job.details='Enviando ao serviço de push da Apple ou do navegador';
+        job.updatedAt=new Date().toISOString();
+        let accepted=0, failed=0;
         for (const target of targets) {
           try {
             await webpush.sendNotification(target.subscription,JSON.stringify(notice),{TTL:300,urgency:'high'});
-            console.log('Campanha de teste aceita pelo push: '+sendId);
+            accepted++;
+            console.log('Painel: Web Push aceito pelo provedor',sendId);
           } catch(err) {
-            console.error('Falha Web Push demo: '+sendId+' '+String(err.statusCode||err.message).slice(0,80));
+            failed++;
+            const code=err.statusCode || 'sem código';
+            console.error('Painel: falha no envio',sendId,code,String(err.message).slice(0,90));
             if (err.statusCode===404||err.statusCode===410) registeredDevices.delete(target.id);
           }
         }
-      },DELAY_MS);
+        job.status=failed ? (accepted?'parcial':'falha') : 'aceito_pelo_provedor';
+        job.details=accepted+' aceito(s) pelo serviço de push; '+failed+' falha(s). A exibição final no celular depende do iOS.';
+        job.updatedAt=new Date().toISOString();
+      },CAMPAIGN_DELAY_MS);
       task.unref();
-      return send(res,202,{ok:true,scheduled:true,delaySeconds:DELAY_MS/1000,recipients:targets.length},origin);
+      return send(res,202,{ok:true,scheduled:true,jobId:sendId,delaySeconds:CAMPAIGN_DELAY_MS/1000,recipients:targets.length},origin);
     }
     return adminError(res,404,'Rota administrativa não encontrada',origin);
   }
