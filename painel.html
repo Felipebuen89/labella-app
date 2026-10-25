@@ -76,8 +76,9 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <div class="counter" id="counter">0/160 caracteres</div>
 <label>Prévia da notificação</label>
 <div class="preview"><div class="preview-title" id="preview-title">Lembrete de agendamento</div><div class="preview-body" id="preview-body">...</div></div>
-<div class="actions"><button id="send" type="button">Programar teste em 1 minuto</button></div>
-<p class="hint">Marque ao menos um aparelho autorizado na lista. O disparo demora cerca de 65 segundos, dando tempo de fechar o aplicativo.</p>
+<div class="actions"><button id="send" type="button">Programar teste em 30 segundos</button></div>
+<div class="actions"><button id="check-send" class="secondary" type="button">Consultar resultado do último envio</button></div>
+<p class="hint">Marque ao menos um aparelho autorizado na lista. O envio começa após cerca de 30 segundos. Quando concluir, volte a este painel e consulte o resultado para diferenciar falha no servidor de bloqueio no iPhone.</p>
 </section>
 </div>
 <p class="note"><strong>Limites desta etapa:</strong> até cinco aparelhos autorizados e oito campanhas de demonstração por hora. Os cadastros e sessões ficam só na memória do Render gratuito e podem desaparecer após uma reinicialização. Precisaremos de autenticação e banco persistentes antes de qualquer operação comercial.</p>
@@ -93,6 +94,7 @@ const msg=s=>{$('feedback').textContent=s};
 let token=sessionStorage.getItem('move_demo_token')||'';
 let devices=[];
 let locked=false;
+let lastJobId=localStorage.getItem('move_demo_last_job') || '';
 const installed=window.matchMedia('(display-mode:standalone)').matches || navigator.standalone===true;
 const templates={
 lembrete:'Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛',
@@ -158,8 +160,11 @@ async function loadDevices(){
 }
 async function loggedIn(){
  screen(true);$('password').value='';
- try{await loadDevices();msg('Painel pronto. Cadastre o iPhone para poder enviar uma mensagem de teste.');}
- catch(e){msg('Não foi possível consultar aparelhos: '+e.message)}
+ try{
+   await loadDevices();
+   if(lastJobId) await checkLast();
+   else msg('Painel pronto. Confirme se seu aparelho está cadastrado para enviar um teste.');
+ }catch(e){msg('Não foi possível consultar o painel: '+e.message)}
 }
 $('login-form').addEventListener('submit',async e=>{
  e.preventDefault();if(locked)return;
@@ -196,6 +201,24 @@ $('register-device').onclick=async()=>{
  }catch(err){msg('Não foi possível cadastrar: '+err.message)}
  finally{btn.disabled=false;}
 };
+async function checkLast(){
+ if(!lastJobId){msg('Ainda não há envio para consultar. Primeiro programe uma mensagem.');return;}
+ try{
+  const data=await api('/admin/send-status?id='+encodeURIComponent(lastJobId));
+  const labels={
+   agendado:'⏳ Ainda agendado: o servidor não disparou a mensagem.',
+   enviando:'⏳ Enviando ao serviço de notificações.',
+   aceito_pelo_provedor:'✅ O serviço de push aceitou a mensagem. Se não apareceu no iPhone, confira Ajustes → Notificações → La’Bella e a Central de Notificações.',
+   parcial:'⚠️ Envio parcialmente aceito.',
+   falha:'❌ Falha no envio pelo servidor.'
+  };
+  msg((labels[data.status]||data.status)+'\n\n'+(data.details||'')+'\n\nEsse resultado não garante que o iOS exibiu o aviso.');
+ }catch(e){
+  msg('Não foi possível consultar o último envio: '+e.message+'\n\nSe o servidor gratuito reiniciou, será necessário cadastrar o aparelho novamente.');
+ }
+}
+$('check-send').onclick=checkLast;
+
 $('send').onclick=async()=>{
  const body=$('message').value.trim().replace(/\s+/g,' ');
  if(body.length<8||body.length>160){msg('A mensagem deve ter entre 8 e 160 caracteres.');return}
@@ -205,7 +228,9 @@ $('send').onclick=async()=>{
  const btn=$('send');btn.disabled=true;
  try{
   const d=await api('/admin/send','POST',{kind:$('kind').value,message:body,deviceIds:ids});
-  msg('✅ Teste programado para '+d.recipients+' aparelho(s). Agora bloqueie o iPhone ou feche o La’Bella. O aviso deverá chegar em cerca de '+d.delaySeconds+' segundos; o horário não é garantido.');
+  lastJobId=d.jobId;
+  localStorage.setItem('move_demo_last_job',d.jobId);
+  msg('✅ Envio programado para '+d.recipients+' aparelho(s). Agora bloqueie o iPhone ou feche o La’Bella por '+d.delaySeconds+' segundos. Se não receber, volte e toque em “Consultar resultado do último envio”.');
  }catch(e){msg('Não foi possível programar: '+e.message)}
  finally{btn.disabled=false;}
 };
