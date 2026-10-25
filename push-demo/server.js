@@ -82,15 +82,24 @@ const app = http.createServer(async(req,res)=>{
       if (!isSubValid(parsed.subscription)) return send(res,400,{error:'Assinatura de notificação inválida'},origin);
       // Mensagem livre apenas para teste no próprio aparelho inscrito. Não armazena destinatários.
       const custom = req.url === '/custom-test-push';
-      const kinds = {'lembrete': 'Lembrete', 'promocao': 'Promoção'};
+      const titles = {'lembrete': 'Lembrete de agendamento', 'promocao': 'Promoção da semana'};
       let notification;
       if (custom) {
-        if (!Object.prototype.hasOwnProperty.call(kinds, parsed.kind)) return send(res,400,{error:'Escolha lembrete ou promoção'},origin);
+        if (!Object.prototype.hasOwnProperty.call(titles, parsed.kind)) return send(res,400,{error:'Escolha lembrete ou promoção'},origin);
         if (typeof parsed.message !== 'string') return send(res,400,{error:'Digite uma mensagem'},origin);
-        const body = parsed.message.replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+        let body = parsed.message.replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+        let actualKind = parsed.kind;
+        // Se o usuário colar o título no campo de mensagem, eliminamos a repetição
+        // e harmonizamos o tipo de notificação com o título explícito.
+        const prefix = body.match(/^La[’']Bella\s*[•:—-]\s*(Lembrete|Promo(?:ç|c)[aã]o)\s*(?:\(\s*teste\s*\))?\s*[:•—-]?\s*/i)
+          || body.match(/^(Lembrete|Promo(?:ç|c)[aã]o)\s*\(\s*teste\s*\)\s*[:•—-]?\s*/i);
+        if (prefix) {
+          actualKind = /^lembrete/i.test(prefix[1]) ? 'lembrete' : 'promocao';
+          body = body.slice(prefix[0].length).trim();
+        }
         if (body.length < 8 || body.length > 160) return send(res,400,{error:'A mensagem deve ter entre 8 e 160 caracteres'},origin);
         notification = {
-          title: 'La’Bella • ' + kinds[parsed.kind] + ' (teste)',
+          title: titles[actualKind],
           body,
           tag: 'labella-custom-' + randomUUID()
         };
