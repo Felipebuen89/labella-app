@@ -35,6 +35,8 @@ async function rpc(method, data = {}) {
 }
 const devices = () => rpc('lb_push_admin_devices');
 const register = (label,subscription) => rpc('lb_push_admin_register',{p_label:label,p_subscription:subscription});
+const registerConsented = (label,subscription) => rpc('lb_push_admin_register_consented',{p_label:label,p_subscription:subscription});
+const unsubscribe = subscription => rpc('lb_push_admin_unsubscribe',{p_endpoint:subscription.endpoint,p_auth:subscription.keys.auth});
 const remove = id => rpc('lb_push_admin_remove',{p_id:id});
 const schedule = (kind,message,ids,delayMS) => rpc('lb_push_admin_schedule',{
   p_kind:kind,p_message:message,p_ids:ids,
@@ -71,4 +73,4 @@ async function processDue(webpush) {
     console.error('Supabase: worker aguardará próximo ciclo:',String(err.message||err).slice(0,150));
   } finally { processing=false; }
 }
-module.exports={enabled,devices,register,remove,schedule,campaign,processDue};
+module.exports={enabled,devices,register,registerConsented,unsubscribe,remove,schedule,campaign,processDue};
