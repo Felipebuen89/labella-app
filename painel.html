@@ -33,6 +33,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .preview-title{font-weight:700;color:#ffe6bf;font-size:14px}.preview-body{color:#f2e7db;font-size:14px;white-space:pre-wrap}
 .columns{display:grid;grid-template-columns:1fr 1fr;gap:17px}@media(max-width:600px){.columns{grid-template-columns:1fr}}
 .counter{text-align:right;color:#bbaa98;font-size:11px;padding-top:4px}
+#device-hint{border:1px solid #b48d4f;border-radius:11px;padding:12px;color:#f5d9a9;font-size:13px;line-height:1.55;margin:14px 0}
+#device-hint[hidden]{display:none}
+#send-state{padding:11px 12px;border:1px solid #725c43;border-radius:12px;background:#17110e;color:#f4dbb9;font-size:13px;white-space:pre-wrap;margin-top:11px;line-height:1.5}
+[hidden]{display:none!important}
 .note{border-left:3px solid #d7ae7e;padding-left:12px;margin:25px 0;color:#c7ad90}
 a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 </style>
@@ -59,6 +63,7 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <section class="card" style="margin:15px 0">
 <h2>Aparelhos autorizados</h2>
 <p>Somente os celulares cadastrados manualmente aqui receberão os testes. Nenhum cliente é incluído automaticamente. O cadastro é persistente quando a conexão Supabase está ativa.</p>
+<div id="device-hint" role="status" aria-live="polite">Verificando se há aparelhos autorizados no Supabase…</div>
 <div id="device-list"><p>Nenhum aparelho cadastrado.</p></div>
 <button class="secondary" id="refresh" type="button">Atualizar aparelhos</button>
 <hr>
@@ -76,9 +81,10 @@ a{color:#e2b888}hr{border:0;border-top:1px solid #61432f;margin:23px 0}
 <div class="counter" id="counter">0/160 caracteres</div>
 <label>Prévia da notificação</label>
 <div class="preview"><div class="preview-title" id="preview-title">Lembrete de agendamento</div><div class="preview-body" id="preview-body">...</div></div>
-<div class="actions"><button id="send" type="button">Programar teste em 30 segundos</button></div>
+<div class="actions"><button id="send" type="button">Cadastrar este iPhone e enviar teste</button></div>
+<div id="send-state" role="status" aria-live="polite">Aguardando seleção de destinatário…</div>
 <div class="actions"><button id="check-send" class="secondary" type="button">Consultar resultado do último envio</button></div>
-<p class="hint">Marque ao menos um aparelho autorizado na lista. O envio começa após cerca de 30 segundos. Quando concluir, volte a este painel e consulte o resultado para diferenciar falha no servidor de bloqueio no iPhone.</p>
+<p class="hint">Se não houver celular cadastrado, o botão acima registra este iPhone (com sua autorização) e programa o teste. A mensagem é enviada em cerca de 30 segundos. O status do servidor aparece nesta tela.</p>
 </section>
 </div>
 <p class="note"><strong>Homologação:</strong> até cinco aparelhos autorizados e oito campanhas por hora. Aparelhos e campanhas usam o banco Supabase quando conectado; as sessões de login ainda reiniciam junto com o Render. No plano gratuito, o servidor pode adormecer e atrasar avisos programados. Esta não é uma solução de produção.</p>
@@ -95,6 +101,7 @@ let token=sessionStorage.getItem('move_demo_token')||'';
 let devices=[];
 let locked=false;
 let lastJobId=localStorage.getItem('move_demo_last_job') || '';
+const state=s=>{$('send-state').textContent=s;msg(s)};
 const installed=window.matchMedia('(display-mode:standalone)').matches || navigator.standalone===true;
 const templates={
 lembrete:'Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛',
@@ -137,8 +144,12 @@ $('message').addEventListener('input',updatePreview);
 updatePreview();
 function drawDevices(){
  const box=$('device-list');box.replaceChildren();
+ $('send').textContent=devices.length?'Enviar mensagem aos aparelhos selecionados':'Cadastrar este iPhone e enviar teste';
+ $('device-hint').hidden=devices.length>0;
+ $('device-hint').textContent=devices.length?'':'⚠️ Nenhum celular cadastrado no Supabase. Toque em “Cadastrar este iPhone” ou use o botão de enviar, que fará o cadastro primeiro.';
+ $('send-state').textContent=devices.length?'✅ '+devices.length+' aparelho(s) cadastrado(s). Você pode programar o teste.':'Aguardando cadastro e autorização deste iPhone.';
  if(!devices.length){
-  const p=document.createElement('p');p.textContent='Ainda não há aparelhos de teste cadastrados.';
+  const p=document.createElement('p');p.textContent='0 aparelhos autorizados. Nenhuma mensagem poderá ser enviada até o cadastro.';
   box.appendChild(p);return;
  }
  for(const item of devices){
@@ -164,7 +175,7 @@ async function loggedIn(){
  try{
    await loadDevices();
    if(lastJobId) await checkLast();
-   else msg('Painel pronto. Confirme se seu aparelho está cadastrado para enviar um teste.');
+   else msg(devices.length?'✅ Supabase respondeu: '+devices.length+' aparelho(s) autorizado(s).':'⚠️ Supabase respondeu: zero aparelhos autorizados. Cadastre este iPhone antes de enviar.');
  }catch(e){msg('Não foi possível consultar o painel: '+e.message)}
 }
 $('login-form').addEventListener('submit',async e=>{
@@ -180,26 +191,34 @@ $('logout').onclick=async()=>{
  token='';sessionStorage.removeItem('move_demo_token');devices=[];screen(false);msg('Sessão encerrada.');
 };
 $('refresh').onclick=async()=>{try{await loadDevices();msg('Lista atualizada.')}catch(e){msg(e.message)}};
-$('register-device').onclick=async()=>{
+async function registerCurrentDevice(){
  const label=$('device-label').value.trim();
- if(label.length<2){msg('Dê um nome para o aparelho.');return}
- if(!installed){msg('Para receber Web Push no iPhone, abra o La’Bella pelo ícone da Tela de Início e entre no painel por dentro dele.');return}
- if(!('Notification'in window)||!('serviceWorker'in navigator)){msg('Este navegador não oferece Web Push.');return}
- const btn=$('register-device');btn.disabled=true;
- try{
-  let permission=Notification.permission;
-  if(permission!=='granted') permission=await Notification.requestPermission();
-  if(permission!=='granted')throw Error('Autorize as notificações no iPhone.');
-  msg('Obtendo assinatura segura do dispositivo…');
-  const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
-  const ready=await navigator.serviceWorker.ready;
-  const cfg=await api('/public-config','GET',null,false);
-  let sub=await ready.pushManager.getSubscription();
-  if(!sub)sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:toKey(cfg.vapidPublicKey)});
-  await api('/admin/register','POST',{label,subscription:sub.toJSON()});
-  await loadDevices();
-  msg('✅ Aparelho autorizado para testes. Agora escolha a mensagem e programe o envio.');
- }catch(err){msg('Não foi possível cadastrar: '+err.message)}
+ if(label.length<2)throw Error('Dê um nome para o aparelho.');
+ if(!installed)throw Error('Abra o La’Bella pelo ÍCONE instalado na tela inicial do iPhone. Pelo Safari/ChatGPT não é possível autorizar Web Push.');
+ if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Este navegador não oferece notificações Web Push.');
+ // Pedimos permissão no gesto do toque, antes de qualquer operação de rede.
+ let permission=Notification.permission;
+ if(permission==='default') permission=await Notification.requestPermission();
+ if(permission!=='granted')throw Error('Permissão de notificações negada. Confira Ajustes → Notificações → La’Bella.');
+ state('1/3 • Permissão aceita. Preparando inscrição do iPhone…');
+ const ready=await navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(()=>navigator.serviceWorker.ready);
+ if(!ready.pushManager)throw Error('Gerenciador Web Push indisponível. Instale o La’Bella na Tela de Início.');
+ const cfg=await api('/public-config','GET',null,false);
+ let sub=await ready.pushManager.getSubscription();
+ if(!sub) sub=await ready.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:toKey(cfg.vapidPublicKey)});
+ state('2/3 • Gravando inscrição no Supabase…');
+ const result=await api('/admin/register','POST',{label,subscription:sub.toJSON()});
+ await loadDevices();
+ if(!devices.some(d=>String(d.id)===String(result.id)))throw Error('Supabase não confirmou a inscrição. Tente novamente.');
+ state('3/3 • ✅ Aparelho gravado no Supabase! Agora é possível programar a notificação.');
+ return result.id;
+}
+$('register-device').onclick=async()=>{
+ const btn=$('register-device');
+ if(btn.disabled)return;
+ btn.disabled=true;
+ try{await registerCurrentDevice();}
+ catch(err){state('❌ Falha ao cadastrar iPhone: '+err.message);}
  finally{btn.disabled=false;}
 };
 async function checkLast(){
@@ -213,7 +232,7 @@ async function checkLast(){
    parcial:'⚠️ Envio parcialmente aceito.',
    falha:'❌ Falha no envio pelo servidor.'
   };
-  msg((labels[data.status]||data.status)+'\n\n'+(data.details||'')+'\n\nEsse resultado não garante que o iOS exibiu o aviso.');
+  state((labels[data.status]||data.status)+'\n\n'+(data.details||'')+'\n\nEsse resultado não garante que o iOS exibiu o aviso.');
  }catch(e){
   msg('Não foi possível consultar o último envio: '+e.message+'\n\nSe o servidor gratuito reiniciou, será necessário cadastrar o aparelho novamente.');
  }
@@ -221,20 +240,31 @@ async function checkLast(){
 $('check-send').onclick=checkLast;
 
 $('send').onclick=async()=>{
+ const btn=$('send');
+ if(btn.disabled)return;
  const body=$('message').value.trim().replace(/\s+/g,' ');
- if(body.length<8||body.length>160){msg('A mensagem deve ter entre 8 e 160 caracteres.');return}
- const ids=[...document.querySelectorAll('input[name="demo-device"]:checked')].map(x=>x.value);
- if(!ids.length){msg('Selecione ao menos um aparelho cadastrado.');return}
- if(!confirm('Enviar notificação de teste para '+ids.length+' aparelho(s) autorizado(s)?'))return;
- const btn=$('send');btn.disabled=true;
+ if(body.length<8||body.length>160){state('❌ Escreva uma mensagem entre 8 e 160 caracteres.');return;}
+ btn.disabled=true;
  try{
+  let ids=[...document.querySelectorAll('input[name="demo-device"]:checked')].map(x=>x.value);
+  if(!ids.length && devices.length===0){
+   state('O aparelho ainda não está cadastrado. Vou solicitar autorização e registrar este iPhone…');
+   const id=await registerCurrentDevice();
+   ids=[id];
+  }
+  if(!ids.length)throw Error('Selecione um dos celulares cadastrados para receber a mensagem.');
+  state('✅ Destinatário autorizado. Gravando campanha no Supabase…');
   const d=await api('/admin/send','POST',{kind:$('kind').value,message:body,deviceIds:ids});
+  if(!d.jobId||!d.persistent)throw Error('O banco não confirmou que a campanha foi persistida.');
   lastJobId=d.jobId;
   localStorage.setItem('move_demo_last_job',d.jobId);
-  msg('✅ Envio programado para '+d.recipients+' aparelho(s). Agora bloqueie o iPhone ou feche o La’Bella por '+d.delaySeconds+' segundos. Se não receber, volte e toque em “Consultar resultado do último envio”.');
- }catch(e){msg('Não foi possível programar: '+e.message)}
+  state('✅ MENSAGEM PROGRAMADA NO SUPABASE para '+d.recipients+' celular(es)!\nBloqueie seu iPhone. O servidor tentará enviar após cerca de '+d.delaySeconds+' segundos. Depois volte e consulte o resultado.');
+  // O timer funciona enquanto o painel estiver aberto; se fechar, consulte quando voltar.
+  setTimeout(()=>{if(document.visibilityState!=='hidden')checkLast()},(d.delaySeconds+8)*1000);
+ }catch(e){state('❌ A mensagem NÃO foi agendada. Motivo: '+e.message);}
  finally{btn.disabled=false;}
 };
+
 (async()=>{
  screen(false);
  if(token) {
