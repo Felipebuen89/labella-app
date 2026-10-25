@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171011"><meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; form-action 'none'; object-src 'none'; base-uri 'self'">
+<link rel="icon" href="./icon-192.png"><title>La’Bella | Demonstração da Gestão</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#f9eee6;background:#110d0e;--bg:#110d0e;--card:#211819;--card2:#2d2020;--gold:#dfb68e;--ink:#fff1e7;--muted:#bda69e;--line:#4d3531;--green:#95c7a7;--gold2:#f5d2a7}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 100% 0%,#38231c 0%,transparent 38%),#110d0e;min-height:100dvh}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+[hidden]{display:none!important}.shell{display:grid;grid-template-columns:238px minmax(0,1fr);min-height:100dvh;max-width:1510px;margin:auto}.sidebar{position:sticky;top:0;align-self:start;height:100dvh;background:linear-gradient(180deg,#261819,#140e0f);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:29px 17px 19px}
+.logo{display:flex;align-items:center;gap:10px;padding:0 7px 20px}.logo img{width:46px;height:46px;object-fit:contain;border:1px solid #7a5b4d;border-radius:12px}.logo strong{display:block;font:italic 26px Georgia,serif;color:#f4d4b3;letter-spacing:-1px}.logo small{font-size:9px;letter-spacing:2.2px;color:#bba198}
+.demo-pill{border:1px solid #9c774e;background:#3e2e20;color:#f8d6a8;border-radius:40px;padding:9px 11px;font-size:10px;font-weight:800;letter-spacing:.8px;text-align:center;margin-bottom:27px}
+.side-label{font-size:9px;letter-spacing:2px;color:#a78d83;font-weight:800;padding:0 15px;margin-bottom:10px}
+nav[aria-label="Seções da demonstração"]{display:grid;gap:5px}.navbtn{border:1px solid transparent;background:none;color:#d2bfb7;width:100%;min-height:46px;border-radius:11px;padding:12px 13px;text-align:left;display:flex;align-items:center;gap:12px;font-size:13px}.navbtn span.icon{font-size:18px;width:23px;text-align:center}.navbtn[aria-current=page]{border-color:#936b51;background:#34251f;color:#ffe4c4;font-weight:750}.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding:20px 10px 0}.sidebar-bottom a{display:block;font-size:12px;padding:8px 0;color:#dcbf9d}.sidebar-bottom small{display:block;color:#a48e85;line-height:1.6;font-size:10px;margin-top:10px}
+.content{min-width:0;padding:29px clamp(19px,3.5vw,53px) 64px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:24px}.topmeta{font-size:11px;color:#c0ab9f;letter-spacing:1.4px}.topmeta strong{color:#f3d3aa}.avatar{display:flex;gap:10px;align-items:center;font-size:12px;color:#e2c6ac}.avatar i{font-style:normal;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;border:1px solid #a67c60;background:#38241e;font:18px Georgia,serif}
+.notice{display:flex;align-items:center;gap:12px;border:1px solid #86694d;border-radius:14px;background:#35271d;padding:13px 16px;margin-bottom:24px;color:#f3dcbf}.notice svg{flex:none}.notice strong{font-size:13px}.notice p{margin:3px 0 0;font-size:12px;color:#d5bfa9;line-height:1.5}
+.page{display:none}.page.active{display:block;animation:rise .2s ease-out}@keyframes rise{from{opacity:.5;transform:translateY(5px)}to{opacity:1;transform:none}}
+.eyebrow{color:#c99c77;letter-spacing:2px;font-size:10px;font-weight:800;text-transform:uppercase}.pagetitle{font:normal clamp(32px,4vw,46px)/1.09 Georgia,serif;letter-spacing:-1.3px;color:#fff1e3;margin:12px 0 9px}.lead{color:#baa69b;font-size:14px;line-height:1.65;max-width:650px;margin:0 0 26px}.heading-row{display:flex;justify-content:space-between;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:23px}
+.btn{border:1px solid #d1a579;border-radius:11px;background:linear-gradient(105deg,#f3d3a8,#d5a179);color:#211310;padding:11px 17px;min-height:43px;font-weight:800;font-size:12px}.btn:hover{filter:brightness(1.07)}.btn.secondary{background:#322320;border-color:#7c5a48;color:#f3d5b2}.btn.soft{border-color:#584139;background:#2e211d;color:#f0d5b8}.btn:disabled{opacity:.4;cursor:default}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 22px}.metric{padding:18px;background:linear-gradient(137deg,#2a1d1b,#201719);border:1px solid #61473d;border-radius:15px;min-height:136px}.metric small{font-size:11px;color:#d0baaf;display:block;line-height:1.5}.metric strong{font:normal 36px Georgia,serif;display:block;color:#fff0da;margin:13px 0 7px}.metric em{font-size:11px;color:#b8a59a;font-style:normal}.metric .positive{color:var(--green)}
+.columns{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}.card{background:linear-gradient(125deg,#261b1b,#1d1516);border:1px solid #61443b;border-radius:16px;padding:22px;margin-bottom:18px}.card h3{margin:0 0 7px;color:#f6dfc4;font:normal 23px Georgia,serif}.card .sub{font-size:12px;color:#b8a299;line-height:1.6;margin:0 0 18px}.cardtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.cardtop h3{margin:0}.textlink{font-size:12px;font-weight:700;color:#e9bb8c;border:0;background:none;padding:8px}
+.tablewrap{width:100%;overflow:auto}.dtable{width:100%;border-collapse:collapse;text-align:left;font-size:12px}.dtable th{font-weight:700;letter-spacing:.4px;color:#ab938a;padding:12px 10px;border-bottom:1px solid #664a3e;white-space:nowrap}.dtable td{padding:14px 10px;border-bottom:1px solid #4e3935;color:#f0dad0;vertical-align:middle}.dtable tr:last-child td{border-bottom:0}.dtable .muted{color:#b7a196}.chip{display:inline-block;border-radius:30px;padding:6px 9px;font-size:10px;white-space:nowrap;border:1px solid #836852;color:#e1be9b;background:#423127}.chip.ok{border-color:#4f8065;color:#b6dcc0;background:#203b2b}.chip.wait{border-color:#9e855e;color:#ecd2a4;background:#403226}
+.fakelabel{font-size:10px;color:#b5a096;letter-spacing:.5px;display:inline-block}.subheading{font-size:11px;color:#c8ab92;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin:22px 0 11px}.activity{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #543d34}.activity:last-child{border-bottom:0}.bubble{height:34px;width:34px;flex:none;display:grid;place-items:center;border:1px solid #775a45;background:#392b26;border-radius:10px;color:#e4b98f}.activity strong{font-size:12px;color:#f3dac4}.activity p{margin:4px 0 0;font-size:11px;color:#b7a396;line-height:1.5}
+.legend{display:flex;gap:15px;flex-wrap:wrap;color:#c0a99e;font-size:11px;margin:0 0 15px}.legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#6a9b7c;margin-right:6px}.legend span:nth-child(2):before{background:#a88a6a}.legend span:nth-child(3):before{background:#685459}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 18px}.toolbar label{color:#ccae9b;font-size:12px}.input,.select,.textarea{color:#f9e9d9;background:#171213;border:1px solid #77574b;border-radius:11px;padding:12px;min-height:44px;max-width:100%}.input::placeholder,.textarea::placeholder{color:#8b756f}.select{min-width:138px}.textarea{width:100%;min-height:105px;resize:vertical;line-height:1.6}.field{display:grid;gap:7px;margin-bottom:15px}.field label{font-size:12px;font-weight:700;color:#d7b8a5}.empty{font-size:13px;color:#bca69b;padding:19px}.boxnote{padding:12px;border:1px dashed #94785b;border-radius:12px;color:#d8bea6;font-size:12px;line-height:1.6;margin-top:14px}
+.statline{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #5b4139;font-size:13px}.statline:last-child{border:0}.statline span{color:#cfb6a6}.statline strong{color:#f4d6b7}.reward{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:15px 0;border-bottom:1px solid #543c34}.reward:last-child{border:0}.reward strong{font-size:13px}.reward p{font-size:11px;margin:4px 0;color:#b39f93}.points{color:#eac494;font-weight:800;white-space:nowrap}
+.mobile-nav{display:none}.toast{position:fixed;bottom:24px;right:24px;max-width:360px;border-radius:12px;background:#36261c;border:1px solid #c09a71;color:#ffe1bd;padding:15px 18px;font-size:13px;box-shadow:0 20px 55px #0008;z-index:40}.toast[hidden]{display:none}
+@media(max-width:1050px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}}@media(max-width:730px){.shell{display:block;padding-bottom:78px}.sidebar{height:auto;position:relative;border-right:0;border-bottom:1px solid #584139;padding:12px 15px}.logo{padding:0}.logo img{width:39px;height:39px}.logo strong{font-size:23px}.demo-pill,.side-label,.sidebar nav,.sidebar-bottom{display:none}.content{padding:23px 16px 45px}.top{margin-bottom:17px}.topmeta{font-size:10px}.notice{padding:11px}.notice p{font-size:11px}.pagetitle{font-size:35px}.metrics{gap:9px}.metric{padding:13px;min-height:108px}.metric strong{font-size:29px;margin:10px 0 5px}.metric small{font-size:10px}.card{padding:16px}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:space-around;background:#171012eb;border-top:1px solid #775b4d;padding:7px 2px calc(7px + env(safe-area-inset-bottom));backdrop-filter:blur(18px);z-index:25}.mobile-nav button{flex:1;min-width:0;border:0;background:none;color:#c1a99c;display:grid;justify-items:center;font-size:10px;gap:4px;padding:5px 0}.mobile-nav button span{font-size:18px}.mobile-nav button[aria-current=page]{color:#f4d0a5}.toast{left:14px;right:14px;bottom:85px}}
+@media(max-width:370px){.metric strong{font-size:25px}.pagetitle{font-size:30px}.avatar span{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+<div class="logo"><img src="./icon-192.png" alt=""><div><strong>La’Bella</strong><small>HAIR COMPANY</small></div></div>
+<div class="demo-pill">✧ TOUR INTERATIVO • SEM SENHA</div>
+<div class="side-label">PAINEL DO ESTABELECIMENTO</div>
+<nav aria-label="Seções da demonstração">
+<button type="button" class="navbtn" data-go="resumo" aria-current="page"><span class="icon">◫</span> Visão geral</button>
+<button type="button" class="navbtn" data-go="agenda"><span class="icon">▦</span> Agenda</button>
+<button type="button" class="navbtn" data-go="clientes"><span class="icon">♙</span> Clientes</button>
+<button type="button" class="navbtn" data-go="campanhas"><span class="icon">◉</span> Campanhas</button>
+<button type="button" class="navbtn" data-go="fidelidade"><span class="icon">✧</span> Fidelidade</button>
+<button type="button" class="navbtn" data-go="configuracoes"><span class="icon">⚙</span> Configurações</button>
+</nav>
+<div class="sidebar-bottom"><a href="./acesso.html?perfil=proprietario">🔐 Entrar na gestão real</a><a href="./index.html">↗ Ver aplicativo do cliente</a><small>Nenhuma ação nesta demonstração altera clientes, agenda, campanhas ou aparelhos verdadeiros.</small></div>
+</aside>
+<main class="content">
+<div class="top"><div class="topmeta">PAINEL DA <strong>PROPRIETÁRIA</strong> <span style="color:#867166"> / MODO DEMO</span></div><div class="avatar"><span>La’Bella Hair Company</span><i aria-hidden="true">L</i></div></div>
+<div class="notice" role="status"><span style="font-size:21px" aria-hidden="true">✧</span><div><strong>Você está explorando uma demonstração segura.</strong><p>Dados 100% fictícios • sem login • nenhuma notificação, reserva ou alteração real será enviada ou salva.</p></div></div>
+<section class="page active" id="resumo">
+<div class="heading-row"><div><div class="eyebrow">VISÃO GERAL / HOJE</div><h1 class="pagetitle">Seu salão sob controle.</h1><p class="lead">Visualize o movimento, acompanhe a agenda e descubra como sua gestão pode ficar mais simples.</p></div><button class="btn" type="button" data-go="agenda">Visualizar agenda →</button></div>
+<div class="metrics">
+<div class="metric"><small>Agendamentos de exemplo</small><strong id="m-appointments">6</strong><em>Dados fictícios</em></div>
+<div class="metric"><small>Clientes demonstrativos</small><strong id="m-clients">5</strong><em>Sem dados reais</em></div>
+<div class="metric"><small>Presenças concluídas</small><strong id="m-concluded">2</strong><em class="positive">Nesta simulação</em></div>
+<div class="metric"><small>Campanhas simuladas</small><strong id="m-campaigns">0</strong><em>Nada foi enviado</em></div>
+</div>
+<div class="columns"><div class="card"><div class="cardtop"><h3>Próximos horários</h3><button class="textlink" data-go="agenda">Ver todos →</button></div><p class="sub">Agenda fictícia para experimentar o funcionamento.</p><div class="tablewrap"><table class="dtable"><thead><tr><th>Horário</th><th>Cliente</th><th>Serviço</th><th>Status</th></tr></thead><tbody id="overview-bookings"></tbody></table></div></div>
+<div class="card"><h3>Seu dia em um olhar</h3><p class="sub">Um exemplo de como a proprietária acompanharia o salão.</p><div class="activity"><span class="bubble">▦</span><div><strong>Agenda organizada</strong><p>Horários, serviços e confirmações centralizados.</p></div></div><div class="activity"><span class="bubble">◉</span><div><strong>Campanhas personalizadas</strong><p>Prévia da comunicação antes de um eventual envio real.</p></div></div><div class="activity"><span class="bubble">✧</span><div><strong>Clube de fidelidade</strong><p>Pontos de exemplo para visualizar benefícios.</p></div></div><div class="boxnote">Use o menu para experimentar cada módulo. As alterações existem apenas nesta página e somem ao atualizar.</div></div></div>
+</section>
+<section class="page" id="agenda">
+<div class="eyebrow">ORGANIZAÇÃO DO SALÃO</div><h1 class="pagetitle">Agenda inteligente</h1><p class="lead">Organize atendimentos e simule alterações com tranquilidade. Este calendário contém apenas nomes fictícios.</p>
+<div class="heading-row"><div class="legend"><span>Concluído</span><span>Confirmado</span><span>Pendente</span></div><button id="add-appointment" class="btn" type="button">+ Adicionar horário fictício</button></div>
+<div class="card"><div class="cardtop"><h3>Atendimentos demonstrativos</h3><span class="fakelabel">DADOS DE EXEMPLO</span></div><div class="tablewrap"><table class="dtable"><thead><tr><th>Horário</th><th>Cliente</th><th>Procedimento</th><th>Status</th><th>Simular ação</th></tr></thead><tbody id="all-bookings"></tbody></table></div><p class="boxnote">Marcar como concluído muda apenas o exemplo visual. Nenhuma reserva é criada, confirmada ou cancelada no salão.</p></div>
+</section>
+<section class="page" id="clientes">
+<div class="eyebrow">RELACIONAMENTO</div><h1 class="pagetitle">Clientes e relacionamento</h1><p class="lead">Conheça a organização dos perfis, histórico demonstrativo de visitas e pontuação. Não usamos pessoas nem contatos reais.</p>
+<div class="toolbar"><label for="client-search">Localizar cliente fictício</label><input id="client-search" class="input" type="search" placeholder="Buscar nome de exemplo…"></div>
+<div class="card"><div class="cardtop"><h3>Carteira de demonstração</h3><span class="chip">5 perfis fictícios</span></div><div class="tablewrap"><table class="dtable"><thead><tr><th>Cliente</th><th>Última visita</th><th>Serviço favorito</th><th>Pontos</th></tr></thead><tbody id="all-clients"></tbody></table></div><p class="boxnote">Esta lista não consulta o Supabase e não revela telefone, endereço ou outros dados pessoais.</p></div>
+</section>
+<section class="page" id="campanhas">
+<div class="eyebrow">MARKETING E RELACIONAMENTO</div><h1 class="pagetitle">Campanhas e novidades</h1><p class="lead">Crie um exemplo de promoção e veja como seria a notificação, sem enviar mensagens para nenhum celular.</p>
+<div class="columns"><div class="card"><h3>Montar uma campanha</h3><p class="sub">Tudo nesta tela é uma simulação local.</p>
+<div class="field"><label for="campaign-type">Tipo de campanha</label><select class="select" id="campaign-type"><option value="promocao">Promoção da semana</option><option value="lembrete">Lembrete de atendimento</option><option value="novidade">Novidade do salão</option></select></div>
+<div class="field"><label for="campaign-message">Mensagem de demonstração</label><textarea class="textarea" id="campaign-message" maxlength="160">✨ Semana especial La’Bella! Que tal reservar seu momento de cuidado? Fale com nossa equipe.</textarea><span class="fakelabel" id="message-count">0/160 caracteres</span></div>
+<div class="field"><label for="campaign-audience">Público fictício</label><select class="select" id="campaign-audience"><option value="Todos os 5 perfis fictícios">Todos os 5 perfis fictícios</option><option value="Clientes que visitaram recentemente (fictícios)">Clientes recentes (fictícios)</option><option value="Clientes do clube (fictícios)">Clientes do clube (fictícios)</option></select></div>
+<button id="simulate-campaign" type="button" class="btn">Simular envio — sem disparar nada</button><div id="campaign-result" class="boxnote" role="status" aria-live="polite">Nenhuma campanha simulada nesta sessão.</div></div>
+<div class="card"><h3>Prévia da notificação</h3><p class="sub">Exemplo visual do que poderia aparecer no celular.</p>
+<div style="background:#3b312c;border:1px solid #8e7665;border-radius:18px;padding:19px;box-shadow:0 12px 30px #0004">
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><img src="./icon-192.png" width="36" height="36" style="border-radius:9px" alt=""><div><strong style="font-size:12px">La’Bella Hair Company</strong><div class="fakelabel">NOTIFICAÇÃO — EXEMPLO</div></div></div>
+<strong id="preview-title" style="font-size:15px;color:#fff1d9">Promoção da semana</strong><p id="preview-message" style="font-size:13px;line-height:1.6;color:#ecdcce;margin:9px 0 0">✨ Semana especial La’Bella! Que tal reservar seu momento de cuidado? Fale com nossa equipe.</p></div>
+<p class="boxnote"><strong>NENHUM ENVIO REAL:</strong> esta tela não possui token de administrador, chave de push, conexão de banco ou chamada de disparo.</p></div></div>
+</section>
+<section class="page" id="fidelidade">
+<div class="eyebrow">EXPERIÊNCIA DE CLIENTE</div><h1 class="pagetitle">Clube La’Bella</h1><p class="lead">Experimente como pontos e recompensas poderiam fidelizar clientes. Os pontos abaixo são inteiramente fictícios.</p>
+<div class="columns"><div class="card"><h3>Benefícios em destaque</h3><p class="sub">Modelo ilustrativo de clube para apresentação.</p>
+<div class="reward"><div><strong>Hidratação especial</strong><p>Recompensa ilustrativa</p></div><span class="points">150 pontos</span></div>
+<div class="reward"><div><strong>Finalização premium</strong><p>Recompensa ilustrativa</p></div><span class="points">220 pontos</span></div>
+<div class="reward"><div><strong>Presente de aniversário</strong><p>Campanha ilustrativa</p></div><span class="points">Benefício</span></div></div>
+<div class="card"><h3>Simular acúmulo</h3><p class="sub">Mostre como uma visita poderia aumentar a pontuação.</p>
+<div class="field"><label for="loyalty-client">Cliente de exemplo</label><select class="select" id="loyalty-client"><option value="0">Mariana (personagem fictícia)</option><option value="1">Beatriz (personagem fictícia)</option><option value="2">Camila (personagem fictícia)</option></select></div>
+<div class="statline"><span>Saldo demonstrativo atual</span><strong id="loyalty-balance">120 pontos</strong></div><button id="add-points" type="button" class="btn" style="margin-top:18px">+ Simular 20 pontos</button><p class="boxnote">Não existe integração com compras ou pagamentos reais. Atualizar a página restaura os números iniciais.</p></div></div>
+</section>
+<section class="page" id="configuracoes">
+<div class="eyebrow">SEU ESTABELECIMENTO</div><h1 class="pagetitle">Configurações de acesso</h1><p class="lead">Uma prévia de como a proprietária poderá personalizar seu ambiente, sem alterar nenhum sistema verdadeiro.</p>
+<div class="columns"><div class="card"><h3>Segurança e privacidade</h3><div class="statline"><span>Tour de apresentação</span><strong>Sem senha</strong></div><div class="statline"><span>Gestão de dados reais</span><strong>Login obrigatório</strong></div><div class="statline"><span>Acesso do cliente</span><strong>Conta pessoal opcional para conhecer serviços</strong></div>
+<div class="boxnote">A configuração de sessão persistente no aparelho poderá ser oferecida posteriormente. Não existe opção para tornar a gestão real pública e sem autenticação.</div></div>
+<div class="card"><h3>Conheça os dois ambientes</h3><p class="sub">O aplicativo de clientes e o painel administrativo real continuam separados desta simulação.</p>
+<a class="btn" style="display:block;text-align:center;margin-bottom:11px" href="./index.html">Ver aplicativo da cliente ↗</a>
+<a class="btn secondary" style="display:block;text-align:center;margin-bottom:11px" href="./acesso.html?perfil=proprietario">Entrar na gestão protegida ↗</a>
+<button id="restart-tour" type="button" class="btn soft" style="width:100%">Reiniciar demonstração</button></div></div>
+</section>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</main></div>
+<nav class="mobile-nav" aria-label="Navegação da demonstração no celular">
+<button type="button" data-go="resumo" aria-current="page"><span>◫</span>Início</button>
+<button type="button" data-go="agenda"><span>▦</span>Agenda</button>
+<button type="button" data-go="clientes"><span>♙</span>Clientes</button>
+<button type="button" data-go="campanhas"><span>◉</span>Campanhas</button>
+<button type="button" data-go="fidelidade"><span>✧</span>Clube</button>
+<button type="button" data-go="configuracoes"><span>⚙</span>Ajustes</button>
+</nav>
+<script>
+(function(){
+'use strict';
+// EXCLUSIVAMENTE DADOS FICTÍCIOS EM MEMÓRIA. Sem fetch, WebSocket, storage ou integrações externas.
+const el=id=>document.getElementById(id);
+const clients=[
+ {name:'Mariana',visit:'18/10 (exemplo)',service:'Hidratação',points:120},
+ {name:'Beatriz',visit:'19/10 (exemplo)',service:'Escova',points:90},
+ {name:'Camila',visit:'17/10 (exemplo)',service:'Coloração',points:210},
+ {name:'Renata',visit:'16/10 (exemplo)',service:'Corte',points:60},
+ {name:'Juliana',visit:'15/10 (exemplo)',service:'Tratamento capilar',points:180}
+];
+const bookings=[
+ {time:'09:00',client:'Mariana',service:'Hidratação',status:'Concluído'},
+ {time:'10:00',client:'Beatriz',service:'Escova',status:'Concluído'},
+ {time:'11:00',client:'Camila',service:'Coloração',status:'Confirmado'},
+ {time:'13:30',client:'Renata',service:'Corte',status:'Confirmado'},
+ {time:'15:00',client:'Juliana',service:'Tratamento',status:'Pendente'},
+ {time:'16:00',client:'Mariana',service:'Finalização',status:'Confirmado'}
+];
+let campaignCount=0;
+function show(name){
+ if(!el(name)||!el(name).classList.contains('page'))return;
+ document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===name));
+ document.querySelectorAll('[data-go]').forEach(b=>{
+  if(b.classList.contains('navbtn')||b.closest('.mobile-nav')){
+   if(b.dataset.go===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  }
+ });
+ window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('[data-go]').forEach(button=>button.addEventListener('click',()=>show(button.dataset.go)));
+function td(text,klass){
+ const c=document.createElement('td');c.textContent=text;if(klass)c.className=klass;return c;
+}
+function badge(status){
+ const span=document.createElement('span');span.className='chip '+(status==='Concluído'?'ok':status==='Pendente'?'wait':'');span.textContent=status;return span;
+}
+function renderBookings(){
+ for(const [target,limit,buttons] of [['overview-bookings',4,false],['all-bookings',bookings.length,true]]){
+  const root=el(target);root.replaceChildren();
+  bookings.slice(0,limit).forEach((b,i)=>{
+   const tr=document.createElement('tr');
+   tr.append(td(b.time),td(b.client),td(b.service));
+   const sc=document.createElement('td');sc.append(badge(b.status));tr.append(sc);
+   if(buttons){
+    const act=document.createElement('td'),button=document.createElement('button');
+    button.type='button';button.className='btn soft';button.textContent=b.status==='Concluído'?'Concluído ✓':'Concluir (demo)';
+    button.disabled=b.status==='Concluído';
+    button.onclick=()=>{b.status='Concluído';renderBookings();notify('Atendimento concluído apenas na demonstração.')};
+    act.append(button);tr.append(act);
+   }
+   root.append(tr);
+  });
+ }
+ el('m-appointments').textContent=bookings.length;
+ el('m-concluded').textContent=bookings.filter(b=>b.status==='Concluído').length;
+}
+function renderClients(){
+ const root=el('all-clients');root.replaceChildren();
+ const term=el('client-search').value.trim().toLocaleLowerCase('pt-BR');
+ const list=clients.filter(c=>c.name.toLocaleLowerCase('pt-BR').includes(term));
+ if(!list.length){const tr=document.createElement('tr'),c=document.createElement('td');c.colSpan=4;c.textContent='Nenhum personagem corresponde à pesquisa.';tr.append(c);root.append(tr)}
+ else list.forEach(c=>{
+  const tr=document.createElement('tr');
+  tr.append(td(c.name+' (fictícia)'),td(c.visit),td(c.service),td(String(c.points)+' pts'));root.append(tr);
+ });
+ el('m-clients').textContent=clients.length;
+}
+let toastReset;
+function notify(message){
+ const target=el('toast');target.textContent='✧ '+message;target.hidden=false;
+ clearTimeout(toastReset);toastReset=setTimeout(()=>target.hidden=true,3700);
+}
+el('client-search').addEventListener('input',renderClients);
+el('add-appointment').onclick=()=>{
+ const slots=['17:00','17:30','18:00'];
+ const t=slots[bookings.length-6]||'18:30';
+ if(bookings.length>=9){notify('A agenda de exemplo já está completa.');return}
+ bookings.push({time:t,client:'Beatriz',service:'Escova demonstrativa',status:'Pendente'});
+ renderBookings();notify('Horário fictício adicionado somente a esta tela.');
+};
+const campType=el('campaign-type'),campMsg=el('campaign-message');
+function campaignPreview(){
+ const titles={promocao:'Promoção da semana',lembrete:'Lembrete de atendimento',novidade:'Novidade do salão'};
+ el('preview-title').textContent=titles[campType.value];
+ el('preview-message').textContent=campMsg.value.trim()||'Sua mensagem demonstrativa aparece aqui.';
+ el('message-count').textContent=campMsg.value.length+'/160 caracteres';
+}
+campType.onchange=()=>{const templates={promocao:'✨ Semana especial La’Bella! Que tal reservar seu momento de cuidado? Fale com nossa equipe.',lembrete:'Olá! Este é um exemplo de lembrete de horário para amanhã às 14h.',novidade:'Tem novidade no La’Bella! Conheça os cuidados preparados para você.'};campMsg.value=templates[campType.value];campaignPreview()};
+campMsg.addEventListener('input',campaignPreview);
+el('simulate-campaign').onclick=()=>{
+ const message=campMsg.value.trim();
+ if(message.length<8){el('campaign-result').textContent='Digite pelo menos 8 caracteres para simular.';return}
+ campaignCount+=1;el('m-campaigns').textContent=campaignCount;
+ el('campaign-result').textContent='✓ Simulação concluída: prévia exibida para "'+el('campaign-audience').value+'". 0 mensagens enviadas; 0 aparelhos contatados; nenhum registro salvo.';
+ notify('Campanha simulada. Nenhuma notificação foi enviada.');
+};
+function balance(){el('loyalty-balance').textContent=clients[Number(el('loyalty-client').value)].points+' pontos'}
+el('loyalty-client').onchange=balance;
+el('add-points').onclick=()=>{
+ const c=clients[Number(el('loyalty-client').value)];
+ c.points+=20;balance();renderClients();notify('20 pontos fictícios adicionados à simulação.');
+};
+el('restart-tour').onclick=location.reload.bind(location);
+renderBookings();renderClients();campaignPreview();balance();
+const requested=(location.hash||'').slice(1);
+if(['resumo','agenda','clientes','campanhas','fidelidade','configuracoes'].includes(requested))show(requested);
+})();
+</script>
+</body></html>
