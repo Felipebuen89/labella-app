@@ -1,0 +1,41 @@
+<!doctype html><html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#160f10"><link rel="icon" href="./icon-192.png"><link rel="manifest" href="./manifest.webmanifest">
+<title>La’Bella | Minha conta</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#0f0c0c;color:#f5e8dc}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 85% 0,#422921,transparent 55%),#130f10;padding:22px 17px 48px}main{max-width:660px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0 25px}.logo{font:italic 29px Georgia,serif;color:#f2d6b3;text-decoration:none}.signout{padding:10px 13px;border:1px solid #79594b;background:#2b1d19;border-radius:11px;color:#f0d3b1;font-weight:700}h1{font:normal 38px Georgia,serif;margin:7px 0 12px}.eyebrow{font-size:11px;letter-spacing:2px;color:#cba882;font-weight:700}.muted{color:#c5afa1;font-size:14px;line-height:1.6}.card{padding:21px;border:1px solid #765142;background:linear-gradient(135deg,#271b19,#191213);border-radius:19px;margin:16px 0}.card h2{font:normal 25px Georgia,serif;margin:0 0 9px;color:#f5dec3}.card p{margin:7px 0;color:#ccb6a7;line-height:1.6;font-size:13px}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.status{border-left:3px solid #d6aa7a;background:#2a1a18;padding:12px;font-size:13px;line-height:1.5;border-radius:7px}.button{display:block;width:100%;text-align:center;border-radius:12px;padding:14px;background:linear-gradient(95deg,#ebca9f,#cda078);color:#27160e;text-decoration:none;font-weight:800;margin:12px 0}.alt{background:#30241f;color:#ead1b3;border:1px solid #80634d}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}@media(max-width:460px){.grid{grid-template-columns:1fr}h1{font-size:34px}}
+</style></head>
+<body><main>
+<header><a class="logo" href="./index.html">La’Bella</a><button id="logout" class="signout" hidden>Sair</button></header>
+<div class="eyebrow">SEU ESPAÇO PERSONALIZADO</div>
+<h1 id="welcome">Minha conta</h1>
+<p class="muted" id="intro">Estamos confirmando seu acesso com segurança…</p>
+<div id="session-state" class="status" role="status" aria-live="polite">Conectando ao Supabase Auth…</div>
+<div id="details" hidden>
+<section class="card"><div class="eyebrow">MEUS DADOS</div><h2 id="name">Cliente La’Bella</h2><p id="email"></p><p>Seu cadastro está vinculado ao login seguro do Supabase.</p></section>
+<div class="grid">
+ <section class="card"><h2>Meus horários</h2><p>O agendamento online ainda está em demonstração. Nenhuma reserva real fica registrada nesta conta.</p><a class="button" href="./index.html#booking">Ver agenda</a></section>
+ <section class="card"><h2>Novidades</h2><p>Você pode autorizar promoções e notificações neste aparelho, sempre com seu consentimento.</p><a class="button alt" href="./notificacoes.html">Ativar notificações</a></section>
+ <section class="card"><h2>Clube de benefícios</h2><p>Programa em desenvolvimento. Pontos e recompensas não estão sendo contabilizados.</p><a class="button alt" href="./index.html#club">Conhecer clube</a></section>
+ <section class="card"><h2>Serviços</h2><p>Conheça os cuidados e tratamentos apresentados no aplicativo.</p><a class="button alt" href="./index.html#services">Explorar serviços</a></section>
+</div>
+</div>
+</main><script src="./auth-config.js"></script><script src="./auth-core.js"></script>
+<script>
+(async function(){
+const el=id=>document.getElementById(id);
+try{
+ const account=await window.LaBellaAuth.currentAccount();
+ if(!account){location.replace('./acesso.html?perfil=cliente');return}
+ const name=account.profile.full_name||account.user.user_metadata?.full_name||'Cliente La’Bella';
+ el('welcome').textContent='Olá, '+name.split(/\s+/)[0]+'!';
+ el('intro').textContent='Seu espaço no La’Bella, com tudo que importa em um só lugar.';
+ el('name').textContent=name;
+ el('email').textContent=account.user.email||'Conta conectada';
+ el('session-state').textContent='✓ Acesso confirmado com segurança.';
+ el('details').hidden=false;
+ el('logout').hidden=false;
+ el('logout').onclick=async()=>{await window.LaBellaAuth.signOut();location.replace('./acesso.html?perfil=cliente')};
+}catch(err){el('session-state').textContent='Não foi possível verificar sua conta: '+err.message+'. Volte à tela de entrada.'}
+})();
+</script></body></html>
