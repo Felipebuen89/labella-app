@@ -32,10 +32,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="enable" type="button">1. Ativar notificações</button>
 <button id="appointment" class="secondary" type="button" disabled>2. Testar lembrete de agendamento</button>
 <button id="promo" class="secondary" type="button" disabled>3. Testar promoção da semana</button>
+<hr style="border:0;border-top:1px solid #6b4d38;margin:21px 0">
+<p><strong>TESTE COM O APP FECHADO</strong></p>
+<button id="remote" type="button" disabled>🔔 Enviar notificação em 1 minuto</button>
+<p class="small">Depois que o teste for agendado, feche completamente o La’Bella ou bloqueie a tela. Você não precisa ficar com o aplicativo aberto.</p>
 <p id="status" role="status" aria-live="polite">Verificando compatibilidade…</p>
 <p class="small">No iPhone, abra esta tela pelo ícone La’Bella da tela inicial, não numa aba do Safari. Ao permitir, o iOS decide se o alerta aparece como banner, na tela bloqueada ou na Central de Notificações.</p>
 </div>
-<p class="note small"><strong>Importante:</strong> este é um disparo de teste feito pelo próprio aplicativo quando você toca no botão. Não é uma mensagem remota. Para receber automaticamente com o aplicativo fechado, precisaremos configurar a inscrição Web Push e um serviço de envio. Nenhum dado é transmitido neste teste.</p>
+<p class="note small"><strong>Privacidade:</strong> ao tocar em “Enviar notificação em 1 minuto”, o iPhone fornece uma assinatura de notificações que será enviada temporariamente ao servidor gratuito de teste da Move Digital. Não enviamos dados pessoais, nomes nem agendamentos. A assinatura é mantida apenas em memória durante o teste, sem banco de dados. Este teste pode falhar se o servidor gratuito estiver indisponível e ainda não substitui um sistema de notificações comercial.</p>
 </main>
 <script>
 (() => {
@@ -43,11 +47,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
   const status = msg => {el('status').textContent = msg};
   const supported = window.isSecureContext && 'serviceWorker' in navigator && 'Notification' in window;
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const pushServer = 'https://labella-webpush-teste.onrender.com';
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  }
   let regPromise = null;
   if (!supported) {status('Este navegador não disponibilizou notificações. No iPhone, abra o La’Bella instalado na tela inicial.');el('enable').disabled = true;return;}
   regPromise = navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(() => navigator.serviceWorker.ready);
   regPromise.then(() => { status(installed ? 'Pronto para pedir autorização. Toque em “Ativar notificações”.' : 'Abra esta página de dentro do La’Bella instalado na tela inicial. O Safari comum do iPhone não permite Web Push.');}).catch(err=>status('Falha ao registrar o serviço de notificações: '+err.message));
-  function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;}
+  function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;el('remote').disabled=!allowed;}
   toggleButtons();
   el('enable').addEventListener('click',async ()=>{
     if (!installed){status('Abra primeiro o La’Bella pelo ícone da tela inicial, depois toque no teste dentro dele.');return;}
@@ -75,6 +86,39 @@ button:disabled{opacity:.45;cursor:not-allowed}
       status('O iOS aceitou o pedido de notificação. Confira o banner ou a Central de Notificações. Se ela não aparecer, confira Ajustes → Notificações → La’Bella. Este teste não garante envio remoto em segundo plano.');
     }catch(err){status('O iOS não exibiu o teste local: '+err.message+'\nPara entregar uma notificação remota com o app fechado precisamos completar a configuração Web Push.');}
   }
+  el('remote').addEventListener('click', async () => {
+    if (!installed) { status('Abra o La’Bella pelo ícone instalado na Tela de Início do iPhone.'); return; }
+    if (Notification.permission !== 'granted') { status('Autorize as notificações antes de testar.'); return; }
+    const button = el('remote'); button.disabled = true;
+    status('Conectando ao servidor de teste. A primeira conexão pode levar até um minuto no serviço gratuito…');
+    try {
+      const reg = await regPromise;
+      if (!reg.pushManager) throw new Error('O navegador não suporta inscrição Web Push nesta tela');
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 90000);
+      let cfg;
+      try {
+        const response = await fetch(pushServer + '/public-config',{signal:ctrl.signal,cache:'no-store'});
+        if (!response.ok) throw new Error('Servidor temporariamente indisponível (HTTP ' + response.status + ')');
+        cfg = await response.json();
+      } finally { clearTimeout(timeout); }
+      let subscription = await reg.pushManager.getSubscription();
+      if (!subscription) subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(cfg.vapidPublicKey)
+      });
+      status('Inscrição criada. Agendando notificação remota…');
+      const resp = await fetch(pushServer + '/test-push',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({subscription:subscription.toJSON()})
+      });
+      let result = {};
+      try { result=await resp.json(); } catch (_) {}
+      if (!resp.ok) throw new Error(result.error || 'Erro ao agendar (HTTP ' + resp.status + ')');
+      status('✅ Pedido aceito pelo servidor!\n\nAgora feche o La’Bella ou bloqueie o iPhone. A notificação deverá chegar em cerca de ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nA entrega depende da rede, das permissões do iOS e da disponibilidade do serviço gratuito.');
+    } catch(err){
+      status('Não foi possível agendar o teste remoto: ' + (err?.name==='AbortError' ? 'servidor demorou para responder' : err.message) + '\n\nConfira sua conexão e a permissão de notificações; você pode tentar novamente.');
+    } finally { toggleButtons(); }
+  });
   el('appointment').addEventListener('click',()=>test('appointment'));
   el('promo').addEventListener('click',()=>test('promo'));
 })();
