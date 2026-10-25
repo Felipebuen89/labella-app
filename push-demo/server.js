@@ -7,6 +7,7 @@
  */
 const http = require('http');
 const webpush = require('web-push');
+const db = require('./database');
 const { URL } = require('url');
 const { randomUUID, randomBytes, createHash, timingSafeEqual } = require('crypto');
 
@@ -144,6 +145,10 @@ const app = http.createServer(async(req,res)=>{
       return send(res,200,{ok:true},origin);
     }
     if (req.method==='GET' && req.url==='/admin/devices') {
+      if (db.enabled) {
+        try {const devices=await db.devices(); return send(res,200,{ok:true,devices,maxDevices:MAX_DEMO_DEVICES,persistent:true},origin);}
+        catch(e){return adminError(res,503,e.message,origin);}
+      }
       const devices=[...registeredDevices.entries()].map(([id,x])=>({id,label:x.label,createdAt:x.createdAt}));
       return send(res,200,{ok:true,devices,maxDevices:MAX_DEMO_DEVICES,persistent:false},origin);
     }
@@ -152,6 +157,10 @@ const app = http.createServer(async(req,res)=>{
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       const label = typeof data.label==='string'?data.label.trim().slice(0,45):'';
       if (label.length<2||label.length>45 || !isSubValid(data.subscription)) return adminError(res,400,'Nome ou assinatura de aparelho inválido',origin);
+      if (db.enabled) {
+        try{const registered=await db.register(label,data.subscription);return send(res,201,{ok:true,...registered},origin);}
+        catch(e){return adminError(res,503,e.message,origin);}
+      }
       const id=hash(data.subscription.endpoint).slice(0,24);
       if (!registeredDevices.has(id) && registeredDevices.size>=MAX_DEMO_DEVICES) return adminError(res,409,'Limite de aparelhos demonstrativos atingido',origin);
       registeredDevices.set(id,{label,subscription:data.subscription,createdAt:new Date().toISOString()});
@@ -161,12 +170,23 @@ const app = http.createServer(async(req,res)=>{
       let data;
       try {data=await requestJSON(req)}catch(err){return adminError(res,400,err.message,origin)}
       if (!data || typeof data.id!=='string') return adminError(res,400,'Identificador inválido',origin);
+      if (db.enabled) {
+        try{const removed=await db.remove(data.id);return send(res,200,{ok:true,removed},origin);}
+        catch(e){return adminError(res,503,e.message,origin);}
+      }
       return send(res,200,{ok:true,removed:registeredDevices.delete(data.id)},origin);
     }
     if (req.method==='GET' && req.url.startsWith('/admin/send-status?')) {
       let id;
       try { id = new URL(req.url,'http://localhost').searchParams.get('id') } catch (_) {}
       if (!id || !/^[0-9a-f-]{36}$/.test(id)) return adminError(res,400,'Identificador inválido',origin);
+      if (db.enabled) {
+        try {
+          const job=await db.campaign(id);
+          if (!job) return adminError(res,404,'Campanha não encontrada',origin);
+          return send(res,200,{ok:true,...job},origin);
+        }catch(e){return adminError(res,503,e.message,origin);}
+      }
       const job=campaignJobs.get(id);
       if (!job) return adminError(res,404,'O envio não existe mais. O servidor gratuito pode ter reiniciado.',origin);
       return send(res,200,{ok:true,status:job.status,details:job.details,recipients:job.recipients,updatedAt:job.updatedAt},origin);
@@ -179,6 +199,21 @@ const app = http.createServer(async(req,res)=>{
       if (!notice) return adminError(res,400,'Selecione o tipo e digite de 8 a 160 caracteres',origin);
       if (!Array.isArray(data.deviceIds) || !data.deviceIds.length || data.deviceIds.length>MAX_DEMO_DEVICES) return adminError(res,400,'Escolha os aparelhos de teste',origin);
       const ids=[...new Set(data.deviceIds)];
+      if (db.enabled) {
+        if(ids.length!==data.deviceIds.length||ids.some(id=>typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)))
+          return adminError(res,400,'Lista de aparelhos inválida',origin);
+        const recent=adminSendTimes.filter(t=>now-t<60*60*1000);
+        adminSendTimes.length=0;adminSendTimes.push(...recent);
+        if(adminSendTimes.length>=8) return adminError(res,429,'Limite de oito campanhas por hora nesta demonstração',origin);
+        try {
+          const job=await db.schedule(data.kind,body,ids,CAMPAIGN_DELAY_MS);
+          adminSendTimes.push(now);
+          // Envio e status ficam persistidos no Supabase. O worker processa os vencidos ao acordar.
+          setTimeout(()=>db.processDue(webpush),CAMPAIGN_DELAY_MS+1500).unref();
+          console.log('Supabase: campanha persistida:',job.id,'destinatários:',job.recipients);
+          return send(res,202,{ok:true,scheduled:true,jobId:job.id,delaySeconds:CAMPAIGN_DELAY_MS/1000,recipients:job.recipients,persistent:true},origin);
+        }catch(e){return adminError(res,503,e.message,origin)}
+      }
       if (ids.length!==data.deviceIds.length || ids.some(id=>typeof id!=='string'||!registeredDevices.has(id)))
         return adminError(res,400,'Existe aparelho não autorizado na seleção',origin);
       const recent=adminSendTimes.filter(t=>now-t<60*60*1000);
@@ -218,7 +253,7 @@ const app = http.createServer(async(req,res)=>{
     return adminError(res,404,'Rota administrativa não encontrada',origin);
   }
 
-  if (req.method === 'GET' && req.url === '/health') return send(res,200,{ok:true,kind:'web-push-demo',delaySeconds:DELAY_MS/1000},origin);
+  if (req.method === 'GET' && req.url === '/health') return send(res,200,{ok:true,kind:'web-push-demo',database:db.enabled?'supabase':'memoria',delaySeconds:DELAY_MS/1000},origin);
   if (req.method === 'GET' && req.url === '/public-config') {
     if (origin!==ORIGIN) return send(res,403,{error:'Origem não autorizada'},origin);
     return send(res,200,{vapidPublicKey:VAPID_PUBLIC,delaySeconds:DELAY_MS/1000},origin);
@@ -287,4 +322,10 @@ const app = http.createServer(async(req,res)=>{
   }
   return send(res,404,{error:'Rota não encontrada'},origin);
 });
-app.listen(PORT,'0.0.0.0',()=>console.log('LaBella Web Push demo ouvindo porta',PORT));
+app.listen(PORT,'0.0.0.0',()=>{
+ console.log('LaBella Web Push demo ouvindo porta',PORT,'Persistencia:',db.enabled?'Supabase':'memoria');
+ if(db.enabled){
+   setTimeout(()=>db.processDue(webpush),2000).unref();
+   setInterval(()=>db.processDue(webpush),15000).unref();
+ }
+});
