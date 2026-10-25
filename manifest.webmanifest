@@ -1,7 +1,7 @@
 {
-  "name": "La’Bella Hair Company — Demonstração",
+  "name": "La’Bella Hair Company",
   "short_name": "La’Bella",
-  "description": "Protótipo demonstrativo de aplicativo para salão de beleza",
+  "description": "Aplicativo do salão La’Bella: serviços, novidades e notificações com autorização",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -26,5 +26,8 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ]
+  ],
+  "id": "./",
+  "lang": "pt-BR",
+  "prefer_related_applications": false
 }
