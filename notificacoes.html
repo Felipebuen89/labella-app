@@ -35,8 +35,20 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <a class="back" href="./">← Voltar ao aplicativo</a>
 <div style="text-align:right;margin-top:-42px;margin-bottom:26px"><a href="./painel.html?v=2" style="font-size:12px;text-decoration:underline;color:#dcb382">Painel administrativo (teste)</a></div>
 <div class="pill">TESTE GRATUITO • NÃO ENVIA MENSAGENS A CLIENTES</div>
-<h1>Notificações no seu iPhone</h1>
-<p>Vamos verificar se o La’Bella consegue mostrar uma notificação <strong>do sistema do celular</strong>, e não uma mensagem desenhada dentro da página.</p>
+<h1>Notificações no seu celular</h1>
+<p>Receba novidades e promoções do La’Bella no Android e no iPhone, com autorização.</p>
+<section class="panel" aria-label="Cadastro voluntário de notificações">
+  <h2 style="font:normal 24px Georgia,serif;color:#f9e2c6">Receber novidades do La’Bella</h2>
+  <p>Cadastre seu celular para receber campanhas de demonstração, sem precisar da senha administrativa.</p>
+  <label style="display:flex;align-items:flex-start;gap:10px;color:#f4d9ba;font-size:14px;line-height:1.5;margin:16px 0">
+    <input type="checkbox" id="consent" style="margin-top:5px;width:19px;height:19px;flex-shrink:0;accent-color:#d9ab7a">
+    <span>Autorizo receber notificações e promoções de teste do La’Bella neste aparelho. Posso cancelar aqui a qualquer momento.</span>
+  </label>
+  <button id="subscribe-device" type="button">🔔 Permitir e cadastrar meu celular</button>
+  <button id="unsubscribe-device" type="button" class="secondary">Desativar notificações neste aparelho</button>
+  <p id="subscribe-status" role="status" aria-live="polite" style="white-space:pre-wrap">Aguardando sua autorização.</p>
+  <p class="small">Android: use o Google Chrome atualizado. iPhone: abra pelo ícone La’Bella na Tela de Início.</p>
+</section>
 <div class="panel">
 <button id="enable" type="button">1. Ativar notificações</button>
 <button id="appointment" class="secondary" type="button" disabled>2. Testar lembrete de agendamento</button>
@@ -49,14 +61,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section class="composer" aria-labelledby="composer-title">
 <div class="pill">NOVO • PAINEL DEMONSTRATIVO</div>
 <h2 id="composer-title">Escreva sua notificação</h2>
-<p>Personalize o aviso e envie <strong>somente para este iPhone</strong>. A mensagem será programada para chegar com o aplicativo fechado.</p>
+<p>Personalize o aviso e envie <strong>somente para este aparelho</strong>. A mensagem será programada para chegar com o aplicativo fechado.</p>
 <label for="push-kind">Tipo de notificação</label>
 <select id="push-kind">
 <option value="lembrete">📅 Lembrete de agendamento</option>
 <option value="promocao">✨ Promoção da semana</option>
 </select>
 <label for="push-message">Mensagem que vai aparecer no celular</label>
-<p class="small">Escreva apenas a mensagem. O nome e o ícone do La’Bella já aparecem automaticamente no iPhone.</p>
+<p class="small">Escreva apenas a mensagem. O nome e o ícone do La’Bella já aparecem automaticamente no celular.</p>
 <textarea id="push-message" rows="4" maxlength="160" placeholder="Escreva aqui a notificação">Olá! Sua visita está confirmada para amanhã às 14h. Esperamos você! 💛</textarea>
 <div id="push-counter" class="counter">0/160 caracteres</div>
 <div class="preview" aria-label="Prévia da notificação">
@@ -68,9 +80,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </section>
 <div class="panel">
 <p id="status" role="status" aria-live="polite">Verificando compatibilidade…</p>
-<p class="small">No iPhone, abra esta tela pelo ícone La’Bella da tela inicial, não numa aba do Safari. Ao permitir, o iOS decide se o alerta aparece como banner, na tela bloqueada ou na Central de Notificações.</p>
+<p class="small">No Android, abra pelo Chrome. No iPhone, abra pelo ícone La’Bella instalado na Tela de Início. Se não aparecer a permissão, confira as notificações do Chrome ou do La’Bella nas Configurações do celular.</p>
 </div>
-<p class="note small"><strong>Privacidade:</strong> ao tocar em “Enviar notificação em 1 minuto”, o iPhone fornece uma assinatura de notificações que será enviada temporariamente ao servidor gratuito de teste da Move Digital. Não enviamos dados pessoais, nomes nem agendamentos. A assinatura é mantida apenas em memória durante o teste, sem banco de dados. Este teste pode falhar se o servidor gratuito estiver indisponível e ainda não substitui um sistema de notificações comercial.</p>
+<p class="note small"><strong>Privacidade:</strong> ao autorizar o cadastro, o navegador compartilha uma assinatura técnica Web Push que é salva no Supabase. Ela permite enviar avisos ao aparelho, e você pode cancelar o consentimento aqui. Não solicitamos nome, telefone ou agendamento. Este teste pode falhar se o servidor gratuito estiver indisponível e ainda não substitui um sistema de notificações comercial.</p>
 </main>
 <script>
 (() => {
@@ -78,6 +90,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
   const status = msg => {el('status').textContent = msg};
   const supported = window.isSecureContext && 'serviceWorker' in navigator && 'Notification' in window;
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isAndroid=/Android/.test(navigator.userAgent);
+  const pushAllowedHere=!isIOS||installed;
+  const subscribeStatus=message=>{el('subscribe-status').textContent=message;};
   const pushServer = 'https://labella-webpush-teste.onrender.com';
   function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -86,19 +102,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
     return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
   }
   let regPromise = null;
-  if (!supported) {status('Este navegador não disponibilizou notificações. No iPhone, abra o La’Bella instalado na tela inicial.');el('enable').disabled = true;return;}
+  if (!supported) {
+    status('Navegador sem notificações Web Push. No Android, abra o endereço pelo Google Chrome atualizado; no iPhone, instale na Tela de Início.');
+    subscribeStatus('Este navegador não oferece Web Push. Experimente o Google Chrome atualizado.');
+    el('enable').disabled=true;el('subscribe-device').disabled=true;el('unsubscribe-device').disabled=true;return;
+  }
   regPromise = navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(() => navigator.serviceWorker.ready);
-  regPromise.then(() => { status(installed ? 'Pronto para pedir autorização. Toque em “Ativar notificações”.' : 'Abra esta página de dentro do La’Bella instalado na tela inicial. O Safari comum do iPhone não permite Web Push.');}).catch(err=>status('Falha ao registrar o serviço de notificações: '+err.message));
+  regPromise.then(() => {
+    status(pushAllowedHere?'Pronto para pedir autorização. Toque em “Ativar notificações”.':'No iPhone, abra pelo ícone do La’Bella instalado na Tela de Início.');
+    if(Notification.permission==='granted')subscribeStatus('Notificações permitidas. Marque o consentimento e cadastre o aparelho para receber campanhas.');
+    else if(Notification.permission==='denied')subscribeStatus('Notificações bloqueadas no navegador. Verifique as permissões do site e as notificações do Chrome.');
+  }).catch(err=>{status('Falha ao registrar Web Push: '+err.message);subscribeStatus('Falha de inicialização: '+err.message);});
   function toggleButtons(){const allowed=Notification.permission==='granted';el('appointment').disabled=!allowed;el('promo').disabled=!allowed;el('remote').disabled=!allowed;el('push-send').disabled=!allowed;}
   toggleButtons();
   el('enable').addEventListener('click',async ()=>{
-    if (!installed){status('Abra primeiro o La’Bella pelo ícone da tela inicial, depois toque no teste dentro dele.');return;}
+    if (!pushAllowedHere){status('No iPhone, abra o La’Bella pelo ícone instalado na Tela de Início. No Android, o Chrome permite ativar diretamente.');return;}
     try {
       // A solicitação é iniciada no gesto do usuário (restrição do iOS).
       const permission = await Notification.requestPermission();
       toggleButtons();
       if(permission==='granted') status('Permissão autorizada! Agora toque em um dos testes abaixo.');
-      else if(permission==='denied') status('Notificações bloqueadas. Verifique Ajustes → Notificações → La’Bella para alterar a permissão.');
+      else if(permission==='denied') status('Notificações bloqueadas. Confira as permissões do navegador ou La’Bella nas Configurações do celular.');
       else status('Permissão ainda não concedida.');
     } catch(err){status('Não foi possível solicitar a permissão: '+err.message);}
   });
@@ -106,7 +130,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(Notification.permission!=='granted'){status('Primeiro, autorize as notificações.');return;}
     try{
       const reg = await regPromise;
-      if(typeof reg.showNotification!=='function') throw new Error('O iPhone não expôs o recurso showNotification');
+      if(typeof reg.showNotification!=='function') throw new Error('O navegador não expôs o recurso showNotification');
       const isPromo=type==='promo';
       await reg.showNotification('La’Bella • DEMONSTRAÇÃO', {
         body:isPromo?'✨ Promoção da semana: hidratação + escova com condição especial.':'📅 Lembrete de teste: sua visita está marcada para amanhã às 14h.',
@@ -114,11 +138,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
         tag:isPromo?'labella-promocao-teste':'labella-agenda-teste',
         data:{url:'./'}
       });
-      status('O iOS aceitou o pedido de notificação. Confira o banner ou a Central de Notificações. Se ela não aparecer, confira Ajustes → Notificações → La’Bella. Este teste não garante envio remoto em segundo plano.');
-    }catch(err){status('O iOS não exibiu o teste local: '+err.message+'\nPara entregar uma notificação remota com o app fechado precisamos completar a configuração Web Push.');}
+      status('O navegador aceitou o pedido de notificação. Confira a barra de notificações. Este teste local não garante envio remoto.');
+    }catch(err){status('O celular não exibiu o teste local: '+err.message+'\nPara entregar uma notificação remota com o app fechado precisamos completar a configuração Web Push.');}
   }
   el('remote').addEventListener('click', async () => {
-    if (!installed) { status('Abra o La’Bella pelo ícone instalado na Tela de Início do iPhone.'); return; }
+    if (!pushAllowedHere) { status('No iPhone, abra pelo ícone do La’Bella instalado.'); return; }
     if (Notification.permission !== 'granted') { status('Autorize as notificações antes de testar.'); return; }
     const button = el('remote'); button.disabled = true;
     status('Conectando ao servidor de teste. A primeira conexão pode levar até um minuto no serviço gratuito…');
@@ -145,7 +169,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       let result = {};
       try { result=await resp.json(); } catch (_) {}
       if (!resp.ok) throw new Error(result.error || 'Erro ao agendar (HTTP ' + resp.status + ')');
-      status('✅ Pedido aceito pelo servidor!\n\nAgora feche o La’Bella ou bloqueie o iPhone. A notificação deverá chegar em cerca de ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nA entrega depende da rede, das permissões do iOS e da disponibilidade do serviço gratuito.');
+      status('✅ Pedido aceito pelo servidor!\n\nAgora feche o La’Bella ou bloqueie o celular. A notificação deverá chegar em cerca de ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nA entrega depende da rede, das permissões do navegador e da disponibilidade do serviço gratuito.');
     } catch(err){
       status('Não foi possível agendar o teste remoto: ' + (err?.name==='AbortError' ? 'servidor demorou para responder' : err.message) + '\n\nConfira sua conexão e a permissão de notificações; você pode tentar novamente.');
     } finally { toggleButtons(); }
@@ -198,8 +222,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   updatePreview();
 
   el('push-send').addEventListener('click', async () => {
-    if (!installed) { status('Este teste funciona abrindo o La’Bella pelo ícone da Tela de Início.'); return; }
-    if (Notification.permission !== 'granted') { status('Primeiro, autorize as notificações no iPhone.'); return; }
+    if (!pushAllowedHere) { status('No iPhone, abra pelo ícone do La’Bella instalado.'); return; }
+    if (Notification.permission !== 'granted') { status('Primeiro, autorize as notificações neste aparelho.'); return; }
     const draft = readDraft();
     const message = draft.body;
     if (message.length < 8 || message.length > 160) { status('Escreva uma mensagem entre 8 e 160 caracteres, sem repetir o nome do salão.'); return; }
@@ -231,13 +255,65 @@ button:disabled{opacity:.45;cursor:not-allowed}
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Falha no envio');
-      status('✅ Mensagem personalizada agendada!\n\nFeche o La’Bella ou bloqueie o iPhone. A notificação deve chegar em aproximadamente ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nO horário é aproximado e depende da rede e do serviço gratuito.');
+      status('✅ Mensagem personalizada agendada!\n\nFeche o La’Bella ou bloqueie o celular. A notificação deve chegar em aproximadamente ' + Math.round(result.delaySeconds || 65) + ' segundos.\n\nO horário é aproximado e depende da rede e do serviço gratuito.');
     } catch (error) {
       status('Não foi possível agendar a notificação: ' + (error?.name==='AbortError' ? 'servidor demorou a responder' : error.message));
     } finally {
       toggleButtons();
     }
   });
+
+  async function currentSubscription(){
+    const reg=await regPromise;
+    if(!reg.pushManager)throw Error('Web Push indisponível. No Android, use Chrome atualizado.');
+    let sub=await reg.pushManager.getSubscription();
+    if(sub)return sub;
+    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),90000);
+    let response;
+    try{response=await fetch(pushServer+'/public-config',{cache:'no-store',signal:ctrl.signal});}
+    finally{clearTimeout(timer);}
+    if(!response.ok)throw Error('Servidor temporariamente indisponível. HTTP '+response.status);
+    const cfg=await response.json();
+    return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(cfg.vapidPublicKey)});
+  }
+  el('subscribe-device').addEventListener('click',async()=>{
+    const btn=el('subscribe-device');
+    if(!el('consent').checked){subscribeStatus('⚠️ Marque primeiro a autorização para receber notificações.');return;}
+    if(!pushAllowedHere){subscribeStatus('No iPhone, primeiro abra o La’Bella instalado na Tela de Início. No Android, use Google Chrome.');return;}
+    let permission=Notification.permission;
+    // Solicitação diretamente no clique do usuário, antes de qualquer operação assíncrona.
+    if(permission==='default')permission=await Notification.requestPermission();
+    if(permission!=='granted'){subscribeStatus('❌ Permissão bloqueada. No Android: Configurações → Apps → Chrome → Notificações; confira também as configurações do site no Chrome.');return;}
+    btn.disabled=true;
+    try{
+      subscribeStatus('1/3 • Permissão concedida. Obtendo inscrição Web Push…');
+      const sub=await currentSubscription();
+      subscribeStatus('2/3 • Salvando consentimento no Supabase…');
+      const response=await fetch(pushServer+'/public-subscribe',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({subscription:sub.toJSON(),consent:true,platform:isAndroid?'android':isIOS?'ios':'outro'})});
+      const result=await response.json();
+      if(!response.ok)throw Error(result.error||'Erro HTTP '+response.status);
+      subscribeStatus('✅ 3/3 • Aparelho cadastrado no Supabase! Agora o administrador poderá selecioná-lo para receber campanhas.');
+    }catch(err){subscribeStatus('❌ Falha no cadastro: '+err.message);}
+    finally{btn.disabled=false;}
+  });
+  el('unsubscribe-device').addEventListener('click',async()=>{
+    const btn=el('unsubscribe-device');btn.disabled=true;
+    try{
+      const reg=await regPromise;
+      const sub=await reg.pushManager.getSubscription();
+      if(!sub){subscribeStatus('Este navegador ainda não possui inscrição Web Push para cancelar.');return;}
+      const response=await fetch(pushServer+'/public-unsubscribe',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({subscription:sub.toJSON()})});
+      const result=await response.json();
+      if(!response.ok)throw Error(result.error||'Erro HTTP '+response.status);
+      await sub.unsubscribe();
+      el('consent').checked=false;
+      subscribeStatus('✅ Inscrição cancelada e removida do Supabase.');
+    }catch(err){subscribeStatus('❌ Falha ao cancelar: '+err.message);}
+    finally{btn.disabled=false;}
+  });
+
   el('appointment').addEventListener('click',()=>test('appointment'));
   el('promo').addEventListener('click',()=>test('promo'));
 })();
