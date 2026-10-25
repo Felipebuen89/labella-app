@@ -21,4 +21,4 @@ jobs:
         with:
           node-version: '22'
       - name: Teste funcional seguro e isolado (sem notificação real)
-        run: node --test push-demo/audit.test.cjs
+        run: node --test push-demo/audit.test.cjs push-demo/database.test.cjs
