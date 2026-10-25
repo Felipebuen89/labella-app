@@ -190,7 +190,7 @@ el('forgot').onclick=async()=>{
  setBusy(true);
  try{
   const db=await window.LaBellaAuth.getClient();
-  const redirect=new URL('./acesso.html',location.href);redirect.searchParams.set('perfil',state.role);
+  const redirect=new URL('./redefinir-senha.html',location.href);
   const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:redirect.toString()});
   if(error)throw error;
   status('Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação.');
