@@ -50,8 +50,8 @@ async function requestOwnerAccess(userId,businessName){
  return {pending:true,exists:false};
 }
 async function beginGoogle(role){
- const db=await getClient();
  if(!cfg.googleEnabled)throw Error('A entrada com Google aguarda ativação no Google Cloud e no Supabase. Por enquanto, use e-mail e senha.');
+ const db=await getClient();
  sessionStorage.setItem('labella_auth_role',role);
  const returnTo=new URL('./acesso.html',location.href);
  returnTo.searchParams.set('perfil',role);
