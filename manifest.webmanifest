@@ -1,8 +1,8 @@
 {
   "name": "La’Bella Hair Company",
   "short_name": "La’Bella",
-  "description": "Aplicativo do salão La’Bella: serviços, novidades e notificações com autorização",
-  "start_url": "./",
+  "description": "Acesse sua conta de cliente ou a gestão do salão, com serviços e novidades",
+  "start_url": "./acesso.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#100d0d",
