@@ -8,6 +8,7 @@ const net = require('node:net');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 const pwd = 'Test-Strong-Password-Audit-2026';
+const ownerPwd = 'Test-Only-Owner-Password-2026';
 const ORIGIN = 'https://felipebuen89.github.io';
 const baseDir = __dirname;
 let child;
@@ -49,7 +50,8 @@ test('Auditoria isolada: painel, autenticação, dispositivo, envio e diagnósti
     ...process.env, NODE_ENV:'test', PORT:String(port),
     NODE_OPTIONS:'--require '+path.join(baseDir,'audit-mock-push.cjs'),
     VAPID_PUBLIC:'audit-only-public-key',VAPID_PRIVATE:'audit-only-private-key',
-    ADMIN_PASSWORD_SHA256:crypto.createHash('sha256').update(pwd).digest('hex')
+    ADMIN_PASSWORD_SHA256:crypto.createHash('sha256').update(pwd).digest('hex'),
+     OWNER_PASSWORD_SHA256:crypto.createHash('sha256').update(ownerPwd).digest('hex')
    },stdio:['ignore','pipe','pipe']
  });
  child.stdout.on('data',x=>stdout+=String(x));
@@ -93,6 +95,26 @@ test('Auditoria isolada: painel, autenticação, dispositivo, envio e diagnósti
     assert.equal(r.status,200);
     assert.ok(r.body.token && r.body.token.length>30);
     token=r.body.token;
+  });
+  await t.test('Proprietária tem senha e sessão independentes da administração técnica',async()=>{
+    const noLogin=await fetchJSON(base,'/proprietario/devices');
+    assert.equal(noLogin.status,401);
+    const wrong=await fetchJSON(base,'/proprietario/login',{method:'POST',json:{password:pwd}});
+    assert.equal(wrong.status,401,'Senha técnica não pode abrir perfil proprietário');
+    const owner=await fetchJSON(base,'/proprietario/login',{method:'POST',json:{password:ownerPwd}});
+    assert.equal(owner.status,200);
+    assert.ok(owner.body.token);
+    const ownAccess=await fetchJSON(base,'/proprietario/me',{token:owner.body.token});
+    assert.equal(ownAccess.status,200);
+    assert.equal(ownAccess.body.mode,'proprietario-demo');
+    const blockedAdmin=await fetchJSON(base,'/admin/devices',{token:owner.body.token});
+    assert.equal(blockedAdmin.status,401);
+    const blockedOwner=await fetchJSON(base,'/proprietario/devices',{token});
+    assert.equal(blockedOwner.status,401);
+    const signout=await fetchJSON(base,'/proprietario/logout',{method:'POST',token:owner.body.token,json:{}});
+    assert.equal(signout.status,200);
+    const invalid=await fetchJSON(base,'/proprietario/me',{token:owner.body.token});
+    assert.equal(invalid.status,401);
   });
   await t.test('Cadastro só aceita endpoints Web Push válidos',async()=>{
     const bad=await fetchJSON(base,'/admin/register',{method:'POST',token,json:{
