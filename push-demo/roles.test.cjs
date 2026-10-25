@@ -15,7 +15,7 @@ test('Perfil cliente não contém formulário de administração de horários',(
  assert.equal(d.getElementById('agenda-tab-admin'),null);
  assert.equal(d.getElementById('agenda-admin'),null);
  assert.ok(d.getElementById('agenda-client'));
- assert.ok(d.querySelector('a[href="./proprietario.html"]'));
+ assert.ok(d.querySelector('a[href="./acesso.html?perfil=proprietario"]'));
  assert.match(d.title,/Cliente/);
  dom.window.close();
 });
