@@ -5,6 +5,9 @@ on:
   push:
     paths:
       - '.github/workflows/marcia-android-preview.yml'
+      - 'marcia-app.html'
+      - 'marcia-flores.svg'
+      - 'marcia-android/scripts/build-web.mjs'
 
 permissions:
   contents: write
