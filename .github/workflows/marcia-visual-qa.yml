@@ -1,0 +1,23 @@
+name: QA visual local — Márcia Calixto
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/marcia-visual-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Empacotar interface e flores para inspeção visual
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-client-design-source
+          path: |
+            marcia-app.html
+            marcia-flores.svg
+          retention-days: 2
