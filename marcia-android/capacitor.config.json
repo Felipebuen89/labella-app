@@ -1,0 +1,11 @@
+{
+  "appId": "br.com.movedigital.marcia.preview",
+  "appName": "Márcia Calixto (Prévia)",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
