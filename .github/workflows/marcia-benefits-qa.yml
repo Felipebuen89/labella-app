@@ -20,7 +20,7 @@ jobs:
       - name: Preparar Playwright e Chromium
         run: |
           npm install --no-save playwright@1.58.2
-          npx playwright install chromium
+          command -v google-chrome || command -v chromium
       - name: Testar interface móvel, rolagem e botões
         run: node marcia-android/scripts/test-benefits.cjs
       - name: Salvar evidências
