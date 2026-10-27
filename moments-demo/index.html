@@ -545,23 +545,26 @@ function adminTraining(){
  '<button class="btn gold block" type="submit">'+ic('send')+' Publicar para revendedores</button></form></div>'+
  '<div class="training-list"><h3>Materiais publicados <span class="pill">'+state.training.length+'</span></h3>'+ (state.training.length?state.training.map(t=>trainingCard(t,true)).join(''):empty('Nenhum treinamento publicado','Adicione o primeiro conteúdo usando o formulário acima.','sparkle'))+'</div>';
 }
+async 
 async function saveTraining(d){
- const title=String(d.get('title')||'').trim(),txt=String(d.get('text')||'').trim();
- if(!title||!txt)return toast('Informe título e descrição');
- let image=safeImage(d.get('image')),video=safeVideo(d.get('video')),link=safeMediaUrl(d.get('link'));
- const file=d.get('file');
+ if(!admin)return toast('Apenas o franqueado pode publicar treinamentos');
+ const title=String(d.get('title')||'').trim(),description=String(d.get('description')||'').trim(),kind=String(d.get('kind')||'text');
+ const url=validMediaUrl(d.get('url')||''),file=d.get('photo');
+ if(!title||!description)return toast('Informe título e descrição');
+ if(!['video','image','text'].includes(kind))return toast('Formato inválido');
+ let contentUrl=url;
  if(file&&file.size){
-  if(file.size>900000)return toast('Arquivo muito grande. Use até 900 KB ou envie um link de vídeo.');
-  if(!/^(image\/(png|jpeg|webp)|video\/(mp4|webm))$/.test(file.type))return toast('Formato não permitido');
-  try{
-   const data=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(rd.result);rd.onerror=()=>reject(new Error('leitura'));rd.readAsDataURL(file)});
-   if(file.type.startsWith('image/'))image=safeImage(data);else video=safeVideo(data);
-  }catch(e){return toast('Não foi possível ler o arquivo')}
+  if(!/^image\/(png|jpeg|webp)$/.test(file.type))return toast('Selecione uma imagem JPG, PNG ou WebP');
+  if(file.size>650000)return toast('Foto maior que 650 KB. Use uma imagem menor.');
+  try{contentUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Leitura'));reader.readAsDataURL(file)})}
+  catch(e){return toast('Erro ao ler a imagem')}
  }
- const entry={id:'TR-'+Date.now()+'-'+rand(),title,text:txt,image,video,link,createdAt:nowISO()};
- state.training.unshift(entry);
- notify('Novo treinamento',title+' disponível na aba Técnicas de venda.',false);
- save();render();toast('Treinamento publicado na demonstração');
+ if(kind==='video'&&!url)return toast('Informe o link HTTPS do vídeo');
+ if(kind==='image'&&!contentUrl)return toast('Informe a foto ou seu link');
+ const entry={id:'TR-'+rand()+Date.now(),title,description,text:description,kind,url:contentUrl||'',image:kind==='image'?contentUrl:'',video:kind==='video'?url:'',link:'',createdAt:nowISO(),active:true};
+ state.training.push(entry);
+ broadcastSellerMessage('Nova técnica de venda',title+' disponível na aba Técnicas de venda');
+ save();render();toast('Técnica publicada para os revendedores');
 }
 
 function adminCatalog(){let visible=shownProducts().slice(0,36);return `${title('Catálogo e preços do revendedor','Edite somente o custo de compra do revendedor e o valor de venda recomendado.','', 'PAINEL DA FRANQUIA')}<div class="notice">Por decisão comercial, este app não contém tabelas de preços de CD ou de franquia. As alterações abaixo valem apenas neste navegador de demonstração.</div><div class="searchbox" style="margin-bottom:17px">${ic('search')}<input id="admin-search" value="${esc(query)}" placeholder="Buscar produto..." aria-label="Buscar no catálogo"></div><div class="panel"><div class="panel-head"><h3 class="panel-title">Produtos (${PRODUCTS.length})</h3><span class="pill">Mostrando até 36 por vez</span></div><div id="admin-product-list">${visible.map(x=>`<div class="item-line"><span class="mini-art">${itemArt(x)}</span><div class="flex"><b>${esc(x.name)}</b><small>${money(cost(x))} compra • ${retail(x)==null?'Venda não definida':money(retail(x))+' venda sugerida'}</small></div><button class="btn outline small" data-editproduct="${x.id}">Editar</button></div>`).join('')}</div></div>`}
