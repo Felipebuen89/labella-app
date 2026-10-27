@@ -225,59 +225,97 @@ function history(){
 }
 const footer=()=>`<div class="footer-note">Moments Paris • Ferramenta demonstrativa de apoio ao revendedor. Fotos obtidas por produto em catálogo público; quando não há correspondência confirmada, exibimos arte sinalizada. Não é uma plataforma oficial publicada.</div>`;
 
+
+const ADMIN_TABS=[['orders','Pedidos','bag'],['sellers','Revendedores','user'],['campaigns','Campanhas','gift'],['training','Técnicas','sparkle'],['settings','Gestão','settings']];
+let selectedSeller='';
+function sellerSummary(key,a){
+ const sales=a.sales||[],inv=a.inventory||{},orders=a.orders||[];
+ return {key,name:a.profile?.revendedor||key,code:a.profile?.code||key,
+  qty:Object.values(inv).reduce((n,o)=>n+(o.qty||0),0),
+  inventoryCost:Object.values(inv).reduce((n,o)=>n+(o.qty||0)*(o.avgCost||0),0),
+  revenue:sales.reduce((n,o)=>n+(o.total||0),0),
+  profit:sales.reduce((n,o)=>n+(o.profit||0),0),
+  units:sales.reduce((n,o)=>n+(o.qty||0),0),
+  orders:orders.length,sales:sales.length};
+}
+function adminOrders(){
+ const orders=allOrders().slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+ const pending=orders.filter(o=>orderState(o)==='Aguardando aprovação');
+ const total=orders.filter(o=>orderState(o)!=='Recusado').reduce((n,o)=>n+o.total,0);
+ return title('Pedidos recebidos','A franquia decide a aprovação. O estoque só entra depois de liberado e recebido.','','PAINEL DA FRANQUIA')+
+ '<section class="admin-mini">'+stat('Aguardando aprovação',pending.length,'Ação do franqueado','clock')+stat('Pedidos enviados',orders.length,'Todos os revendedores','bag')+stat('Valor solicitado',money(total),'Total demonstrativo','wallet')+'</section>'+
+ (orders.length?orders.map(o=>{
+  const current=orderState(o),next={'Aguardando aprovação':'Aprovado','Aprovado':'Em separação','Em separação':'Pronto para retirada'}[current];
+  return `<div class="order-card admin-order"><div class="order-flex"><div><div class="eyebrow">${esc(o.id)}</div><h3>${esc(o.reseller)} · ${money(o.total)}</h3></div>${orderBadge(o)}</div><div class="order-meta">${o.items.reduce((n,i)=>n+i.qty,0)} unidades · Retirada ${niceDate(o.pickupDate)} às ${esc(o.pickupTime)} · ${esc(o.branch)}</div><div class="action-row mt20">${next?`<button class="btn gold" data-approve="${o.id}" data-next="${next}">${ic('check')} ${current==='Aguardando aprovação'?'Aprovar pedido':next==='Em separação'?'Iniciar separação':'Liberar retirada'}</button>`:''}${current==='Aguardando aprovação'?`<button class="btn outline" data-approve="${o.id}" data-next="Recusado">Recusar</button>`:''}<button class="btn outline small" data-orderdetail="${o.id}">Ver itens</button><button class="btn outline small" data-pdf="${o.id}">PDF</button></div>${current==='Pronto para retirada'?`<div class="small-help">Aguardando confirmação de recebimento pelo revendedor.</div>`:''}</div>`
+ }).join(''):empty('Nenhum pedido para avaliar','Os pedidos feitos no painel do revendedor aparecerão aqui, nesta demonstração local.','bag'));
+}
+function adminSellerDetail(key){
+ const a=accountFor(key);if(!a)return '<p class="subtext">Revendedor não encontrado</p>';
+ const info=sellerSummary(key,a);
+ const saleRows=(a.sales||[]).slice().reverse();
+ const invRows=Object.entries(a.inventory||{}).filter(([id,v])=>v.qty>0).sort((x,y)=>y[1].qty-x[1].qty);
+ return `<div class="panel seller-details"><div class="panel-head"><div><p class="eyebrow">REVendedor · ${esc(info.code)}</p><h3 class="panel-title">${esc(info.name)}</h3></div><button class="btn light small" data-seller-switch="${esc(key)}">Testar como revendedor</button></div>
+ <div class="seller-kpis"><span>Vendas: <strong>${money(info.revenue)}</strong></span><span>Lucro bruto: <strong>${money(info.profit)}</strong></span><span>Unidades vendidas: <strong>${info.units}</strong></span><span>Estoque: <strong>${info.qty} unidades</strong></span></div>
+ <div class="panel-head mt20"><h4>Estoque por produto</h4><span class="pill">${invRows.length} produtos</span></div>
+ ${invRows.length?invRows.map(([id,v])=>`<div class="order-line"><span>${esc(P[id]?.name||id)}</span><strong>${v.qty} un. · ${money(v.qty*v.avgCost)}</strong></div>`).join(''):empty('Estoque vazio','Nenhum pedido recebido neste perfil.','boxes')}
+ <div class="panel-head mt20"><h4>Vendas registradas</h4><span class="pill">${saleRows.length}</span></div>
+ ${saleRows.length?saleRows.map(v=>`<div class="order-line"><div><strong>${esc(v.name||P[v.productId]?.name||'Produto')}</strong><div class="subtext">${v.qty} un. · ${niceDate(v.createdAt)} · Canal: ${esc(v.method||'Não informado')}</div></div><strong>${money(v.total)}<small class="sale-profit">Lucro ${money(v.profit)}</small></strong></div>`).join(''):empty('Nenhuma venda ainda','Acompanhe aqui as vendas lançadas pelo revendedor.','chart')}</div>`;
+}
+function adminSellers(){
+ const entries=Object.entries(state.sellerAccounts);
+ const details=entries.map(([key,a])=>sellerSummary(key,a));
+ const totalRevenue=details.reduce((n,x)=>n+x.revenue,0),totalUnits=details.reduce((n,x)=>n+x.units,0),totalStock=details.reduce((n,x)=>n+x.qty,0);
+ return title('Meus revendedores','Acompanhe cada revendedor: estoque, vendas, quantidade e canal de venda.','','PAINEL DA FRANQUIA')+
+ '<div class="admin-mini">'+stat('Revendedores',details.length,'Perfis locais nesta demo','user')+stat('Vendas da rede',money(totalRevenue),'Faturamento informado','chart')+stat('Unidades disponíveis',totalStock,'Estoques somados','boxes')+'</div>'+
+ '<div class="panel"><div class="panel-head"><h3 class="panel-title">Cadastrar revendedor de demonstração</h3><span class="pill">Sem conta real</span></div><form id="seller-form" class="seller-form"><input class="field" name="name" maxlength="65" required placeholder="Nome do revendedor"><button class="btn gold" type="submit">'+ic('plus')+' Adicionar</button></form></div>'+
+ '<div class="seller-cards">'+details.map(x=>`<button type="button" class="seller-card ${selectedSeller===x.key?'selected':''}" data-seller-detail="${esc(x.key)}"><span class="seller-name">${esc(x.name)} <small>${esc(x.code)}</small></span><span class="seller-data"><strong>${money(x.revenue)}</strong><small>${x.units} vendidos · ${x.qty} em estoque</small></span><span class="seller-chevron">›</span></button>`).join('')+'</div>'+
+ (selectedSeller?adminSellerDetail(selectedSeller):'<p class="small-help">Toque no nome de um revendedor para ver o estoque, todas as vendas e como foram realizadas.</p>')+
+ '<div class="notice">Cada perfil desta demonstração existe apenas neste navegador. Para acompanhar revendedores em aparelhos diferentes, será necessário o banco de dados e o login real.</div>';
+}
+function validMediaUrl(value){
+ const s=String(value||'').trim();
+ if(/^data:image\/(?:png|jpeg|webp|gif);base64,[a-zA-Z0-9+/=]+$/.test(s))return s;
+ try{const u=new URL(s);return u.protocol==='https:'?u.href:''}catch(e){return ''}
+}
+function trainingDisplay(item){
+ const url=validMediaUrl(item.url);
+ if(item.kind==='image'&&url)return `<img class="training-image" src="${esc(url)}" loading="lazy" alt="${esc(item.title)}">`;
+ if(item.kind==='video'&&url){
+  let id='';
+  try{const u=new URL(url);if(['youtube.com','www.youtube.com','m.youtube.com'].includes(u.hostname)){id=u.searchParams.get('v')||u.pathname.match(/^\/shorts\/([^/?]+)/)?.[1]||'';if(u.pathname.startsWith('/embed/'))id=u.pathname.split('/')[2]}else if(u.hostname==='youtu.be')id=u.pathname.split('/')[1]||''}catch(e){}
+  if(/^[A-Za-z0-9_-]{11}$/.test(id))return `<div class="training-video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${esc(item.title)}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  if(/\.mp4(?:\?|$)/i.test(url))return `<video class="training-video-file" controls preload="metadata" playsinline src="${esc(url)}"></video>`;
+  return `<a class="btn outline" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ic('arrow')} Assistir vídeo</a>`;
+ }
+ return '';
+}
+function trainingCards(){
+ const items=(state.training||[]).filter(x=>x.active!==false).slice().reverse();
+ return items.length?`<div class="training-grid">${items.map(x=>`<article class="training-card"><div class="eyebrow">${x.kind==='video'?'VIDEOAULA':x.kind==='image'?'MATERIAL VISUAL':'DICA DE VENDAS'}</div>${trainingDisplay(x)}<h3>${esc(x.title)}</h3><p>${esc(x.description||'')}</p><small>Publicado pela franquia · ${niceDate(x.createdAt)}</small></article>`).join('')}</div>`:empty('Biblioteca em preparação','A franquia poderá publicar vídeos, fotos, imagens e dicas práticas de vendas.','sparkle');
+}
+function training(){
+ return title('Técnicas de venda','Treinamentos, vídeos e materiais publicados pelo dono da franquia.','','ACADEMIA MOMENTS PARIS')+
+ '<div class="training-intro"><span class="eyebrow">APRENDA E VENDA MAIS</span><h3>Seu próximo resultado começa com conhecimento.</h3><p>Confira os conteúdos preparados pela sua franquia para melhorar a abordagem, a apresentação de perfumes e o fechamento.</p></div>'+trainingCards()+footer();
+}
+function adminTraining(){
+ return title('Técnicas de venda','Publique materiais para os revendedores: imagem, vídeo ou orientação escrita.','','PAINEL DA FRANQUIA')+
+ `<div class="panel"><h3 class="panel-title">Publicar novo treinamento</h3><form id="training-form"><div class="form-grid"><div class="form-group"><label class="form-label">Formato</label><select class="field" name="kind" id="training-kind"><option value="video">Vídeo</option><option value="image">Imagem</option><option value="text">Texto / roteiro</option></select></div><div class="form-group"><label class="form-label">Título</label><input class="field" name="title" required maxlength="90" placeholder="Ex.: Como apresentar o perfume"></div></div>
+ <div class="form-group"><label class="form-label">Descrição e orientações</label><textarea class="field" name="description" rows="4" maxlength="650" placeholder="O que o revendedor deve aprender?"></textarea></div>
+ <div class="form-group"><label class="form-label">Link HTTPS do vídeo ou da imagem (opcional para texto)</label><input class="field" name="url" type="url" placeholder="https://..."></div>
+ <div class="form-group"><label class="form-label">Ou selecionar foto no celular (até 650 KB)</label><input class="field" name="photo" type="file" accept="image/jpeg,image/png,image/webp"><small class="small-help">Fotos pequenas podem ser salvas nesta demonstração; vídeos devem ter link do YouTube ou MP4. Envio real de vídeos precisa de armazenamento online.</small></div>
+ <button class="btn gold block" type="submit">${ic('plus')} Publicar na área do revendedor</button></form></div>
+ <div class="panel mt20"><div class="panel-head"><h3 class="panel-title">Materiais publicados</h3><span class="pill">${state.training.length}</span></div>${state.training.length?state.training.slice().reverse().map(x=>`<div class="order-line"><div><strong>${esc(x.title)}</strong><div class="subtext">${x.kind==='video'?'Vídeo':x.kind==='image'?'Imagem':'Texto'} · ${x.active===false?'Oculto':'Publicado'}</div></div><button class="btn outline small" data-training-toggle="${x.id}">${x.active===false?'Reativar':'Ocultar'}</button></div>`).join(''):empty('Sem treinamentos','Adicione a primeira aula acima.','sparkle')}</div>`;
+}
+function adminSettings(){
+ const orders=allOrders(),revenue=Object.values(state.sellerAccounts).reduce((n,a)=>n+(a.sales||[]).reduce((m,v)=>m+(v.total||0),0),0);
+ const pending=orders.filter(o=>orderState(o)==='Aguardando aprovação').length;
+ return title('Gestão e catálogo','Indicadores da rede e controle de preços dos revendedores.','','PAINEL DA FRANQUIA')+
+ '<div class="admin-mini">'+stat('Pedidos totais',orders.length,'Todos os perfis','bag')+stat('Vendas realizadas',money(revenue),'Valor informado','chart')+stat('Aguardando aprovação',pending,'Pedidos em análise','clock')+'</div>'+
+ '<div class="panel"><div class="panel-head"><h3 class="panel-title">Catálogo do revendedor</h3><button class="btn outline" data-act="open-admin-catalog">Gerenciar catálogo</button></div><p class="subtext">Altere fotos, preços de compra do revendedor e sugestões de venda. Valores de CD e franquia não ficam disponíveis no aplicativo.</p></div>';
+}
 function adminView(){
- const orders=allOrders(),pending=orders.filter(o=>orderState(o)==='Aguardando aprovação');
- const amount=orders.filter(o=>orderState(o)!=='Recusado').reduce((a,o)=>a+o.total,0);
- const promos=state.promo.filter(p=>p.active!==false).length;
- const sections=[['orders','Pedidos'],['resellers','Revendedores'],['training','Técnicas de venda'],['campaigns','Campanhas'],['catalog','Catálogo'],['stats','Resumo']];
- return '<section class="admin-hero"><div><span class="eyebrow">GESTÃO EXCLUSIVA • FRANQUIA</span><h2>Painel do franqueado</h2><p>Aprove pedidos, acompanhe os revendedores e publique campanhas e conteúdos de vendas.</p></div><button class="btn gold" data-act="admin-exit">'+ic('logout')+' Sair do painel</button></section>'+
- notice()+
- '<div class="simple-tabs admin-tabs">'+sections.map(([id,name])=>'<button class="'+(adminTab===id?'active':'')+'" data-admin-tab="adm-'+id+'">'+name+'</button>').join('')+'</div>'+
- (adminTab==='orders'?adminOrderDashboard(orders):adminTab==='resellers'?adminResellers():adminTab==='training'?adminTraining():adminTab==='campaigns'?adminCampaigns():adminTab==='catalog'?adminCatalog():adminStats(amount,pending.length,promos));
-}
-const nextOrderAction=o=>{
- const t=orderState(o);
- const actions={
- 'Aguardando aprovação':[['Aprovado','Aprovar pedido','gold'],['Recusado','Recusar','outline']],
- 'Aprovado':[['Em separação','Iniciar separação','gold']],
- 'Em separação':[['Pronto para retirada','Liberar retirada','gold']]
- };
- return (actions[t]||[]).map(([next,label,variant])=>'<button class="btn '+variant+' small" data-next-order="'+esc(o.id)+'" data-next-status="'+esc(next)+'">'+label+'</button>').join('') ||
- '<span class="subtext">'+(t==='Pronto para retirada'?'Aguardando o revendedor confirmar recebimento':'Etapa finalizada')+'</span>';
-};
-function adminOrderDashboard(orders){
- const waiting=orders.filter(o=>orderState(o)==='Aguardando aprovação').length;
- const approved=orders.filter(o=>approvedState(o)&&!o.received).length;
- return title('Pedidos dos revendedores','Solicitações entram em Aguardando aprovação e seguem as etapas até o recebimento.','','PEDIDOS DA FRANQUIA')+
- '<div class="admin-mini">'+stat('Aguardando aprovação',waiting,'Pedidos para analisar','clock')+stat('Em preparação / retirada',approved,'Pedidos já aprovados','bag')+stat('Solicitações totais',orders.length,'De todos os revendedores desta demo','list')+'</div>'+
- (orders.length?orders.slice().reverse().map(o=>'<article class="order-card"><div class="order-flex"><div><div class="eyebrow">PEDIDO '+esc(o.id)+'</div><h3>'+esc(o.reseller)+' <span class="tiny-price">• '+money(o.total)+'</span></h3></div>'+orderBadge(o)+'</div><div class="order-meta">'+o.items.reduce((a,i)=>a+i.qty,0)+' unidades • '+niceDate(o.pickupDate)+' às '+esc(o.pickupTime)+' • '+esc(o.branch)+'</div><div class="action-row mt20">'+nextOrderAction(o)+'<button class="btn light small" data-orderdetail="'+esc(o.id)+'">Ver produtos</button><button class="btn outline small" data-pdf="'+esc(o.id)+'">PDF</button></div></article>').join(''):empty('Nenhum pedido recebido','Finalize um pedido no painel do revendedor para testar a aprovação.','bag'));
-}
-function adminResellers(){
- saveActiveSeller();
- const sellers=Object.entries(state.sellerAccounts);
- const sumSales=sellers.reduce((a,[k,x])=>a+(x.sales||[]).reduce((b,v)=>b+v.total,0),0);
- const units=sellers.reduce((a,[k,x])=>a+Object.values(x.inventory||{}).reduce((b,p)=>b+(p.qty||0),0),0);
- return title('Gestão dos revendedores','Acompanhe cada pessoa, os produtos em estoque e todas as vendas registradas.','','INTELIGÊNCIA DA FRANQUIA')+
- '<div class="admin-mini">'+stat('Revendedores',sellers.length,'Perfis deste navegador','user')+stat('Vendas registradas',money(sumSales),'Somatório dos perfis da demo','chart')+stat('Unidades em estoque',units,'Produtos disponíveis','boxes')+'</div>'+
- '<div class="panel"><div class="panel-head"><h3 class="panel-title">Adicionar revendedor para teste</h3></div><form id="seller-form" class="action-row" style="align-items:end"><div class="form-group" style="flex:1;min-width:170px"><label class="form-label">Nome do revendedor</label><input class="field" name="name" maxlength="65" required placeholder="Ex.: Ana Souza"></div><button class="btn gold" type="submit">+ Adicionar</button></form></div>'+
- '<div class="seller-grid">'+sellers.map(([key,x])=>{
- const revenue=(x.sales||[]).reduce((a,v)=>a+v.total,0);
- const profit=(x.sales||[]).reduce((a,v)=>a+v.profit,0);
- const qty=Object.values(x.inventory||{}).reduce((a,v)=>a+(v.qty||0),0);
- const sold=(x.sales||[]).reduce((a,v)=>a+v.qty,0);
- return '<div class="seller-card"><div class="seller-head"><div class="seller-avatar">'+esc((x.profile?.revendedor||'RV').trim().slice(0,2).toUpperCase())+'</div><div><strong>'+esc(x.profile?.revendedor||'Revendedor')+'</strong><small>'+esc(x.profile?.code||key)+'</small></div></div><div class="seller-metrics"><div><small>Vendas</small><strong>'+money(revenue)+'</strong></div><div><small>Lucro bruto</small><strong>'+money(profit)+'</strong></div><div><small>Estoque</small><strong>'+qty+' un.</strong></div><div><small>Vendidos</small><strong>'+sold+' un.</strong></div></div><div class="action-row"><button class="btn outline small" data-seller-detail="'+esc(key)+'">Ver estoque e vendas</button><button class="btn light small" data-switch-seller="'+esc(key)+'">Testar como revendedor</button></div></div>';
- }).join('')+'</div><div class="notice">Os relatórios acima funcionam com os perfis criados NESTE navegador. Outros celulares não enviam vendas automaticamente até conectarmos contas, banco de dados e permissões reais.</div>';
-}
-function sellerDetail(key){
- const a=accountFor(key);if(!a)return toast('Revendedor não encontrado');
- const stocks=Object.entries(a.inventory||{}).filter(([id,i])=>i.qty>0);
- const sales=(a.sales||[]).slice().reverse();
- const summary='<section class="seller-metrics"><div><small>Produtos diferentes</small><strong>'+stocks.length+'</strong></div><div><small>Vendas registradas</small><strong>'+sales.length+'</strong></div></section>';
- showModal('Revendedor: '+esc(a.profile.revendedor),'Estoque individual, produtos vendidos, receita e forma de venda.',
- summary+'<h3 class="modal-section">Produtos no estoque</h3>'+
- (stocks.length?stocks.map(([id,v])=>'<div class="order-line"><span>'+esc(P[id]?.name||id)+'</span><b>'+v.qty+' un. • '+money(v.qty*v.avgCost)+'</b></div>').join(''):empty('Sem estoque','Esse revendedor ainda não recebeu produtos.','boxes'))+
- '<h3 class="modal-section">Histórico de vendas</h3>'+
- (sales.length?sales.map(x=>'<div class="order-line"><div><strong>'+esc(x.name)+'</strong><div class="subtext">'+niceDate(x.createdAt)+' • '+x.qty+' un. • '+esc(x.channel||'Canal não informado')+'</div></div><div style="text-align:right"><strong>'+money(x.total)+'</strong><div class="subtext">Lucro '+money(x.profit)+'</div></div></div>').join(''):empty('Nenhuma venda','As vendas registradas por esse perfil aparecem aqui.','chart')), '',true);
+ const c={'orders':adminOrders,'sellers':adminSellers,'campaigns':adminCampaigns,'training':adminTraining,'settings':adminSettings,'catalog':adminCatalog,'stats':adminSettings};
+ return `<section class="admin-hero"><div><span class="eyebrow">CONTROLE DA FRANQUIA · DEMONSTRAÇÃO</span><h2>Gestão Moments Paris</h2><p>Aprovação de pedidos, revendedores, campanhas e treinamentos em um painel separado.</p></div><button class="btn outline" data-act="admin-exit">${ic('logout')} Voltar</button></section>${notice()}<div class="admin-layout-tabs">${ADMIN_TABS.map(([id,name])=>`<button class="${adminTab===id?'active':''}" data-admin-tab="adm-${id}">${name}</button>`).join('')}</div>${(c[adminTab]||adminOrders)()}`;
 }
 
 function adminCampaigns(){return `${title('Campanhas e notificações','Crie uma campanha que apareça no aplicativo do revendedor.','', 'PAINEL DA FRANQUIA')}<div class="columns"><div class="panel"><h3 class="panel-title">Nova promoção</h3><p class="subtext">Descreva a oferta e, se desejar, associe um cupom percentual.</p><form id="campaign-form"><div class="form-group"><label class="form-label">Título da campanha</label><input class="field" name="title" maxlength="90" required placeholder="Ex.: Semana de oportunidades"></div><div class="form-group"><label class="form-label">Descrição</label><textarea class="field" rows="4" name="text" required maxlength="320" placeholder="Descreva sua oferta ou novidade..."></textarea></div><div class="form-grid"><div class="form-group"><label class="form-label">Cupom (opcional)</label><input name="coupon" class="field" placeholder="EX.: OUTUBRO10" maxlength="24"></div><div class="form-group"><label class="form-label">Desconto % (opcional)</label><input name="percent" type="number" min="0" max="80" step="1" class="field" placeholder="10"></div></div><div class="form-group"><label class="form-label">Válida até (opcional)</label><input name="end" type="date" class="field" min="${today()}"></div><button class="btn gold block" type="submit">${ic('send')} Publicar campanha e aviso</button></form></div><div class="panel"><h3 class="panel-title">Enviar notificação</h3><p class="subtext">Envia um aviso ao centro de notificações do revendedor nesta demonstração.</p><form id="notification-form"><div class="form-group"><label class="form-label">Assunto</label><input name="title" class="field" maxlength="80" required placeholder="Ex.: Seu pedido já está pronto"></div><div class="form-group"><label class="form-label">Mensagem</label><textarea name="text" class="field" rows="4" required maxlength="260" placeholder="Escreva o recado..."></textarea></div><button class="btn block" type="submit">${ic('bell')} Enviar aviso</button></form><div class="notice">Para alertas push em aparelhos diferentes, a versão de produção precisará de servidor, autenticação e serviço de notificações.</div></div></div><div class="panel mt20"><div class="panel-head"><h3 class="panel-title">Campanhas publicadas</h3><span class="pill">${state.promo.length}</span></div>${state.promo.length?state.promo.slice().reverse().map(p=>`<div class="order-line"><div><strong>${esc(p.title)}</strong><div class="subtext">${esc(p.text)}${p.coupon?' • cupom '+esc(p.coupon):''}</div></div><button class="btn ${p.active===false?'light':'red'} small" data-togglepromo="${p.id}">${p.active===false?'Reativar':'Encerrar'}</button></div>`).join(''):empty('Nenhuma promoção publicada','Crie a primeira campanha para começar a divulgar novidades.','gift')}</div>`}
