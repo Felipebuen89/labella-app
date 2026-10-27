@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="MC símbolo provisório para demonstração"><defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#7B2E51"/><stop offset=".54" stop-color="#60364C"/><stop offset="1" stop-color="#176866"/></linearGradient><linearGradient id="ink" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#FAE7E3"/><stop offset="1" stop-color="#E4C1B9"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#bg)"/><circle cx="512" cy="512" r="360" fill="none" stroke="#F2D7CF" stroke-opacity=".4" stroke-width="5"/><circle cx="512" cy="512" r="340" fill="none" stroke="#F2D7CF" stroke-opacity=".13" stroke-width="2"/><text x="512" y="590" font-size="345" letter-spacing="-35" font-family="Georgia,serif" font-style="italic" text-anchor="middle" fill="url(#ink)">mc</text><path d="M512 738l-18-25 18-26 18 26z" fill="#F3CDC6"/><path d="M484 696c-35-6-63-28-74-58 35-5 67 8 84 36M540 696c35-6 63-28 74-58-35-5-67 8-84 36" fill="none" stroke="#F1C7CB" stroke-opacity=".8" stroke-width="7" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>Monograma conceitual MC — Move Digital (não é o logotipo oficial)</title>
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#225f61"/><stop offset="1" stop-color="#113f45"/></linearGradient><linearGradient id="fg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffe5cf"/><stop offset="1" stop-color="#dfa8b4"/></linearGradient></defs>
+<rect width="1024" height="1024" rx="225" fill="url(#bg)"/>
+<rect x="69" y="69" width="886" height="886" rx="178" fill="none" stroke="#dfb0b6" stroke-opacity=".5" stroke-width="7"/>
+<circle cx="512" cy="487" r="338" fill="none" stroke="#c9a0ad" stroke-width="8" stroke-opacity=".66"/>
+<text x="480" y="574" text-anchor="middle" font-family="Georgia,serif" font-size="360" font-style="italic" font-weight="400" letter-spacing="-50" fill="url(#fg)">mc</text>
+<path d="M266 706 Q512 778 758 706" fill="none" stroke="#dfa8b4" stroke-width="8" stroke-linecap="round"/>
+<circle cx="790" cy="340" r="14" fill="#ffe5cf"/>
+</svg>
