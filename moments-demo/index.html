@@ -310,10 +310,11 @@ state={...structuredClone(DEFAULT),...(state||{})};
 for(let k of ['profile','cart','inventory','priceOverride','retailOverride','photoOverride'])state[k]=state[k]||{};
 for(let k of ['orders','sales','promo','coupons','notifications','reorder'])state[k]=state[k]||[];
 state.profile={...DEFAULT.profile,...state.profile};
+state.notifications=state.sellerAccounts[state.currentSellerKey].notifications||state.notifications||[];state.sellerAccounts[state.currentSellerKey].notifications=state.notifications;
 state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
 let tab='home',admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
 
-const sellerFields=['profile','cart','orders','inventory','sales','reorder','activeCoupon'];
+const sellerFields=['profile','cart','orders','inventory','sales','reorder','activeCoupon','notifications'];
 const copyData=x=>JSON.parse(JSON.stringify(x));
 if(!state.sellerAccounts||typeof state.sellerAccounts!=='object'){
  const key=(state.profile.code||'REV-DEMO').trim()||'REV-DEMO';
@@ -328,6 +329,7 @@ state.training=Array.isArray(state.training)?state.training:[];
 const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
 const save=()=>{try{saveActiveSeller();localStorage.setItem('moments_rev_demo_v3',JSON.stringify(state))}catch(e){toast('Espaço para armazenamento esgotado')}};
 const sellerKeys=()=>Object.keys(state.sellerAccounts);
+const broadcastSellerMessage=(title,message)=>{saveActiveSeller();for(const [key,a] of Object.entries(state.sellerAccounts)){a.notifications=a.notifications||[];a.notifications.unshift({id:'N-'+rand()+Date.now(),title,text:message,when:nowISO(),read:false});if(key===state.currentSellerKey)state.notifications=a.notifications;}save();};
 const allOrders=()=>{saveActiveSeller();return Object.entries(state.sellerAccounts).flatMap(([sellerKey,a])=>(a.orders||[]).map(o=>({...o,sellerKey})))};
 const findOrder=id=>{saveActiveSeller();for(const a of Object.values(state.sellerAccounts)){const o=(a.orders||[]).find(o=>o.id===id);if(o)return o}return null};
 const accountFor=key=>{saveActiveSeller();return state.sellerAccounts[key]||null};
@@ -341,7 +343,7 @@ function switchSeller(key){
 function createSeller(name){
  const clean=String(name||'').trim();if(clean.length<2)return toast('Informe o nome do revendedor');
  const key='REV-'+String(Date.now()).slice(-7)+rand();
- state.sellerAccounts[key]={profile:{...DEFAULT.profile,revendedor:clean,name:'Revenda de '+clean,code:key},cart:{},orders:[],inventory:{},sales:[],reorder:[],activeCoupon:''};
+ state.sellerAccounts[key]={profile:{...DEFAULT.profile,revendedor:clean,name:'Revenda de '+clean,code:key},cart:{},orders:[],inventory:{},sales:[],reorder:[],activeCoupon:'',notifications:[]};
  save();render();toast(clean+' adicionado à demonstração');
 }
 const orderState=o=>o.received?'Recebido':({'Solicitado':'Aguardando aprovação','Confirmado':'Aprovado','Entregue':'Pronto para retirada'}[o.status]||o.status||'Aguardando aprovação');
@@ -354,7 +356,7 @@ function updateOrderStatus(id,next){
  const valid={'Aguardando aprovação':['Aprovado','Recusado'],'Aprovado':['Em separação','Recusado'],'Em separação':['Pronto para retirada','Recusado'],'Pronto para retirada':[],'Recebido':[],'Recusado':[]};
  if(!valid[prev]?.includes(next))return toast('Conclua a etapa anterior antes de alterar o pedido');
  o.status=next;o.approvedAt=next==='Aprovado'?nowISO():o.approvedAt;
- notify('Status do pedido',o.reseller+': pedido '+o.id+' • '+next,false);
+ broadcastSellerMessage('Pedido atualizado',o.reseller+': '+o.id+' · '+next);
  save();render();toast('Pedido atualizado: '+next);
 }
 const cost=x=>+((state.priceOverride[x.id]??x.cost)||0),retail=x=>state.retailOverride[x.id]!==undefined?+state.retailOverride[x.id]:(x.retail??null);
@@ -662,8 +664,8 @@ switch(a){case 'toggle-categories':categoriesExpanded=!categoriesExpanded;render
 document.addEventListener('input',e=>{if(e.target.id==='product-search'){query=e.target.value;let grid=document.getElementById('product-grid');if(grid)grid.innerHTML=shownProducts().map(productCard).join('')||empty('Sem resultados','Experimente outro nome ou categoria.','search');let out=document.getElementById('match-count');if(out)out.textContent=shownProducts().length;}if(e.target.id==='admin-search'){query=e.target.value;let grid=document.getElementById('admin-product-list');if(grid)grid.innerHTML=shownProducts().slice(0,36).map(x=>`<div class="item-line"><span class="mini-art">${itemArt(x)}</span><div class="flex"><b>${esc(x.name)}</b><small>${money(cost(x))} compra • ${retail(x)==null?'Venda não definida':money(retail(x))+' venda sugerida'}</small></div><button class="btn outline small" data-editproduct="${x.id}">Editar</button></div>`).join('')||'<p class="subtext">Nenhum produto encontrado</p>';}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-status]'))updateOrderStatus(e.target.dataset.status,e.target.value)});
 document.addEventListener('submit',async e=>{let f=e.target,formId=f.getAttribute('id');if(!formId)return;const ids=['checkout-form','profile-form','sale-form','retail-form','campaign-form','notification-form','admin-login-form','edit-product-form','seller-form','training-form'];if(!ids.includes(formId))return;e.preventDefault();const d=new FormData(f);if(formId==='seller-form'){createSeller(d.get('name'));return}if(formId==='training-form'){await saveTraining(d);return}if(formId==='checkout-form'){if(!d.get('pickupTime'))return toast('Selecione o horário de retirada');if(d.get('pickupDate')<today())return toast('Escolha uma data atual ou futura');createOrder(d)}if(formId==='profile-form'){state.profile={...state.profile,...Object.fromEntries(d)};save();closeModal();render();toast('Dados da revenda salvos')}if(formId==='sale-form')recordSale(d);if(formId==='retail-form'){state.retailOverride[d.get('id')]=Number(d.get('price'));save();closeModal();render();toast('Preço de venda atualizado')}
-if(formId==='campaign-form'){let title=String(d.get('title')).trim(),message=String(d.get('text')).trim(),coupon=String(d.get('coupon')||'').trim().toUpperCase(),percent=Number(d.get('percent')||0);if(coupon&&(!percent||percent>80))return toast('Digite um desconto de 1% a 80% para o cupom');if(percent&&!coupon)return toast('Informe o código do cupom para aplicar o desconto');let campaign={id:'CP-'+rand()+Date.now(),title,text:message,coupon,percent,end:String(d.get('end')||''),active:true,createdAt:nowISO()};state.promo.push(campaign);if(coupon){state.coupons=state.coupons.filter(c=>c.code!==coupon);state.coupons.push({code:coupon,percent,active:true,end:campaign.end})}notify('Nova promoção: '+title,message,true);save();render();toast('Campanha publicada para demonstração')}
-if(formId==='notification-form'){notify(String(d.get('title')).trim(),String(d.get('text')).trim(),true);save();render();toast('Aviso enviado no navegador')}
+if(formId==='campaign-form'){let title=String(d.get('title')).trim(),message=String(d.get('text')).trim(),coupon=String(d.get('coupon')||'').trim().toUpperCase(),percent=Number(d.get('percent')||0);if(coupon&&(!percent||percent>80))return toast('Digite um desconto de 1% a 80% para o cupom');if(percent&&!coupon)return toast('Informe o código do cupom para aplicar o desconto');let campaign={id:'CP-'+rand()+Date.now(),title,text:message,coupon,percent,end:String(d.get('end')||''),active:true,createdAt:nowISO()};state.promo.push(campaign);if(coupon){state.coupons=state.coupons.filter(c=>c.code!==coupon);state.coupons.push({code:coupon,percent,active:true,end:campaign.end})}broadcastSellerMessage('Nova promoção: '+title,message);save();render();toast('Campanha publicada para demonstração')}
+if(formId==='notification-form'){broadcastSellerMessage(String(d.get('title')).trim(),String(d.get('text')).trim());save();render();toast('Aviso disponibilizado na demonstração')}
 if(formId==='admin-login-form'){if(String(d.get('pin'))!=='2026')return toast('PIN de demonstração incorreto');admin=true;adminTab='orders';closeModal();render(true);toast('Bem-vindo ao painel demonstrativo')}
 if(formId==='edit-product-form'){let id=d.get('id'),url=String(d.get('image')||'').trim(),c=Number(d.get('cost')),r=Number(d.get('retail'));if(!P[id]||c<0||r<0)return toast('Confira os valores');state.priceOverride[id]=c;if(String(d.get('retail')).trim())state.retailOverride[id]=r;else delete state.retailOverride[id];if(url&&/^https:\/\//i.test(url))state.photoOverride[id]=url;else delete state.photoOverride[id];save();closeModal();render();toast('Produto atualizado')}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installer=e});window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});}
