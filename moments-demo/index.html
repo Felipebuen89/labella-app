@@ -436,7 +436,6 @@ state={...structuredClone(DEFAULT),...(state||{})};
 for(let k of ['profile','cart','inventory','priceOverride','retailOverride','photoOverride'])state[k]=state[k]||{};
 for(let k of ['orders','sales','promo','coupons','notifications','reorder'])state[k]=state[k]||[];
 state.profile={...DEFAULT.profile,...state.profile};
-state.notifications=state.sellerAccounts[state.currentSellerKey].notifications||state.notifications||[];state.sellerAccounts[state.currentSellerKey].notifications=state.notifications;
 state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
 let tab='home',admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
 
@@ -449,6 +448,7 @@ if(!state.sellerAccounts||typeof state.sellerAccounts!=='object'){
 }
 if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])state.currentSellerKey=Object.keys(state.sellerAccounts)[0];
 for(const field of sellerFields){if(state.sellerAccounts[state.currentSellerKey][field]!==undefined)state[field]=state.sellerAccounts[state.currentSellerKey][field];else if(field==='notifications')state.sellerAccounts[state.currentSellerKey].notifications=state.notifications||[]}
+state.notifications=state.sellerAccounts[state.currentSellerKey].notifications||[];
 state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
 state.sellerAccounts[state.currentSellerKey].activeCoupon=state.activeCoupon;
 state.training=Array.isArray(state.training)?state.training:[];
