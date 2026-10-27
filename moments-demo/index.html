@@ -310,6 +310,7 @@ state={...structuredClone(DEFAULT),...(state||{})};
 for(let k of ['profile','cart','inventory','priceOverride','retailOverride','photoOverride'])state[k]=state[k]||{};
 for(let k of ['orders','sales','promo','coupons','notifications','reorder'])state[k]=state[k]||[];
 state.profile={...DEFAULT.profile,...state.profile};
+state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
 let tab='home',admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
 
 const sellerFields=['profile','cart','orders','inventory','sales','reorder','activeCoupon'];
@@ -317,10 +318,12 @@ const copyData=x=>JSON.parse(JSON.stringify(x));
 if(!state.sellerAccounts||typeof state.sellerAccounts!=='object'){
  const key=(state.profile.code||'REV-DEMO').trim()||'REV-DEMO';
  state.currentSellerKey=key;
- state.sellerAccounts={[key]:Object.fromEntries(sellerFields.map(field=>[field,copyData(state[field]??(field==='profile'?DEFAULT.profile:['orders','sales','reorder'].includes(field)?[]:{}))]))};
+ state.sellerAccounts={[key]:Object.fromEntries(sellerFields.map(field=>[field,copyData(state[field]??(field==='profile'?DEFAULT.profile:field==='activeCoupon'?'':['orders','sales','reorder'].includes(field)?[]:{}))]))};
 }
 if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])state.currentSellerKey=Object.keys(state.sellerAccounts)[0];
 for(const field of sellerFields){if(state.sellerAccounts[state.currentSellerKey][field]!==undefined)state[field]=state.sellerAccounts[state.currentSellerKey][field]}
+state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
+state.sellerAccounts[state.currentSellerKey].activeCoupon=state.activeCoupon;
 state.training=Array.isArray(state.training)?state.training:[];
 const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
 const save=()=>{try{saveActiveSeller();localStorage.setItem('moments_rev_demo_v3',JSON.stringify(state))}catch(e){toast('Espaço para armazenamento esgotado')}};
@@ -331,7 +334,8 @@ const accountFor=key=>{saveActiveSeller();return state.sellerAccounts[key]||null
 function switchSeller(key){
  if(!state.sellerAccounts[key])return toast('Revendedor não encontrado');
  saveActiveSeller();state.currentSellerKey=key;const a=state.sellerAccounts[key];
- for(const field of sellerFields)state[field]=a[field]??(field==='profile'?{...DEFAULT.profile}:['orders','sales','reorder'].includes(field)?[]:{});
+ for(const field of sellerFields)state[field]=a[field]??(field==='profile'?{...DEFAULT.profile}:field==='activeCoupon'?'':['orders','sales','reorder'].includes(field)?[]:{});
+ state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
  admin=false;adminTab='orders';tab='home';save();closeModal();render(true);toast('Demonstração de '+state.profile.revendedor);
 }
 function createSeller(name){
