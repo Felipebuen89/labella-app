@@ -183,6 +183,49 @@
 .mc-coupon-value{font:normal 35px "Playfair Display",Georgia,serif;color:#9a4f60;margin:9px 0}
 .mc-coupon-card p{font-size:11px;margin:6px 0;color:#765c62}
 .mc-coupon-card .btn{margin-top:12px}
+
+/* Benefícios: começar pelo incômodo específico e estabelecer expectativa realista */
+.mc-benefit-modal{color:#563b47}
+.mc-benefit-modal .mc-overline{display:block;color:#9d6571;font-size:10px;letter-spacing:1.8px;font-weight:900}
+.mc-benefit-modal h3{font:normal 30px/1.14 "Playfair Display",Georgia,serif;color:#70384d;margin:8px 0 13px}
+.mc-benefit-modal .mc-benefit-photo{height:168px;object-fit:cover}
+.mc-pain-intro{display:flex;gap:12px;align-items:center;padding:14px;background:linear-gradient(140deg,#faf0ea,#f4d8d4);border:1px solid #e9c8c4;border-radius:15px;margin:13px 0}
+.mc-pain-intro>span{font-size:27px;color:#ab6575;line-height:1}
+.mc-pain-intro p{font-size:13px;font-weight:750;line-height:1.48;margin:0;color:#714b59}
+.mc-benefit-headline{font:normal 23px/1.25 "Playfair Display",Georgia,serif;color:#663d4e;margin:17px 0 12px}
+.mc-benefit-list{display:grid;gap:9px;margin:0 0 16px}
+.mc-result{display:flex;align-items:flex-start;gap:11px;border:1px solid #ecd6d0;border-radius:14px;padding:12px;background:#fff9f4}
+.mc-result-number{flex-shrink:0;color:#a86b73;font:normal 21px "Playfair Display",Georgia,serif}
+.mc-result strong{display:block;font-size:12px;color:#67414c;line-height:1.35}
+.mc-result p{font-size:12px;line-height:1.6;margin:4px 0 0;color:#706066}
+.mc-reality{border-left:3px solid #177278;background:#e9f3ef;border-radius:0 12px 12px 0;padding:11px 13px;margin:13px 0;color:#215960}
+.mc-reality strong{font-size:12px}.mc-reality p{font-size:11px;margin:4px 0 0;color:#43666a;line-height:1.65}
+.mc-benefit-modal .mc-safety{font-size:11px;line-height:1.6;color:#715b61;margin:13px 0}
+.mc-science-link{font-size:11px;font-weight:850;color:#8a4660!important;text-decoration:underline;line-height:1.5;display:block;margin:12px 0}
+.mc-benefit-actions{display:grid;gap:9px;margin:17px 0 8px}
+.mc-benefit-cta{min-height:50px}
+.mc-caution-footer{font-size:10px!important;line-height:1.55;color:#85727a;margin:11px 0 0}
+/* Destaque de cupom condicional: dois pulsos suaves, respeito a movimento reduzido */
+.mc-voucher-area{margin:16px 0 18px}
+.mc-voucher-trigger{width:100%;min-height:89px;border:1px solid #edc6ac;border-radius:17px;display:flex;align-items:center;gap:11px;text-align:left;padding:12px 13px;background:linear-gradient(112deg,#fff6ea,#f4d9cb);box-shadow:0 6px 18px #41283518;color:#673e4e;position:relative;overflow:hidden}
+.mc-voucher-trigger.has-coupons{border:2px solid #d49b6d;background:linear-gradient(111deg,#6b2b52,#a64e68 65%,#cc7a70);color:#fff8ef;box-shadow:0 5px 20px #b1687770;animation:mcVoucherPulse 5s ease-in-out infinite}
+.mc-voucher-trigger.has-coupons:before{content:"";pointer-events:none;position:absolute;top:0;bottom:0;width:65px;background:linear-gradient(95deg,transparent,#ffffff26,transparent);transform:translateX(-190px) rotate(15deg);animation:mcVoucherShine 5s ease-in-out infinite}
+.mc-voucher-trigger.is-applied{animation:none;background:linear-gradient(110deg,#0c6767,#257b75);border-color:#a6e0c5}
+.mc-voucher-trigger.is-applied:before{animation:none}
+.mc-voucher-symbol{flex-shrink:0;width:49px;height:49px;display:grid;place-items:center;background:#ffffff29;border:1px dashed #ffe3ca;border-radius:13px;font:normal 26px "Playfair Display",Georgia,serif;color:#fff}
+.mc-voucher-trigger.no-coupons .mc-voucher-symbol{color:#ae6c75;border-color:#dbadab;background:#fff5ed}
+.mc-voucher-copy{flex:1;min-width:0;display:grid;gap:3px}
+.mc-voucher-kicker{font-size:9px;letter-spacing:.85px;font-weight:950;color:#ffe3bd}
+.mc-voucher-trigger.no-coupons .mc-voucher-kicker{color:#945d6b}
+.mc-voucher-copy strong{font-size:14px;line-height:1.25;color:inherit}
+.mc-voucher-copy small{font-size:10px;line-height:1.3;opacity:.94}
+.mc-voucher-chevron{font-size:19px;flex-shrink:0;color:inherit}
+.mc-coupon-reveal{border:1px solid #e7c7bc;border-radius:0 0 16px 16px;padding:14px 12px;background:#fff5ee;color:#633b49;margin:-10px 6px 0;padding-top:21px}
+.mc-coupon-reveal .link{color:#894e5f!important}
+.mc-coupon-reveal strong{font-size:12px}
+@keyframes mcVoucherPulse{0%,10%,20%,100%{transform:scale(1);box-shadow:0 5px 16px #aa597052}5%,15%{transform:scale(1.018);box-shadow:0 0 0 5px #ecb68b49,0 8px 25px #9a4e75a6}}
+@keyframes mcVoucherShine{0%,20%,100%{transform:translateX(-200px) rotate(15deg)}8%{transform:translateX(650px) rotate(15deg)}}
+@media(prefers-reduced-motion:reduce){.mc-voucher-trigger.has-coupons,.mc-voucher-trigger.has-coupons:before{animation:none!important}}
 </style></head>
 <body>
 <div class="shell"><div class="phone"><div class="warning">DEMONSTRAÇÃO NÃO OFICIAL · MARCA E SERVIÇOS SUJEITOS À VALIDAÇÃO</div><div id="client"></div></div><aside class="side"><div class="side-text"><div class="eyebrow">MOVE DIGITAL · EXPERIÊNCIA EXCLUSIVA</div><h2>Seu cuidado.<br>Sua jornada.<br>Seu aplicativo.</h2><div class="line"></div><p>Experiência digital desenhada para o universo da Márcia Calixto, valorizando o relacionamento após a avaliação e o acompanhamento de pacotes de sessões.</p><div class="features"><div><b>01</b> Agenda e avaliações organizadas.</div><div><b>02</b> Acompanhamento de sessões e benefícios.</div><div><b>03</b> Painel da proprietária integrado à demonstração.</div></div><a class="btn" href="marcia-site.html">Conhecer a prévia do site ↗</a><p class="tiny" style="margin-top:21px">Nenhuma solicitação é enviada à clínica. Dados demonstrativos locais.</p></div></aside></div>
@@ -202,13 +245,83 @@ ozonio:'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format
 olhar:'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=600&q=82'
 };
 const services=[
-{id:'eval',name:'Avaliação personalizada',cat:'Avaliações',img:'eval',type:'eval',duration:45,price:65,desc:'Um primeiro encontro para conversar sobre objetivos, dúvidas e possibilidades de atendimento.',benefits:['Compreender melhor suas necessidades e expectativas.','Esclarecer dúvidas sobre indicações, preparação e cuidados.','Planejar com a equipe uma jornada de atendimento individualizada.']},
-{id:'ultra',name:'Ultrassom micro e macrofocado',cat:'Facial',img:'ultra',type:'eval',duration:60,price:690,desc:'Tecnologia divulgada pela clínica; necessidade e indicação dependem de avaliação.',benefits:['Conhecer uma tecnologia voltada a tratamentos estéticos de firmeza e contorno.','Esclarecer se a técnica é apropriada e quais resultados podem ser esperados.','Receber orientações profissionais sobre riscos, limitações e cuidados.']},
-{id:'crio',name:'Criolipólise',cat:'Corporal',img:'crio',type:'eval',duration:60,price:490,desc:'Procedimento divulgado para cuidados corporais, sujeito a avaliação e critérios profissionais.',benefits:['Conhecer uma tecnologia destinada a tratar gordura localizada em casos selecionados.','Receber avaliação sobre áreas, contraindicações e riscos possíveis.','Entender expectativas realistas e tempo de acompanhamento antes de decidir.']},
-{id:'drenagem',name:'Drenagem linfática',cat:'Bem-estar',img:'drenagem',type:'contact',duration:60,price:135,desc:'Técnica manual de bem-estar divulgada pela clínica. Disponibilidade a confirmar.',benefits:['Pode proporcionar sensação de leveza e conforto corporal.','Em situações apropriadas, pode auxiliar no manejo de inchaço transitório.','Oferece um momento de atenção e autocuidado individualizado.']},
-{id:'modeladora',name:'Massagem modeladora',cat:'Corporal',img:'modeladora',type:'contact',duration:60,price:155,desc:'Serviço divulgado em materiais do espaço. Consulte disponibilidade e duração.',benefits:['Experiência de cuidado corporal com manobras manuais específicas.','Oportunidade de conversar sobre objetivos e expectativas sem promessas irreais.','Pode promover sensação de bem-estar, conforme tolerância e avaliação.']},
-{id:'ozonio',name:'Ozonioterapia',cat:'Outros',img:'ozonio',type:'info',duration:60,price:0,desc:'Área mencionada no perfil profissional. Modalidades e habilitações precisam ser verificadas.',benefits:['Entender quais modalidades, se houver, estão efetivamente disponíveis.','Solicitar informações sobre habilitação profissional e requisitos aplicáveis.','Conhecer limitações e cuidados antes de qualquer decisão.']},
-{id:'olhar',name:'Beleza do olhar',cat:'Outros',img:'olhar',type:'info',duration:60,price:125,desc:'Serviços de parceiros apresentados em publicações; disponibilidade atual ainda não confirmada.',benefits:['Conhecer possibilidades de realce estético do olhar.','Esclarecer opções, manutenção e cuidados associados.','Confirmar profissionais e serviços realmente disponíveis.']}
+{id:'eval',name:'Avaliação personalizada',cat:'Avaliações',img:'eval',type:'eval',duration:45,price:65,
+ desc:'Um atendimento para entender o que incomoda você e descobrir alternativas adequadas.',
+ pain:'Não sabe por onde começar ou tem receio de escolher o tratamento errado?',
+ headline:'Troque dúvidas por um plano de cuidado pensado para você.',
+ benefits:[
+ {situation:'Dúvida entre diferentes tratamentos',effect:'A profissional pode explicar quais opções realmente fazem sentido para suas necessidades.'},
+ {situation:'Receio de efeitos indesejados',effect:'É o momento para discutir contraindicações, cuidados e os riscos de cada alternativa.'},
+ {situation:'Expectativas difíceis de definir',effect:'Você poderá entender resultados possíveis, etapas, custos e limites antes de decidir.'}],
+ expect:'A avaliação ajuda a orientar decisões; não garante indicação nem resultado.',
+ caution:'Informações dependem do profissional habilitado e do serviço escolhido.',
+ sourceName:'Anvisa — Procedimento seguro',sourceUrl:'https://www.gov.br/anvisa/pt-br/comunicacao/campanhas/estetica/procedimento-seguro'},
+{id:'ultra',name:'Ultrassom micro e macrofocado',cat:'Facial',img:'ultra',type:'eval',duration:60,price:690,
+ desc:'Tecnologia não invasiva usada em determinados protocolos para firmeza e contorno facial.',
+ pain:'A flacidez leve da pele ou o contorno menos definido incomodam você?',
+ headline:'Uma possibilidade para melhorar discretamente a firmeza da pele.',
+ benefits:[
+ {situation:'Pele levemente flácida no rosto',effect:'O ultrassom focalizado pode estimular colágeno e produzir melhora gradual e discreta na firmeza.'},
+ {situation:'Linha do maxilar menos definida',effect:'Em pessoas selecionadas, o tratamento pode proporcionar um efeito modesto de sustentação do contorno.'},
+ {situation:'Flacidez leve na região do pescoço',effect:'Pode ajudar no aspecto da pele com perda leve a moderada de firmeza, sem cirurgia.'}],
+ expect:'Os efeitos tendem a surgir gradualmente em cerca de 2 a 6 meses e geralmente são modestos; não substitui lifting cirúrgico.',
+ caution:'Aparelho, indicação, área tratada e riscos precisam ser avaliados por profissional habilitado.',
+ sourceName:'Academia Americana de Dermatologia',sourceUrl:'https://www.aad.org/public/cosmetic/younger-looking/firm-sagging-skin'},
+{id:'crio',name:'Criolipólise',cat:'Corporal',img:'crio',type:'eval',duration:60,price:490,
+ desc:'Resfriamento controlado usado para reduzir depósitos específicos de gordura localizada.',
+ pain:'Existe uma gordurinha localizada que persiste mesmo com hábitos saudáveis?',
+ headline:'Foco na redução de gordura localizada — não na perda de peso.',
+ benefits:[
+ {situation:'Volume de gordura localizado no abdômen',effect:'Em candidatos adequados, pode reduzir moderadamente a saliência de gordura na área tratada.'},
+ {situation:'Acúmulo localizado nos flancos',effect:'Pode ajudar a suavizar o contorno lateral do corpo após a eliminação gradual de células adiposas.'},
+ {situation:'Pequenos depósitos nas coxas',effect:'É uma opção não cirúrgica para áreas selecionadas, depois de avaliação individual.'}],
+ expect:'A mudança costuma ser gradual ao longo de meses. Não emagrece, não trata obesidade e não é tratamento para celulite.',
+ caution:'Há riscos, incluindo dor, alterações de sensibilidade e hiperplasia adiposa paradoxal rara; confirme o equipamento e as contraindicações.',
+ sourceName:'Cleveland Clinic — Criolipólise',sourceUrl:'https://my.clevelandclinic.org/health/treatments/21060-fat-freezing-cryolipolysis'},
+{id:'drenagem',name:'Drenagem linfática',cat:'Bem-estar',img:'drenagem',type:'contact',duration:60,price:135,
+ desc:'Massagem suave e direcionada que pode auxiliar a movimentação de líquidos acumulados.',
+ pain:'Sente pernas pesadas ou percebe inchaço em determinadas situações?',
+ headline:'Mais conforto quando o incômodo está relacionado ao acúmulo de líquidos.',
+ benefits:[
+ {situation:'Sensação de pernas e tornozelos inchados',effect:'Pode ajudar a aliviar o inchaço em algumas condições relacionadas à retenção de líquidos.'},
+ {situation:'Desconforto de pele esticada pelo edema',effect:'Ao facilitar a movimentação da linfa, pode diminuir a sensação de peso e tensão em casos apropriados.'},
+ {situation:'Linfedema acompanhado por profissional de saúde',effect:'Pode integrar um plano terapêutico de controle de inchaço, junto de outras medidas indicadas.'}],
+ expect:'Os benefícios dependem da causa do inchaço; não é procedimento para emagrecer ou eliminar gordura.',
+ caution:'Inchaço persistente exige diagnóstico; trombose, infecção e certas doenças cardíacas ou renais são situações que precisam ser avaliadas.',
+ sourceName:'Cleveland Clinic — Drenagem linfática',sourceUrl:'https://my.clevelandclinic.org/health/treatments/21768-lymphatic-drainage-massage'},
+{id:'modeladora',name:'Massagem modeladora',cat:'Corporal',img:'modeladora',type:'contact',duration:60,price:155,
+ desc:'Massagem corporal com manobras firmes, voltada à experiência estética e ao autocuidado.',
+ pain:'Quer reservar um momento para cuidar do corpo e do seu bem-estar?',
+ headline:'Cuidado corporal que pode proporcionar conforto e mudança visual temporária.',
+ benefits:[
+ {situation:'Desejo de uma experiência intensa de autocuidado',effect:'Proporciona uma sessão dedicada ao corpo e à percepção de bem-estar, conforme a intensidade tolerada.'},
+ {situation:'Incômodo com a textura irregular da pele',effect:'A manipulação dos tecidos pode produzir mudanças temporárias na aparência, mas a evidência é limitada.'},
+ {situation:'Sensação de tensão e necessidade de uma pausa',effect:'A massagem pode trazer conforto momentâneo para algumas pessoas; a técnica deve respeitar sensibilidade e limites.'}],
+ expect:'Não existem boas evidências de que a massagem manual elimine gordura localizada, emagreça ou remova a celulite de forma duradoura.',
+ caution:'Pode causar desconforto ou hematomas. Evite promessas de redução permanente de medidas e confirme se a técnica é adequada para você.',
+ sourceName:'Academia Americana de Dermatologia — Celulite',sourceUrl:'https://www.aad.org/public/cosmetic/fat-removal/cellulite-treatments-what-really-works'},
+{id:'ozonio',name:'Ozonioterapia',cat:'Outros',img:'ozonio',type:'info',duration:60,price:0,
+ desc:'Atividade citada no perfil da empresa, mas ainda sem modalidades e responsável confirmados.',
+ pain:'Quer entender se existe alguma modalidade regulamentada disponível?',
+ headline:'Conheça os requisitos antes de considerar a técnica.',
+ benefits:[
+ {situation:'Dúvida sobre a finalidade do procedimento',effect:'Pergunte qual modalidade é oferecida e se possui respaldo e autorização para aquela indicação.'},
+ {situation:'Incerteza sobre quem realizará a aplicação',effect:'Confirme que o responsável é profissional de saúde habilitado, registrado no conselho competente.'},
+ {situation:'Preocupação com segurança',effect:'Verifique a regularização do equipamento e receba explicações sobre riscos e caráter complementar.'}],
+ expect:'Esta seção é apenas informativa: não anunciamos efeitos clínicos nem permitimos reserva antes da validação.',
+ caution:'A Lei 14.648/2023 estabelece condições específicas; a aprovação de equipamentos não implica eficácia para toda alegação.',
+ sourceName:'Lei 14.648/2023',sourceUrl:'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14648.htm'},
+{id:'olhar',name:'Beleza do olhar',cat:'Outros',img:'olhar',type:'info',duration:60,price:125,
+ desc:'Cílios e outros serviços de embelezamento citados em publicações de parceiros, ainda a confirmar.',
+ pain:'Gostaria de destacar o olhar sem mudar totalmente sua rotina de beleza?',
+ headline:'Uma possibilidade estética para realçar a expressão do olhar.',
+ benefits:[
+ {situation:'Cílios que parecem curtos ou pouco marcados',effect:'Extensões, quando oferecidas, podem criar efeito visual imediato de maior comprimento e volume.'},
+ {situation:'Desejo de um olhar mais definido',effect:'A escolha de estilo e curvatura pode ajudar a personalizar o visual conforme suas preferências.'},
+ {situation:'Pouco tempo para maquiagem no dia a dia',effect:'Algumas pessoas preferem o efeito das extensões para usar menos máscara de cílios; a manutenção continua necessária.'}],
+ expect:'Resultados são estéticos e temporários, exigem manutenção e variam por técnica.',
+ caution:'Colas e produtos podem provocar alergias e irritação ocular. Confirme a profissional e produtos próprios para a região.',
+ sourceName:'FDA — Segurança de cosméticos para olhos',sourceUrl:'https://www.fda.gov/cosmetics/cosmetic-products/eye-cosmetic-safety'}
 ];
 const rewards=[{id:'r1',name:'Mimo de autocuidado',points:200,icon:'✧'},{id:'r2',name:'Benefício especial',points:350,icon:'♡'},{id:'r3',name:'Experiência exclusiva',points:600,icon:'✦'}];
 const pad=n=>String(n).padStart(2,'0'),currency=n=>Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -217,7 +330,7 @@ const formatDate=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-d
 const svc=id=>services.find(x=>x.id===id)||services[0];
 const emptySeed=()=>({user:'Cliente Demo',points:160,totalEarned:160,packages:[{id:1,client:'Cliente Demo',service:'Drenagem linfática',total:6,done:2,status:'Em andamento',nextDate:datePlus(3)}],bookings:[{id:11,client:'Cliente Demo',service:'Avaliação personalizada',date:datePlus(2),time:'10:00',status:'Agendado',owner:true}],requests:[{id:21,client:'Cliente Exemplo B',service:'Criolipólise',stage:'Novo contato',created:datePlus(0)}],couponOffers:[{id:51,code:'BEMVINDA10',title:'Boas-vindas MC',kind:'percent',value:10,service:'all',min:100,limit:50,active:true,expires:'2027-12-31'},{id:52,code:'CUIDADO20',title:'R$ 20 de cuidado',kind:'fixed',value:20,service:'drenagem',min:100,limit:30,active:true,expires:'2027-12-31'}],campaigns:[{id:31,title:'Uma novidade para você',tag:'EXCLUSIVO',text:'Acompanhe as novidades e descubra novas experiências de cuidado.',active:true}],coupons:[],notes:[{title:'Bem-vinda à experiência MC',text:'Acompanhe seu pacote, seus compromissos e descubra benefícios demonstrativos.'}],rewardRules:{perSession:40},history:[],reminderSent:[]});
 let data;try{data=JSON.parse(localStorage.getItem('move-marcia-demo-v1'))||emptySeed()}catch(e){data=emptySeed()}let defaults=emptySeed();data=Object.assign(defaults,data);for(const k of ['packages','bookings','requests','campaigns','coupons','couponOffers','notes','history','reminderSent'])if(!Array.isArray(data[k]))data[k]=defaults[k];data.rewardRules=Object.assign({perSession:40},data.rewardRules||{});
-const nativeClient=Boolean(window.MOVE_NATIVE_CLIENT===true);let mode=!nativeClient&&new URLSearchParams(location.search).get('view')==='owner'?'owner':'client',page='home',ownerPage='overview',serviceFilter='Todos',requestService='eval',requestDate=datePlus(2),requestTime='',selectedCouponId='',modalOpen=false,toastTimer=0;
+const nativeClient=Boolean(window.MOVE_NATIVE_CLIENT===true);let mode=!nativeClient&&new URLSearchParams(location.search).get('view')==='owner'?'owner':'client',page='home',ownerPage='overview',serviceFilter='Todos',requestService='drenagem',requestDate=datePlus(2),requestTime='',selectedCouponId='',couponExpanded=false,modalOpen=false,toastTimer=0;
 const save=()=>{try{localStorage.setItem('move-marcia-demo-v1',JSON.stringify(data))}catch(e){}};
 
 const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -232,8 +345,11 @@ function priceQuote(id,code){let base=quotePrice(id),c=(data.couponOffers||[]).f
 if(!couponValid(c,id))c=null;
 let discount=c?Math.min(base,c.kind==='percent'?Math.round(base*Math.min(100,c.value)/100*100)/100:Number(c.value)):0;
 return {base,discount,total:Math.max(0,base-discount),coupon:c}}
-function couponPanel(id){const valid=eligibleCoupons(id);return '<div class="mc-coupon-box"><div class="row between"><strong>Cupons disponíveis</strong><button class="link" data-action="page" data-id="coupons">Ver todos →</button></div>'+
-(valid.length?valid.map(c=>'<button class="mc-coupon-option '+(selectedCouponId===c.code?'selected':'')+'" data-action="applyCoupon" data-id="'+esc(c.code)+'"><span><b>'+esc(c.code)+'</b><small>'+esc(c.title)+' · '+(c.kind==='percent'?c.value+'% de desconto':money(c.value)+' de desconto')+'</small></span><span>'+(selectedCouponId===c.code?'✓ Aplicado':'Usar →')+'</span></button>').join(''):'<p class="small muted">Nenhum cupom se aplica a este tratamento nesta simulação.</p>')+'</div>'}
+function couponPanel(id){const valid=eligibleCoupons(id),active=valid.find(c=>c.code===selectedCouponId),maxSave=valid.length?Math.max(...valid.map(c=>priceQuote(id,c.code).discount)):0,has=valid.length>0;
+return '<div class="mc-voucher-area">'+(has?'<button class="mc-voucher-trigger has-coupons '+(active?'is-applied':'')+'" data-action="toggleCoupons" aria-expanded="'+(couponExpanded?'true':'false')+'" aria-label="'+(active?'Cupom aplicado: '+active.code:'Abrir '+valid.length+' cupons disponíveis para desconto')+'"><span class="mc-voucher-symbol" aria-hidden="true">%</span><span class="mc-voucher-copy"><span class="mc-voucher-kicker">'+(active?'✓ CUPOM APLICADO':'✦ VOCÊ TEM DESCONTO DISPONÍVEL!')+'</span><strong>'+(active?'Economia de '+money(priceQuote(id,active.code).discount):'Economize até '+money(maxSave)+' nesta visita')+'</strong><small>'+(active?'Código '+esc(active.code)+' · toque para trocar':'Toque aqui para escolher um dos '+valid.length+' cupons')+'</small></span><span class="mc-voucher-chevron" aria-hidden="true">'+(couponExpanded?'⌃':'⌄')+'</span></button>':
+'<button class="mc-voucher-trigger no-coupons" data-action="toggleCoupons" aria-expanded="'+(couponExpanded?'true':'false')+'"><span class="mc-voucher-symbol" aria-hidden="true">%</span><span class="mc-voucher-copy"><span class="mc-voucher-kicker">CLUBE MC</span><strong>Confira os benefícios do clube</strong><small>Sem cupom para este serviço agora</small></span><span class="mc-voucher-chevron" aria-hidden="true">›</span></button>')+
+(couponExpanded?'<div class="mc-coupon-reveal"><div class="row between"><strong>'+ (has?'Escolha seu desconto':'Cupons de demonstração')+'</strong><button class="link" data-action="page" data-id="coupons">Ver todos →</button></div>'+(has?valid.map(c=>'<button class="mc-coupon-option '+(selectedCouponId===c.code?'selected':'')+'" data-action="applyCoupon" data-id="'+esc(c.code)+'"><span><b>'+esc(c.code)+'</b><small>'+esc(c.title)+' · '+(c.kind==='percent'?c.value+'% de desconto':money(c.value)+' de desconto')+'</small></span><span>'+(selectedCouponId===c.code?'✓ Aplicado':'Aplicar →')+'</span></button>').join(''):'<p class="small muted">Selecione outro procedimento ou consulte a aba de cupons para descobrir ofertas elegíveis.</p>')+'</div>':'')+'</div>'
+}
 function priceSummary(id){const q=priceQuote(id,selectedCouponId);return '<div class="mc-quote"><div class="row between"><span>Valor ilustrativo</span><strong>'+money(q.base)+'</strong></div>'+(q.coupon?'<div class="row between"><span>Cupom '+esc(q.coupon.code)+'</span><strong>− '+money(q.discount)+'</strong></div>':'')+'<div class="row between mc-quote-final"><span>Total demonstrativo</span><strong>'+money(q.total)+'</strong></div><p class="tiny">Nenhum pagamento é realizado; valores e descontos são fictícios.</p></div>'}
 function mcIcon(id){const p={home:'<path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',services:'<path d="M12 21c-5-3-7-7-6-12 2 1 4 3 6 6 2-3 4-5 6-6 1 5-1 9-6 12Z"/><path d="M12 15c-1-5-1-8 0-12 2 3 3 7 0 12Z"/>',agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M8 14h2m4 0h2"/>',campaigns:'<path d="m3 11 13-5v12L3 13v-2Zm13-3 3-2v12l-3-2M6 14l1 6h3l-2-5"/>',club:'<path d="m12 3 9 8-9 10-9-10 9-8Zm-9 8h18M8 3l4 18 4-18"/>',heart:'<path d="M20.8 8.7c0 4.7-8.8 10.2-8.8 10.2S3.2 13.4 3.2 8.7a4.9 4.9 0 0 1 8.8-2.9 4.9 4.9 0 0 1 8.8 2.9Z"/>'};return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p[id]||p.heart)+'</svg>'}
 function nav(){const menu=[['home','Início','home'],['services','Tratamentos','services'],['agenda','Agenda','agenda'],['campaigns','Campanhas','campaigns'],['club','Clube MC','club']];return '<nav class="dock mc-dock" aria-label="Menu principal">'+menu.map(x=>'<button data-action="page" data-id="'+x[0]+'" class="'+(page===x[0]?'active':'')+'" '+(page===x[0]?'aria-current="page"':'')+'>'+mcIcon(x[2])+'<span>'+x[1]+'</span></button>').join('')+'</nav>'}
@@ -257,8 +373,8 @@ function agenda(){let mine=data.bookings.filter(b=>b.owner).sort((a,b)=>a.date.l
 return '<section class="screen">'+title('AGENDAMENTOS','Seu próximo cuidado.','Simule uma reserva com valores e descontos fictícios. Nada é enviado à clínica.')+
 '<div class="section-head"><h2 class="section-title">Meus compromissos</h2></div>'+
 (mine.length?mine.map(b=>'<div class="card" style="margin-bottom:10px"><div class="row between"><span class="pill">'+formatDate(b.date)+' · '+b.time+'</span><span class="pill teal">'+b.status+'</span></div><strong style="display:block;margin:13px 0 4px">'+esc(b.service)+'</strong>'+(typeof b.total==='number'?'<p class="small muted">Simulação: '+money(b.basePrice)+' '+(b.discount?'· desconto '+money(b.discount):'')+' → <b>'+money(b.total)+'</b></p>':'')+(b.couponCode?'<span class="pill">Cupom: '+esc(b.couponCode)+'</span>':'')+'<p class="small muted">Horário ilustrativo salvo somente neste navegador.</p>'+(b.status==='Agendado'?'<button class="link" data-action="cancelBooking" data-id="'+b.id+'">Cancelar horário fictício</button>':'')+'</div>').join(''):'<div class="card"><p class="small muted">Ainda não há compromissos registrados.</p></div>')+
-'<div class="section-head"><h2 class="section-title">Simular agendamento</h2></div><div class="card"><label class="small" for="appointment-service"><b>Escolha um atendimento</b></label><select id="appointment-service" class="select">'+services.filter(s=>s.type!=='info').map(s=>'<option value="'+s.id+'" '+(requestService===s.id?'selected':'')+'>'+esc(s.name)+' · '+money(s.price)+'</option>').join('')+'</select><div class="small muted">Escolha uma data demonstrativa</div><div class="booking-days">'+Array.from({length:10},(_,i)=>datePlus(i+1)).map(d=>'<button class="day '+(requestDate===d?'selected':'')+'" data-action="date" data-id="'+d+'" '+(new Date(d+'T12:00:00').getDay()===0?'disabled':'')+'><small>'+new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'})+'</small><strong>'+d.slice(-2)+'</strong></button>').join('')+'</div><div class="times">'+['09:00','10:00','11:00','13:00','14:00','15:00','16:00'].filter(t=>!data.bookings.some(b=>b.date===requestDate&&b.time===t&&b.status!=='Cancelado')).map(t=>'<button class="time '+(requestTime===t?'selected':'')+'" data-action="time" data-id="'+t+'">'+t+'</button>').join('')+'</div>'+
-couponPanel(requestService)+priceSummary(requestService)+
+'<div class="section-head"><h2 class="section-title">Simular agendamento</h2></div><div class="card"><label class="small" for="appointment-service"><b>Escolha um atendimento</b></label><select id="appointment-service" class="select">'+services.filter(s=>s.type!=='info').map(s=>'<option value="'+s.id+'" '+(requestService===s.id?'selected':'')+'>'+esc(s.name)+' · '+money(s.price)+'</option>').join('')+'</select>'+couponPanel(requestService)+'<div class="small muted">Escolha uma data demonstrativa</div><div class="booking-days">'+Array.from({length:10},(_,i)=>datePlus(i+1)).map(d=>'<button class="day '+(requestDate===d?'selected':'')+'" data-action="date" data-id="'+d+'" '+(new Date(d+'T12:00:00').getDay()===0?'disabled':'')+'><small>'+new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'})+'</small><strong>'+d.slice(-2)+'</strong></button>').join('')+'</div><div class="times">'+['09:00','10:00','11:00','13:00','14:00','15:00','16:00'].filter(t=>!data.bookings.some(b=>b.date===requestDate&&b.time===t&&b.status!=='Cancelado')).map(t=>'<button class="time '+(requestTime===t?'selected':'')+'" data-action="time" data-id="'+t+'">'+t+'</button>').join('')+'</div>'+
+priceSummary(requestService)+
 '<div class="notice" style="margin:14px 0">Os preços, descontos e horários não são oficiais. Serviços sujeitos a avaliação continuam dependendo da aprovação profissional.</div><button class="btn wide" data-action="sendBooking" '+(!requestTime?'disabled':'')+'>Confirmar simulação de '+money(q.total)+' ↗</button></div>'+foot()+'</section>'
 }
 function journey(){let packages=data.packages.filter(p=>p.client===data.user);return '<section class="screen">'+title('MEU ACOMPANHAMENTO','Sua jornada de cuidado.','Uma área pensada para facilitar a organização de sessões e compromissos.')+'<div class="notice" style="margin-bottom:17px">Exemplo fictício de pacote de sessões. Não representa contrato, prontuário nem tratamento real da clínica.</div>'+(packages.length?packages.map(p=>'<div class="journey-hero"><div class="eyebrow" style="color:#f0d4d8">PACOTE DEMONSTRATIVO</div><h2>'+esc(p.service)+'</h2><p>'+p.done+' sessões realizadas · '+Math.max(0,p.total-p.done)+' restantes</p><div class="progress"><i style="width:'+Math.min(100,p.done/p.total*100)+'%"></i></div><span class="tiny">'+Math.round(p.done/p.total*100)+'% de sessões registradas</span></div><div class="steps">'+Array.from({length:p.total},(_,i)=>'<div class="step '+(i<p.done?'done':'')+'">'+(i<p.done?'✓':i+1)+'</div>').join('')+'</div><div class="card"><div class="cardline"><span>Protocolo ilustrativo</span><span>'+esc(p.service)+'</span></div><div class="cardline"><span>Sessões realizadas</span><span>'+p.done+'</span></div><div class="cardline"><span>Restantes</span><span>'+Math.max(0,p.total-p.done)+'</span></div><div class="cardline"><span>Próxima data de referência</span><span>'+formatDate(p.nextDate)+'</span></div></div>').join(''):'<div class="card">Nenhum pacote demonstrativo ativo.</div>')+'<div class="section-head"><h2 class="section-title">Depois do atendimento</h2></div><div class="listcard"><div class="list-icon">♡</div><div><strong>Informações e orientações</strong><p>Orientações específicas só serão disponibilizadas após aprovação da equipe responsável e em ambiente privado.</p></div></div><button class="btn secondary wide" data-action="page" data-id="agenda">Ver meus compromissos ↗</button>'+foot()+'</section>'}
@@ -342,12 +458,13 @@ if(action==='previewCampaigns'){if(nativeClient)return;mode='client';page='campa
 if(action==='clientMode'){mode='client';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='serviceFilter'){serviceFilter=id;return render()}
 if(action==='detail'){let s=svc(id);return popup('<div class="eyebrow">CUIDADO PERSONALIZADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><p>'+esc(s.desc)+'</p><p class="small muted">Simulação de valor: '+(s.type==='info'?'Sob consulta':money(s.price))+'</p><button class="btn wide" data-action="showBenefits" data-id="'+s.id+'">Ver mais benefícios ✦</button><p class="notice" style="margin-top:12px">A oferta depende da confirmação de disponibilidade e da avaliação profissional.</p><button class="btn secondary" data-action="close" style="margin-top:12px">Voltar</button>')}
-if(action==='showBenefits'){const s=svc(id),arr=s.benefits||[];return popup('<div class="eyebrow">O QUE VOCÊ PODE GANHAR COM ESSE CUIDADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Imagem demonstrativa"><p>Conheça os benefícios e perguntas importantes antes de decidir:</p><div class="mc-benefits">'+arr.map(x=>'<div class="mc-benefit"><span>✧</span><p>'+esc(x)+'</p></div>').join('')+'</div><p class="notice" style="margin-top:12px">Os efeitos variam. A informação não substitui avaliação profissional, nem representa garantia de resultado.</p><div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">'+(s.type==='info'?'':'<button class="btn" data-action="chooseService" data-id="'+s.id+'">Simular agendamento →</button>')+'<button class="btn secondary" data-action="close">Fechar</button></div>')}
+if(action==='showBenefits'){const s=svc(id),arr=s.benefits||[];return popup('<div class="mc-benefit-modal"><span class="mc-overline">'+(s.type==='info'?'INFORMAÇÕES PARA DECIDIR':'QUANDO ESSE CUIDADO PODE FAZER SENTIDO')+'</span><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo mc-benefit-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><div class="mc-pain-intro"><span aria-hidden="true">♡</span><p>'+esc(s.pain||'Conheça os detalhes desse cuidado.')+'</p></div><h4 class="mc-benefit-headline">'+esc(s.headline||'Benefícios potenciais')+'</h4><div class="mc-benefit-list">'+arr.map((x,i)=>'<div class="mc-result"><span class="mc-result-number">0'+(i+1)+'</span><div><strong>'+esc(x.situation)+'</strong><p>'+esc(x.effect)+'</p></div></div>').join('')+'</div><div class="mc-reality"><strong>O que esperar na prática</strong><p>'+esc(s.expect||'Os resultados variam conforme cada pessoa.')+'</p></div><p class="mc-safety"><b>Antes de fazer:</b> '+esc(s.caution||'Converse com a equipe profissional.')+'</p>'+(s.sourceUrl?'<a class="mc-science-link" href="'+esc(s.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Entenda a referência médica: '+esc(s.sourceName||'Saiba mais')+' ↗</a>':'')+'<div class="mc-benefit-actions">'+(s.type==='info'?'':'<button class="btn mc-benefit-cta" data-action="chooseService" data-id="'+s.id+'">'+(s.type==='eval'?'Simular avaliação →':'Ver horários de demonstração →')+'</button>')+'<button class="btn secondary" data-action="close">Voltar aos tratamentos</button></div><p class="mc-caution-footer">Informações educativas, não são promessa de resultados e precisam de aprovação da clínica antes do lançamento.</p></div>')}
 if(action==='campaignDetail'){const c=data.campaigns.find(x=>x.id==id&&x.active);if(!c)return toast('Campanha indisponível');return popup('<div class="eyebrow">'+esc(c.tag||'CAMPANHA')+'</div><h3>'+esc(c.title)+'</h3><p>'+esc(c.text)+'</p><p class="notice">Campanha de demonstração. Condições, disponibilidade e preços precisam da aprovação da clínica.</p><button class="btn" data-action="close">Entendi</button>')}
 if(action==='chooseService'){close();if(svc(id).type==='info')return popup('<h3>Informações sob consulta</h3><p>Esta especialidade precisa ter modalidade, profissional e habilitações verificadas antes de ser liberada para reserva no aplicativo.</p><button class="btn" data-action="close">Entendi</button>');requestService=id;requestTime='';return changePage('agenda')}
 
-if(action==='applyCoupon'){const c=(data.couponOffers||[]).find(x=>x.code===id);if(!couponValid(c,requestService))return toast('Este cupom não se aplica à seleção atual.');selectedCouponId=selectedCouponId===id?'':id;render();return}
-if(action==='couponToAgenda'){const c=(data.couponOffers||[]).find(x=>x.code===id);requestService=c&&c.service!=='all'?c.service:(services.find(x=>couponValid(c,x.id))||services[0]).id;selectedCouponId=couponValid(c,requestService)?id:'';requestTime='';return changePage('agenda')}
+if(action==='toggleCoupons'){couponExpanded=!couponExpanded;render();return}
+if(action==='applyCoupon'){const c=(data.couponOffers||[]).find(x=>x.code===id);if(!couponValid(c,requestService))return toast('Este cupom não se aplica à seleção atual.');selectedCouponId=selectedCouponId===id?'':id;couponExpanded=true;render();return}
+if(action==='couponToAgenda'){const c=(data.couponOffers||[]).find(x=>x.code===id);requestService=c&&c.service!=='all'?c.service:(services.find(x=>couponValid(c,x.id))||services[0]).id;selectedCouponId=couponValid(c,requestService)?id:'';couponExpanded=true;requestTime='';return changePage('agenda')}
 if(action==='previewCoupons'){if(nativeClient)return;mode='client';page='coupons';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='addCoupon'){
 let title=document.getElementById('couponTitle')?.value.trim(),code=document.getElementById('couponCode')?.value.trim().toUpperCase().replace(/[^A-Z0-9]/g,''),kind=document.getElementById('couponKind')?.value,value=Number(document.getElementById('couponValue')?.value),min=Number(document.getElementById('couponMin')?.value),service=document.getElementById('couponService')?.value,expires=document.getElementById('couponExpiry')?.value,limit=Math.round(Number(document.getElementById('couponLimit')?.value));
@@ -370,7 +487,7 @@ if(action==='resetConfirm'){data=emptySeed();save();close();mode='client';page='
 if(action==='close')return close();
 }
 document.addEventListener('click',e=>{let a=e.target.closest('[data-action]');if(a)handleAction(a.dataset.action,a.dataset.id,a)});
-document.addEventListener('change',e=>{if(e.target.id==='appointment-service'){requestService=e.target.value;selectedCouponId='';render()}const id=e.target.getAttribute('data-stage');if(id){let item=data.requests.find(x=>x.id==id);if(item){item.stage=e.target.value;save();render()}}});
+document.addEventListener('change',e=>{if(e.target.id==='appointment-service'){requestService=e.target.value;selectedCouponId='';couponExpanded=false;render()}const id=e.target.getAttribute('data-stage');if(id){let item=data.requests.find(x=>x.id==id);if(item){item.stage=e.target.value;save();render()}}});
 if(typeof window!=='undefined'&&window.setInterval){window.setInterval(checkOpenPageReminders,60000);checkOpenPageReminders()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modalOpen)close()});
 render();
