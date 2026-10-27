@@ -63,12 +63,12 @@ var data;try{data=JSON.parse(localStorage.getItem(STORAGE))||makeSeed()}catch(e)
 if(!data||!Array.isArray(data.bookings)){data=makeSeed()}
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify(data))}catch(e){}}
 var admin=new URLSearchParams(location.search).get('painel')==='1';
-var page='inicio', adminPage='resumo', category='Todos', bookService='corte', bookPro='bia', bookDate=plusDays(1), bookTime='', bookingDone=false, ownerDate=plusDays(1), campaignTitle='',campaignText='';
+var page='inicio', adminPage='resumo', category='Todos', bookService='corte', bookPro='bia', bookDate=plusDays(1), bookTime='', bookingDone=false, rescheduleOldId=null, ownerDate=plusDays(1), campaignTitle='',campaignText='';
 var root=document.getElementById('root'), toastTimer;
 function toast(s){var t=document.getElementById('toast');t.textContent=s;t.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('on')},2900)}
 function userBookings(){return data.bookings.filter(function(b){return b.who.indexOf('Você')===0 && b.status!=='cancelado'}).sort(function(a,b){return (a.date+a.time).localeCompare(b.date+b.time)})}
 function upcoming(){return userBookings().find(function(b){return b.date>=plusDays(0)&&b.status!=='concluido'})}
-function newPage(p){page=p;bookingDone=false;render();window.scrollTo(0,0)}
+function newPage(p){if(p!=='agendar')rescheduleOldId=null;page=p;bookingDone=false;render();window.scrollTo(0,0)}
 function newAdminPage(p){adminPage=p;render();window.scrollTo(0,0)}
 function stageLabel(s){return {'pendente':'Aguardando confirmação','confirmado':'Confirmado','concluido':'Concluído','cancelado':'Cancelado'}[s]||s}
 function titleBlock(t,sub){return '<p class="kicker">'+esc(sub||'Seu espaço de beleza')+'</p><h1 class="big-title">'+esc(t)+'</h1>'}
@@ -151,7 +151,7 @@ document.addEventListener('click',function(e){
  if(a==='go')return newPage(v);
  if(a==='admin-go')return newAdminPage(v);
  if(a==='cat'){category=v;return render()}
- if(a==='book-service'){bookService=v;bookTime='';return newPage('agendar')}
+ if(a==='book-service'){rescheduleOldId=null;bookService=v;bookTime='';return newPage('agendar')}
  if(a==='pro'){bookPro=v;bookTime='';return render()}
  if(a==='date'){bookDate=v;bookTime='';return render()}
  if(a==='time'){bookTime=v;return render()}
@@ -160,6 +160,7 @@ document.addEventListener('click',function(e){
  if(a==='confirm-book'){
   if(!bookTime||freeSlots().indexOf(bookTime)<0)return toast('Este horário não está mais disponível.');
   data.bookings.push({id:'a'+Date.now(),who:'Você (demonstração)',service:bookService,pro:bookPro,date:bookDate,time:bookTime,status:'pendente',rewarded:false});
+  if(rescheduleOldId){var prior=data.bookings.find(function(x){return x.id===rescheduleOldId});if(prior&&prior.status!=='concluido')prior.status='cancelado';rescheduleOldId=null}
   save();bookingDone=true;render();return
  }
  if(a==='cancel'){
@@ -167,7 +168,7 @@ document.addEventListener('click',function(e){
  }
  if(a==='reschedule'){
   var old=data.bookings.find(function(x){return x.id===v});if(!old)return;
-  bookService=old.service;bookPro=old.pro;bookDate=old.date<plusDays(1)?plusDays(1):old.date;bookTime='';old.status='cancelado';save();newPage('agendar');return toast('Escolha um novo horário. A reserva anterior foi cancelada neste demo.')
+  rescheduleOldId=old.id;bookService=old.service;bookPro=old.pro;bookDate=old.date<plusDays(1)?plusDays(1):old.date;bookTime='';newPage('agendar');return toast('Escolha um novo horário. O anterior só será cancelado após confirmar o novo.')
  }
  if(a==='redeem'){
   if(data.points<500)return toast('Você precisa de 500 pontos para este resgate.');
