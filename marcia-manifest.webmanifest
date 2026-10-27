@@ -1,0 +1,20 @@
+{
+  "id": "/labella-app/marcia-app.html",
+  "name": "Márcia Calixto — Estética e Saúde (Demo)",
+  "short_name": "Márcia Calixto",
+  "description": "Aplicativo de demonstração não oficial da Move Digital",
+  "start_url": "./marcia-app.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#075058",
+  "theme_color": "#075058",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "marcia-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
