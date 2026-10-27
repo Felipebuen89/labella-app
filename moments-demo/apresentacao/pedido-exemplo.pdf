@@ -1,0 +1,61 @@
+%PDF-1.4
+%MPDF
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [4 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1464 >>
+stream
+BT /F1 17 Tf 42 790 Td (MOMENTS PARIS / PEDIDO DE REVENDEDOR) Tj ET
+BT /F1 8 Tf 42 768 Td (CONTROLE DE PEDIDOS - DOCUMENTO GERADO PELO APLICATIVO) Tj ET
+0.75 G 42 757 m 553 757 l S 0 G
+BT /F1 12 Tf 42 732 Td (PEDIDO: DEMO-2026-001) Tj ET
+BT /F1 10 Tf 42 714 Td (Revendedor: Revendedor Demonstracao) Tj ET
+BT /F1 10 Tf 42 696 Td (Codigo: REV-DEMO) Tj ET
+BT /F1 10 Tf 42 678 Td (Local de retirada: Franquia Moments Paris) Tj ET
+BT /F1 10 Tf 42 660 Td (Data e horario: 03/11/2026 as 14:00) Tj ET
+BT /F1 10 Tf 42 642 Td (Criado em: 27/10/2026) Tj ET
+0.75 G 42 624 m 553 624 l S 0 G
+BT /F1 10 Tf 42 602 Td (PRODUTO) Tj ET
+BT /F1 10 Tf 402 602 Td (QTD) Tj ET
+BT /F1 10 Tf 475 602 Td (TOTAL) Tj ET
+0.75 G 42 588 m 553 588 l S 0 G
+BT /F1 10 Tf 42 568 Td (Acqua Boy - 15 ml) Tj ET
+BT /F1 10 Tf 413 568 Td (2) Tj ET
+BT /F1 10 Tf 477 568 Td (R$ 44.00) Tj ET
+BT /F1 10 Tf 42 546 Td (Best Girl - 15 ml) Tj ET
+BT /F1 10 Tf 413 546 Td (1) Tj ET
+BT /F1 10 Tf 477 546 Td (R$ 22.00) Tj ET
+BT /F1 10 Tf 42 524 Td (Titan Black - 15 ml) Tj ET
+BT /F1 10 Tf 413 524 Td (1) Tj ET
+BT /F1 10 Tf 477 524 Td (R$ 22.00) Tj ET
+0.75 G 42 502 m 553 502 l S 0 G
+BT /F1 10 Tf 345 481 Td (Subtotal: R$ 88.00) Tj ET
+BT /F1 10 Tf 345 462 Td (Desconto: R$ 0.00) Tj ET
+BT /F1 13 Tf 300 438 Td (TOTAL DO PEDIDO: R$ 88.00) Tj ET
+BT /F1 9 Tf 42 60 Td (Lista de solicitacao sujeita a confirmacao da franquia.) Tj ET
+BT /F1 8 Tf 42 45 Td (Exemplo ilustrativo para demonstracao - nao e um pedido real.) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000344 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1859
+%%EOF
