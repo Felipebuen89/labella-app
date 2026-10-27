@@ -1,4 +1,4 @@
-import {readFile,writeFile,mkdir} from "node:fs/promises";
+import {readFile,writeFile,mkdir,copyFile} from "node:fs/promises";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 
@@ -26,5 +26,7 @@ if(!app.includes('window.MOVE_NATIVE_CLIENT=true;'))throw Error("Falha ao ativar
 
 await mkdir(resolve(root,"www"),{recursive:true});
 await writeFile(resolve(root,"www/index.html"),app,"utf8");
+await copyFile(resolve(root,"../marcia-flores.svg"),resolve(root,"www/marcia-flores.svg"));
+console.log("Florais da identidade MC incluídos no pacote Android para funcionar offline.");
 console.log("www/index.html criado em modo cliente Android, a partir de marcia-app.html.");
 console.log("Sem login/back-end: build somente para demonstração e teste interno.");
