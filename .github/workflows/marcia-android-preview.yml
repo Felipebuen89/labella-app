@@ -7,7 +7,7 @@ on:
       - '.github/workflows/marcia-android-preview.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-preview:
@@ -55,3 +55,18 @@ jobs:
           name: marcia-calixto-demo-debug-apk
           path: marcia-android/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
+
+      - name: Criar link público do APK de demonstração
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp marcia-android/android/app/build/outputs/apk/debug/app-debug.apk marcia-calixto-demo-android.apk
+          TAG="mc-demo-android-v1"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --prerelease --latest=false \
+              --title "Move Digital · Márcia Calixto · DEMO NÃO OFICIAL" \
+              --notes "APK apenas para testes internos no Android. Não é o app oficial da clínica, não foi publicado na Google Play e usa dados fictícios. Não cadastrar dados pessoais reais. Instalação externa à loja é por conta e risco do testador."
+          fi
+          gh release upload "$TAG" marcia-calixto-demo-android.apk --clobber
+          echo "Link de teste: https://github.com/${{ github.repository }}/releases/download/$TAG/marcia-calixto-demo-android.apk"
