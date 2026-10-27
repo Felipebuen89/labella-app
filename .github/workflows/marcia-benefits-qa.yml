@@ -1,0 +1,32 @@
+name: QA interativo dos benefícios — Márcia Calixto
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/marcia-benefits-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  touch-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Playwright e Chromium
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Testar interface móvel, rolagem e botões
+        run: node marcia-android/scripts/test-benefits.cjs
+      - name: Salvar evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-benefits-touch-qa
+          path: mc-browser-qa/
+          retention-days: 2
