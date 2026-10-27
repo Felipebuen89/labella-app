@@ -331,6 +331,15 @@ const svc=id=>services.find(x=>x.id===id)||services[0];
 const emptySeed=()=>({user:'Cliente Demo',points:160,totalEarned:160,packages:[{id:1,client:'Cliente Demo',service:'Drenagem linfática',total:6,done:2,status:'Em andamento',nextDate:datePlus(3)}],bookings:[{id:11,client:'Cliente Demo',service:'Avaliação personalizada',date:datePlus(2),time:'10:00',status:'Agendado',owner:true}],requests:[{id:21,client:'Cliente Exemplo B',service:'Criolipólise',stage:'Novo contato',created:datePlus(0)}],couponOffers:[{id:51,code:'BEMVINDA10',title:'Boas-vindas MC',kind:'percent',value:10,service:'all',min:100,limit:50,active:true,expires:'2027-12-31'},{id:52,code:'CUIDADO20',title:'R$ 20 de cuidado',kind:'fixed',value:20,service:'drenagem',min:100,limit:30,active:true,expires:'2027-12-31'}],campaigns:[{id:31,title:'Uma novidade para você',tag:'EXCLUSIVO',text:'Acompanhe as novidades e descubra novas experiências de cuidado.',active:true}],coupons:[],notes:[{title:'Bem-vinda à experiência MC',text:'Acompanhe seu pacote, seus compromissos e descubra benefícios demonstrativos.'}],rewardRules:{perSession:40},history:[],reminderSent:[]});
 let data;try{data=JSON.parse(localStorage.getItem('move-marcia-demo-v1'))||emptySeed()}catch(e){data=emptySeed()}let defaults=emptySeed();data=Object.assign(defaults,data);for(const k of ['packages','bookings','requests','campaigns','coupons','couponOffers','notes','history','reminderSent'])if(!Array.isArray(data[k]))data[k]=defaults[k];data.rewardRules=Object.assign({perSession:40},data.rewardRules||{});
 const nativeClient=Boolean(window.MOVE_NATIVE_CLIENT===true);let mode=!nativeClient&&new URLSearchParams(location.search).get('view')==='owner'?'owner':'client',page='home',ownerPage='overview',serviceFilter='Todos',requestService='drenagem',requestDate=datePlus(2),requestTime='',selectedCouponId='',couponExpanded=false,modalOpen=false,toastTimer=0;
+const deeplink=new URLSearchParams(location.search);
+if(mode==='client'){
+  const requestedScreen=deeplink.get('screen');
+  const requestedService=deeplink.get('service');
+  if(['home','services','agenda','journey','club','coupons','campaigns','profile'].includes(requestedScreen))page=requestedScreen;
+  if(services.some(x=>x.id===requestedService&&x.type!=='info'))requestService=requestedService;
+  const requestedCoupon=deeplink.get('cupom');
+  if(requestedCoupon&&data.couponOffers.some(x=>x.code===requestedCoupon&&x.active)){selectedCouponId=requestedCoupon;couponExpanded=true}
+}
 const save=()=>{try{localStorage.setItem('move-marcia-demo-v1',JSON.stringify(data))}catch(e){}};
 
 const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
