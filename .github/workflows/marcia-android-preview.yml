@@ -26,10 +26,13 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Instalar plataforma 36
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Preparar Android SDK 36
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          command -v sdkmanager
+          sdkmanager --list_installed | grep -E 'platforms;android-|build-tools;' || true
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
       - name: Instalar dependências Capacitor 8
         working-directory: marcia-android
         run: npm install --no-audit --no-fund
