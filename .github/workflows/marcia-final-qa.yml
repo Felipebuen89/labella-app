@@ -1,0 +1,32 @@
+name: QA final do site e app MC
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/marcia-final-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar teste de navegador móvel
+        run: |
+          npm install --no-save playwright@1.58.2
+          command -v google-chrome
+      - name: Validar site, aplicativo e painel com Chrome móvel
+        run: node marcia-android/scripts/test-final.cjs
+      - name: Armazenar capturas para conferência
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mc-final-ui-qa
+          path: mc-final-qa/
+          retention-days: 2
