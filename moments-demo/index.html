@@ -329,6 +329,8 @@ state.training=Array.isArray(state.training)?state.training:[];
 const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
 const save=()=>{try{saveActiveSeller();localStorage.setItem('moments_rev_demo_v3',JSON.stringify(state))}catch(e){toast('Espaço para armazenamento esgotado')}};
 const sellerKeys=()=>Object.keys(state.sellerAccounts);
+const sellerKeyForOrder=id=>{saveActiveSeller();for(const [key,a] of Object.entries(state.sellerAccounts)){if((a.orders||[]).some(o=>o.id===id))return key}return state.currentSellerKey};
+const sendSellerMessage=(key,title,message)=>{saveActiveSeller();const a=state.sellerAccounts[key];if(!a)return;a.notifications=a.notifications||[];a.notifications.unshift({id:'N-'+rand()+Date.now(),title,text:message,when:nowISO(),read:false});if(key===state.currentSellerKey)state.notifications=a.notifications;save()};
 const broadcastSellerMessage=(title,message)=>{saveActiveSeller();for(const [key,a] of Object.entries(state.sellerAccounts)){a.notifications=a.notifications||[];a.notifications.unshift({id:'N-'+rand()+Date.now(),title,text:message,when:nowISO(),read:false});if(key===state.currentSellerKey)state.notifications=a.notifications;}save();};
 const allOrders=()=>{saveActiveSeller();return Object.entries(state.sellerAccounts).flatMap(([sellerKey,a])=>(a.orders||[]).map(o=>({...o,sellerKey})))};
 const findOrder=id=>{saveActiveSeller();for(const a of Object.values(state.sellerAccounts)){const o=(a.orders||[]).find(o=>o.id===id);if(o)return o}return null};
@@ -356,7 +358,7 @@ function updateOrderStatus(id,next){
  const valid={'Aguardando aprovação':['Aprovado','Recusado'],'Aprovado':['Em separação','Recusado'],'Em separação':['Pronto para retirada','Recusado'],'Pronto para retirada':[],'Recebido':[],'Recusado':[]};
  if(!valid[prev]?.includes(next))return toast('Conclua a etapa anterior antes de alterar o pedido');
  o.status=next;o.approvedAt=next==='Aprovado'?nowISO():o.approvedAt;
- broadcastSellerMessage('Pedido atualizado',o.reseller+': '+o.id+' · '+next);
+ sendSellerMessage(sellerKeyForOrder(o.id),'Pedido atualizado','O pedido '+o.id+' agora está '+next+'.');
  save();render();toast('Pedido atualizado: '+next);
 }
 const cost=x=>+((state.priceOverride[x.id]??x.cost)||0),retail=x=>state.retailOverride[x.id]!==undefined?+state.retailOverride[x.id]:(x.retail??null);
@@ -533,7 +535,7 @@ function trainingCard(t,isOwner=false){
 function trainingView(){
  return title('Técnicas de venda','Dicas, vídeos, imagens e materiais enviados pela sua franquia.','','APRENDA E VENDA MAIS')+
  '<div class="academy-banner"><div class="eyebrow">MOMENTS PARIS • ACADEMY</div><h2>Conhecimento que vira venda.</h2><p>Aprenda a apresentar fragrâncias, contornar objeções e atender melhor seus clientes.</p></div>'+
- (state.training.length?'<div class="training-list">'+state.training.map(t=>trainingCard(t)).join('')+'</div>':empty('Novos conteúdos em breve','O franqueado poderá publicar dicas em texto, fotos e vídeos por aqui.','sparkle'))+footer();
+ trainingCards()+footer();
 }
 function adminTraining(){
  return title('Técnicas de venda','Publique treinamentos que aparecerão na aba Técnicas de venda dos revendedores.','','CONTEÚDO DA FRANQUIA')+
@@ -632,7 +634,7 @@ function downloadOrder(id){let o=findOrder(id);if(!o)return;const blob=pdfOrder(
 async function shareOrder(id){let o=findOrder(id);if(!o)return;const f=pdfFile(o);try{if(navigator.canShare?.({files:[f]})){await navigator.share({title:'Pedido Moments Paris '+o.id,text:`Pedido de revendedor ${o.reseller} • ${money(o.total)} • retirar ${niceDate(o.pickupDate)} às ${o.pickupTime}`,files:[f]});return}}catch(e){if(e.name==='AbortError')return;}downloadOrder(id);toast('PDF baixado. Envie-o ao contato da sua franquia.');}
 function exportCSV(){let csv=[['Data','Produto','Quantidade','Preco unitario','Custo total','Valor da venda','Lucro']].concat(state.sales.map(s=>[s.date,s.name,s.qty,s.unitPrice,s.cost,s.total,s.profit])).map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\r\n');let url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));let a=document.createElement('a');a.href=url;a.download='Moments_Paris_Vendas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Planilha de vendas exportada')}
 function editProduct(id){let x=P[id];if(!x)return;showModal('Editar produto','Ajuste somente os valores do revendedor e a imagem cadastrada.',`<form id="edit-product-form"><input type="hidden" name="id" value="${esc(id)}"><div class="form-group"><label class="form-label">Produto</label><input class="field" readonly value="${esc(x.name)}"></div><div class="form-grid"><div class="form-group"><label class="form-label">Preço de compra do revendedor</label><input type="number" min="0" step="0.01" name="cost" class="field" value="${cost(x)}" required></div><div class="form-group"><label class="form-label">Preço sugerido de venda</label><input type="number" min="0" step="0.01" name="retail" class="field" value="${retail(x)??''}" required></div></div><div class="form-group"><label class="form-label">URL de foto do produto (opcional)</label><input type="url" name="image" class="field" value="${esc(state.photoOverride[id]||'')}" placeholder="https://.../foto-do-produto.jpg"><p class="small-help">Use apenas a foto correspondente a este produto. Se vazio, é exibida uma ilustração.</p></div><button class="btn gold block" type="submit">Salvar alterações</button></form>`)}
-function setupEventHandlers(){document.addEventListener('click',async e=>{const el=e.target.closest('[data-act],[data-tab],[data-admin-tab],[data-qty],[data-add],[data-remove],[data-category],[data-stockfilter],[data-period],[data-sell],[data-editprice],[data-receive],[data-orderdetail],[data-status],[data-pdf],[data-share],[data-togglepromo],[data-editproduct],[data-approve],[data-seller-detail],[data-seller-switch],[data-remove-training],[data-backdrop]');if(!el)return;
+function setupEventHandlers(){document.addEventListener('click',async e=>{const el=e.target.closest('[data-act],[data-tab],[data-admin-tab],[data-qty],[data-add],[data-remove],[data-category],[data-stockfilter],[data-period],[data-sell],[data-editprice],[data-receive],[data-orderdetail],[data-status],[data-pdf],[data-share],[data-togglepromo],[data-editproduct],[data-approve],[data-seller-detail],[data-seller-switch],[data-remove-training],[data-training-toggle],[data-backdrop]');if(!el)return;
 if(el.dataset.backdrop&&e.target===el){closeModal();return}
 if(el.dataset.tab){admin=false;tab=el.dataset.tab;filter='Todos';query='';render(true);return}
 if(el.dataset.adminTab){let t=el.dataset.adminTab.slice(4);if(t==='exit'){admin=false;tab='home'}else{admin=true;adminTab=t;query='';filter='Todos'}render(true);return}
@@ -646,6 +648,7 @@ if(el.dataset.period){salesPeriod=el.dataset.period;render();return}
 if(el.dataset.approve){updateOrderStatus(el.dataset.approve,el.dataset.next);return}
 if(el.dataset.sellerDetail){selectedSeller=el.dataset.sellerDetail;render();return}
 if(el.dataset.sellerSwitch){switchSeller(el.dataset.sellerSwitch);return}
+if(el.dataset.trainingToggle){if(!admin)return toast('Apenas a franquia pode alterar materiais');const x=state.training.find(x=>x.id===el.dataset.trainingToggle);if(x){x.active=x.active===false;save();render();toast(x.active?'Material publicado':'Material ocultado')}return}
 if(el.dataset.removeTraining){
  if(!admin)return toast('Apenas o franqueado pode remover materiais');
  state.training=state.training.filter(t=>t.id!==el.dataset.removeTraining);
