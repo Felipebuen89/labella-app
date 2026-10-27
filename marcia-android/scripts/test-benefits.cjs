@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const { resolve } = require('path');
 const { mkdirSync } = require('fs');
 (async()=>{
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox']});
  const screenshots=resolve('mc-browser-qa');mkdirSync(screenshots,{recursive:true});
  for(const width of [390,320]){
   const context=await browser.newContext({viewport:{width,height:740},deviceScaleFactor:1,isMobile:true,hasTouch:true});
