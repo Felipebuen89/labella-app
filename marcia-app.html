@@ -226,6 +226,20 @@
 @keyframes mcVoucherPulse{0%,10%,20%,100%{transform:scale(1);box-shadow:0 5px 16px #aa597052}5%,15%{transform:scale(1.018);box-shadow:0 0 0 5px #ecb68b49,0 8px 25px #9a4e75a6}}
 @keyframes mcVoucherShine{0%,20%,100%{transform:translateX(-200px) rotate(15deg)}8%{transform:translateX(650px) rotate(15deg)}}
 @media(prefers-reduced-motion:reduce){.mc-voucher-trigger.has-coupons,.mc-voucher-trigger.has-coupons:before{animation:none!important}}
+
+/* Correção: modais longos sempre roláveis e fecháveis no iPhone/Android */
+body.mc-modal-open{overflow:hidden!important}
+.overlay{align-items:center!important;justify-content:center!important;overflow:hidden!important;padding:12px max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important}
+.overlay .modal{box-sizing:border-box;position:relative;max-height:calc(100dvh - 26px)!important;max-height:calc(100svh - 26px)!important;width:min(100%,440px)!important;padding:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-radius:21px!important;scrollbar-width:thin}
+.mc-modal-topbar{position:sticky;top:0;z-index:12;background:#fff9f5fa;backdrop-filter:blur(12px);border-bottom:1px solid #eddbd5;padding:11px 15px;min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mc-modal-back{border:none;background:transparent;color:#8a4960;font-size:13px;font-weight:850;padding:9px 8px;min-height:39px;border-radius:10px}
+.mc-modal-close{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;background:#f4e3e0!important;color:#824c5f!important;border:1px solid #ddbcb5!important;border-radius:50%;font-size:18px;font-weight:850}
+.mc-modal-label{font-size:9px;font-weight:850;letter-spacing:1.1px;color:#9c6875}
+.mc-modal-content{padding:19px 21px 26px}
+.mc-modal-content .mc-benefit-photo{max-height:170px}
+.mc-modal-topbar button:focus-visible{outline:2px solid #0d7471;outline-offset:2px}
+@media(max-width:430px){.overlay{padding:8px!important}.overlay .modal{max-height:calc(100dvh - 16px)!important;max-height:calc(100svh - 16px)!important;border-radius:16px!important}.mc-modal-content{padding:14px 16px 22px}}
+
 </style></head>
 <body>
 <div class="shell"><div class="phone"><div class="warning">DEMONSTRAÇÃO NÃO OFICIAL · MARCA E SERVIÇOS SUJEITOS À VALIDAÇÃO</div><div id="client"></div></div><aside class="side"><div class="side-text"><div class="eyebrow">MOVE DIGITAL · EXPERIÊNCIA EXCLUSIVA</div><h2>Seu cuidado.<br>Sua jornada.<br>Seu aplicativo.</h2><div class="line"></div><p>Experiência digital desenhada para o universo da Márcia Calixto, valorizando o relacionamento após a avaliação e o acompanhamento de pacotes de sessões.</p><div class="features"><div><b>01</b> Agenda e avaliações organizadas.</div><div><b>02</b> Acompanhamento de sessões e benefícios.</div><div><b>03</b> Painel da proprietária integrado à demonstração.</div></div><a class="btn" href="marcia-site.html">Conhecer a prévia do site ↗</a><p class="tiny" style="margin-top:21px">Nenhuma solicitação é enviada à clínica. Dados demonstrativos locais.</p></div></aside></div>
@@ -423,8 +437,34 @@ function ownerLoyalty(){return ownerHead('Clube de benefícios','Configure um pr
 function ownerClients(){let names=[...new Set([...data.bookings.map(x=>x.client),...data.packages.map(x=>x.client),...data.requests.map(x=>x.client)])];return ownerHead('Relacionamento com clientes','Visão unificada fictícia, sem dados sensíveis reais.')+'<div class="owner-card">'+names.map(name=>'<div class="owner-row"><div class="list-icon">♡</div><div class="grow"><b>'+esc(name)+'</b><p>'+data.bookings.filter(b=>b.client===name).length+' compromisso(s) · '+data.packages.filter(p=>p.client===name).length+' pacote(s)</p></div></div>').join('')+'<p class="notice">Em produção, o perfil de cada cliente será privado e protegido por autenticação, base legal adequada e regras da LGPD.</p></div>'}
 function renderOwner(){let fn={overview:ownerOverview,schedule:ownerSchedule,assessments:ownerAssessments,packages:ownerPackages,campaigns:ownerCampaigns,coupons:ownerCoupons,loyalty:ownerLoyalty,clients:ownerClients};document.getElementById('ownerContent').innerHTML=ownerTabs()+(fn[ownerPage]||ownerOverview)()+'<p class="footnote">PAINEL DE DEMONSTRAÇÃO MOVE DIGITAL · Sem dados reais da clínica · Sem integração operacional</p>'}
 function render(){if(nativeClient)mode='client';document.body.classList.toggle('owner-mode',mode==='owner');if(mode==='owner')renderOwner();else renderClient()}
-function popup(body){modalOpen=true;document.getElementById('portal').innerHTML='<div class="overlay"><div class="modal" role="dialog" aria-modal="true">'+body+'</div></div>'}
-function close(){modalOpen=false;document.getElementById('portal').innerHTML=''}
+let modalHistoryPushed=false,activeBenefitService='',modalPreviousFocus=null;
+function popup(body){
+  if(!modalOpen){
+    modalPreviousFocus=document.activeElement;
+    if(window.history?.pushState){
+      try{window.history.pushState({mcDialog:true},'',window.location.href);modalHistoryPushed=true}catch(e){modalHistoryPushed=false}
+    }
+  }
+  modalOpen=true;
+  document.body.classList.add('mc-modal-open');
+  const isBenefits=body.includes('mc-benefit-modal');
+  const back=isBenefits&&activeBenefitService?'<button type="button" class="mc-modal-back" data-action="backToDetail" data-id="'+esc(activeBenefitService)+'" aria-label="Voltar aos detalhes do tratamento">← Voltar</button>':'<span class="mc-modal-label">MÁRCIA CALIXTO · ESTÉTICA E SAÚDE</span>';
+  document.getElementById('portal').innerHTML='<div class="overlay" data-overlay-dismiss="true"><div class="modal" role="dialog" aria-modal="true" aria-label="Informações do tratamento" tabindex="-1"><div class="mc-modal-topbar">'+back+'<button type="button" class="mc-modal-close" data-action="close" aria-label="Fechar informações e voltar ao aplicativo">✕</button></div><div class="mc-modal-content">'+body+'</div></div></div>';
+  const modal=document.querySelector('#portal .modal');
+  if(modal){modal.scrollTop=0;modal.focus({preventScroll:true})}
+}
+function close(fromHistory=false){
+  if(!modalOpen)return;
+  modalOpen=false;
+  document.body.classList.remove('mc-modal-open');
+  document.getElementById('portal').innerHTML='';
+  if(modalPreviousFocus?.isConnected&&typeof modalPreviousFocus.focus==='function')modalPreviousFocus.focus({preventScroll:true});
+  modalPreviousFocus=null;
+  if(modalHistoryPushed&&!fromHistory&&window.history?.back){
+    modalHistoryPushed=false;
+    window.history.back();
+  }else modalHistoryPushed=false;
+}
 function toast(msg){let old=document.querySelector('.toast');if(old)old.remove();let x=document.createElement('div');x.className='toast';x.textContent=msg;document.getElementById('portal').appendChild(x);clearTimeout(toastTimer);toastTimer=setTimeout(()=>x.remove(),2800)}
 function changePage(p){page=p;render();window.scrollTo({top:0,behavior:'instant'})}
 
@@ -466,8 +506,9 @@ if(action==='ownerMode'){if(nativeClient)return;mode='owner';render();return win
 if(action==='previewCampaigns'){if(nativeClient)return;mode='client';page='campaigns';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='clientMode'){mode='client';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='serviceFilter'){serviceFilter=id;return render()}
-if(action==='detail'){let s=svc(id);return popup('<div class="eyebrow">CUIDADO PERSONALIZADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><p>'+esc(s.desc)+'</p><p class="small muted">Simulação de valor: '+(s.type==='info'?'Sob consulta':money(s.price))+'</p><button class="btn wide" data-action="showBenefits" data-id="'+s.id+'">Ver mais benefícios ✦</button><p class="notice" style="margin-top:12px">A oferta depende da confirmação de disponibilidade e da avaliação profissional.</p><button class="btn secondary" data-action="close" style="margin-top:12px">Voltar</button>')}
-if(action==='showBenefits'){const s=svc(id),arr=s.benefits||[];return popup('<div class="mc-benefit-modal"><span class="mc-overline">'+(s.type==='info'?'INFORMAÇÕES PARA DECIDIR':'QUANDO ESSE CUIDADO PODE FAZER SENTIDO')+'</span><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo mc-benefit-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><div class="mc-pain-intro"><span aria-hidden="true">♡</span><p>'+esc(s.pain||'Conheça os detalhes desse cuidado.')+'</p></div><h4 class="mc-benefit-headline">'+esc(s.headline||'Benefícios potenciais')+'</h4><div class="mc-benefit-list">'+arr.map((x,i)=>'<div class="mc-result"><span class="mc-result-number">0'+(i+1)+'</span><div><strong>'+esc(x.situation)+'</strong><p>'+esc(x.effect)+'</p></div></div>').join('')+'</div><div class="mc-reality"><strong>O que esperar na prática</strong><p>'+esc(s.expect||'Os resultados variam conforme cada pessoa.')+'</p></div><p class="mc-safety"><b>Antes de fazer:</b> '+esc(s.caution||'Converse com a equipe profissional.')+'</p>'+(s.sourceUrl?'<a class="mc-science-link" href="'+esc(s.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Entenda a referência médica: '+esc(s.sourceName||'Saiba mais')+' ↗</a>':'')+'<div class="mc-benefit-actions">'+(s.type==='info'?'':'<button class="btn mc-benefit-cta" data-action="chooseService" data-id="'+s.id+'">'+(s.type==='eval'?'Simular avaliação →':'Ver horários de demonstração →')+'</button>')+'<button class="btn secondary" data-action="close">Voltar aos tratamentos</button></div><p class="mc-caution-footer">Informações educativas, não são promessa de resultados e precisam de aprovação da clínica antes do lançamento.</p></div>')}
+if(action==='detail'){activeBenefitService=id;let s=svc(id);return popup('<div class="eyebrow">CUIDADO PERSONALIZADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><p>'+esc(s.desc)+'</p><p class="small muted">Simulação de valor: '+(s.type==='info'?'Sob consulta':money(s.price))+'</p><button class="btn wide" data-action="showBenefits" data-id="'+s.id+'">Ver mais benefícios ✦</button><p class="notice" style="margin-top:12px">A oferta depende da confirmação de disponibilidade e da avaliação profissional.</p><button class="btn secondary" data-action="close" style="margin-top:12px">Voltar</button>')}
+if(action==='backToDetail'){if(id&&services.some(t=>t.id===id))return handleAction('detail',id,node);return close()}
+if(action==='showBenefits'){activeBenefitService=id;const s=svc(id),arr=s.benefits||[];return popup('<div class="mc-benefit-modal"><span class="mc-overline">'+(s.type==='info'?'INFORMAÇÕES PARA DECIDIR':'QUANDO ESSE CUIDADO PODE FAZER SENTIDO')+'</span><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo mc-benefit-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><div class="mc-pain-intro"><span aria-hidden="true">♡</span><p>'+esc(s.pain||'Conheça os detalhes desse cuidado.')+'</p></div><h4 class="mc-benefit-headline">'+esc(s.headline||'Benefícios potenciais')+'</h4><div class="mc-benefit-list">'+arr.map((x,i)=>'<div class="mc-result"><span class="mc-result-number">0'+(i+1)+'</span><div><strong>'+esc(x.situation)+'</strong><p>'+esc(x.effect)+'</p></div></div>').join('')+'</div><div class="mc-reality"><strong>O que esperar na prática</strong><p>'+esc(s.expect||'Os resultados variam conforme cada pessoa.')+'</p></div><p class="mc-safety"><b>Antes de fazer:</b> '+esc(s.caution||'Converse com a equipe profissional.')+'</p>'+(s.sourceUrl?'<a class="mc-science-link" href="'+esc(s.sourceUrl)+'" target="_blank" rel="noopener noreferrer">Entenda a referência médica: '+esc(s.sourceName||'Saiba mais')+' ↗</a>':'')+'<div class="mc-benefit-actions">'+(s.type==='info'?'':'<button class="btn mc-benefit-cta" data-action="chooseService" data-id="'+s.id+'">'+(s.type==='eval'?'Simular avaliação →':'Ver horários de demonstração →')+'</button>')+'<button class="btn secondary" data-action="close">Voltar aos tratamentos</button></div><p class="mc-caution-footer">Informações educativas, não são promessa de resultados e precisam de aprovação da clínica antes do lançamento.</p></div>')}
 if(action==='campaignDetail'){const c=data.campaigns.find(x=>x.id==id&&x.active);if(!c)return toast('Campanha indisponível');return popup('<div class="eyebrow">'+esc(c.tag||'CAMPANHA')+'</div><h3>'+esc(c.title)+'</h3><p>'+esc(c.text)+'</p><p class="notice">Campanha de demonstração. Condições, disponibilidade e preços precisam da aprovação da clínica.</p><button class="btn" data-action="close">Entendi</button>')}
 if(action==='chooseService'){close();if(svc(id).type==='info')return popup('<h3>Informações sob consulta</h3><p>Esta especialidade precisa ter modalidade, profissional e habilitações verificadas antes de ser liberada para reserva no aplicativo.</p><button class="btn" data-action="close">Entendi</button>');requestService=id;requestTime='';return changePage('agenda')}
 
@@ -495,10 +536,20 @@ if(action==='reset')return popup('<h3>Restaurar demonstração?</h3><p>Isso apag
 if(action==='resetConfirm'){data=emptySeed();save();close();mode='client';page='home';ownerPage='overview';return render()}
 if(action==='close')return close();
 }
-document.addEventListener('click',e=>{let a=e.target.closest('[data-action]');if(a)handleAction(a.dataset.action,a.dataset.id,a)});
+document.addEventListener('click',e=>{let a=e.target.closest('[data-action]');if(a){e.preventDefault();handleAction(a.dataset.action,a.dataset.id,a);return}if(e.target.matches?.('.overlay[data-overlay-dismiss]'))close()});
 document.addEventListener('change',e=>{if(e.target.id==='appointment-service'){requestService=e.target.value;selectedCouponId='';couponExpanded=false;render()}const id=e.target.getAttribute('data-stage');if(id){let item=data.requests.find(x=>x.id==id);if(item){item.stage=e.target.value;save();render()}}});
 if(typeof window!=='undefined'&&window.setInterval){window.setInterval(checkOpenPageReminders,60000);checkOpenPageReminders()}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modalOpen)close()});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&modalOpen){e.preventDefault();close()}
+ if(e.key==='Tab'&&modalOpen){
+   const nodes=[...document.querySelectorAll('#portal .modal button:not([disabled]),#portal .modal a[href],#portal .modal input:not([disabled])')];
+   if(!nodes.length)return;
+   const first=nodes[0],last=nodes[nodes.length-1];
+   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+ }
+});
+window.addEventListener?.('popstate',()=>{if(modalOpen)close(true)});
 render();
 })();
 </script></body></html>
