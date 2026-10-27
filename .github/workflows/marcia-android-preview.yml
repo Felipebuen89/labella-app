@@ -1,6 +1,10 @@
 name: Márcia Calixto Android — teste interno (APK)
 on:
   workflow_dispatch:
+  # Executa também nesta atualização controlada da configuração de CI.
+  push:
+    paths:
+      - '.github/workflows/marcia-android-preview.yml'
 
 permissions:
   contents: read
