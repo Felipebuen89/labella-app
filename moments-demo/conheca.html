@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Conheça o Moments Paris: autonomia para revendedores e um painel da franquia com dicas, campanhas e fidelidade. Telas reais da demonstração.">
+<title>Conheça o Moments Paris | Revendedores e Franquia</title>
+<link rel="icon" type="image/svg+xml" href="/assets/moments-logo-original-limpo.svg">
+<style>
+:root{color-scheme:dark;--bg:#050505;--card:#131313;--stroke:#313131;--gold:#edda9f;--gold2:#d0b776;--ink:#f7f2e8;--muted:#b9b5ac}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.container{width:min(1100px,calc(100% - 32px));margin:0 auto}
+header{position:sticky;top:0;z-index:50;border-bottom:1px solid #232323;background:#050505f0;backdrop-filter:blur(18px)}
+.head{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.head-brand{display:flex;align-items:center;gap:10px}.head-brand img{width:90px;height:48px;object-fit:contain}.head-brand strong{font-size:12px;letter-spacing:1.8px;color:var(--gold);display:block}.head-brand small{font-size:10px;color:#aaa7a0;display:block}
+.head-cta{font-size:12px;font-weight:700;border:1px solid #a68d57;padding:10px 14px;border-radius:9px;color:var(--gold)}
+.hero{text-align:center;padding:48px 0 27px;max-width:850px;margin:auto}
+.overline{font-size:11px;font-weight:800;letter-spacing:2.2px;color:var(--gold2)}
+.hero h1{font:400 clamp(32px,5.5vw,59px)/1.13 Georgia,"Times New Roman",serif;letter-spacing:-1.2px;margin:14px 0 17px}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{font-size:16px;color:var(--muted);max-width:660px;margin:0 auto}
+.section-label{display:flex;align-items:center;gap:14px;font-size:11px;text-transform:uppercase;letter-spacing:2.2px;font-weight:800;color:var(--gold2);margin:8px 0 18px}
+.section-label:after{content:"";height:1px;background:#3b3427;flex:1}
+.preview-layout{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);align-items:start;gap:38px;padding-bottom:38px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:18px}
+.control{padding:15px 12px;border:1px solid #43403a;background:#141414;border-radius:12px;color:#ede5d5;text-align:left;min-height:72px;display:flex;flex-direction:column;gap:5px;line-height:1.25}
+.control strong{font-size:13px}.control small{font-size:11px;color:#b1aea7}.control.active{background:#d8c185;border-color:#f3e3b1;color:#17130c}.control.active small{color:#473c24}
+.intro-card{padding:22px 24px;background:#111;border:1px solid #353535;border-radius:16px;min-height:170px}
+.intro-card .number{font-size:11px;color:var(--gold);letter-spacing:1.7px;font-weight:800}
+.intro-card h2{font:400 26px/1.2 Georgia,"Times New Roman",serif;margin:8px 0 11px}
+.intro-card p{margin:0;color:#c4c1b8;line-height:1.62}
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.benefit{padding:15px 13px;border:1px solid #303030;background:#101010;border-radius:12px}
+.benefit strong{display:block;color:#ead59a;font-size:13px;margin-bottom:5px}.benefit span{font-size:12px;color:#aaa7a0}
+.phone-wrap{display:flex;align-items:center;justify-content:center}
+.phone{position:relative;width:390px;max-width:100%;height:740px;padding:8px;border:2px solid #5f5440;border-radius:37px;background:#000;box-shadow:0 15px 55px #0008,0 0 0 6px #171717;overflow:hidden}
+.phone:before{content:"";position:absolute;left:50%;top:8px;transform:translateX(-50%);width:88px;height:11px;background:#030303;border-radius:20px;z-index:3;pointer-events:none}
+iframe{border:0;background:#050505;width:100%;height:100%;display:block;border-radius:28px}
+.inside-note{font-size:11px;color:#8f8d88;text-align:center;margin:12px 0 0}
+.buttons{display:flex;flex-wrap:wrap;gap:10px;margin:21px 0}
+.btn{border:1px solid #dfca92;border-radius:10px;padding:13px 18px;font-weight:800;font-size:13px;background:linear-gradient(135deg,#f0e2b2,#d4ba79);color:#171309;display:inline-flex;align-items:center;justify-content:center;min-height:46px}
+.btn.alt{background:#111;color:#f0dba5;border-color:#6a6049}
+.dash{margin:5px 0 55px;padding:24px 25px;border:1px solid #5b4e32;border-radius:18px;background:linear-gradient(115deg,#14130f,#090909)}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}.dash h2{font:400 29px/1.18 Georgia,serif;margin:9px 0 12px}.dash p{color:#c1bdb5;margin:0}.dash-list{display:grid;gap:10px}.dash-item{padding:11px 14px;border:1px solid #3c382f;border-radius:9px;background:#151411;font-size:13px}.dash-item b{color:var(--gold);margin-right:7px}
+footer{border-top:1px solid #252525;padding:24px 0 35px;color:#97948b;font-size:12px}.footer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.disclaimer{font-size:11px;color:#aaa69d;margin:18px 0 0;line-height:1.5}
+@media(max-width:780px){.hero{padding:37px 0 25px}.preview-layout{grid-template-columns:1fr;gap:23px}.preview-left{order:2}.phone-wrap{order:1}.phone{width:min(390px,calc(100vw - 42px));height:min(690px,calc((100vw - 42px)*1.6))}.controls{margin-top:4px}.dash-grid{grid-template-columns:1fr}.dash{padding:20px}.head-brand img{width:78px}.head-cta{font-size:11px;padding:9px 11px}.hero h1{letter-spacing:-.4px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><div class="container head"><a href="/" class="head-brand"><img src="/assets/moments-logo-original-limpo.svg" alt="Moments Paris Gleik & Estrategista"><span><strong>MOMENTS PARIS</strong><small>Gleik & Estrategista</small></span></a><a class="head-cta" href="/" target="_blank" rel="noopener">Abrir aplicativo</a></div></header>
+<main class="container">
+<section class="hero"><div class="overline">UMA EXPERIÊNCIA PARA TODA A REDE</div><h1>O revendedor vende melhor.<br><em>A franquia ajuda a crescer.</em></h1><p>Pedidos, estoque e resultados organizados para quem vende. Dicas, campanhas e fidelidade para a franquia incentivar a rede.</p></section>
+<div class="section-label">Veja as telas reais da demonstração</div>
+<section class="preview-layout" aria-label="Prévia do aplicativo">
+<div class="preview-left">
+<nav class="controls" aria-label="Escolha a tela">
+<button class="control active" type="button" data-screen="orders" aria-pressed="true"><strong>01 · Pedidos</strong><small>Revendedor</small></button>
+<button class="control" type="button" data-screen="training" aria-pressed="false"><strong>02 · Técnicas de venda</strong><small>Dicas da franquia</small></button>
+<button class="control" type="button" data-screen="promo" aria-pressed="false"><strong>03 · Campanhas</strong><small>Ofertas e cupons</small></button>
+<button class="control" type="button" data-screen="loyalty" aria-pressed="false"><strong>04 · Clube de pontos</strong><small>Fidelidade</small></button>
+</nav>
+<article id="screen-copy" class="intro-card" aria-live="polite">
+<div class="number" id="copy-kicker">TELA REAL 01 / 04</div>
+<h2 id="copy-title">Comprar e organizar, sem complicação.</h2>
+<p id="copy-description">O revendedor encontra fragrâncias por categoria, monta o pedido, escolhe a retirada e depois acompanha estoque e vendas.</p>
+</article>
+<div class="benefits" id="benefits"><div class="benefit"><strong>Mais autonomia</strong><span>Tudo acessível pelo celular.</span></div><div class="benefit"><strong>Mais controle</strong><span>Menos planilhas e mensagens avulsas.</span></div></div>
+<div class="buttons"><a class="btn" id="open-screen" href="/" target="_blank" rel="noopener">Testar no aplicativo</a><button class="btn alt" type="button" id="share">Compartilhar apresentação</button></div>
+</div>
+<div class="phone-wrap"><div><div class="phone"><iframe id="live-app" title="Tela real navegável do aplicativo Moments Paris" src="/" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="inside-note">Prévia navegável da demonstração. Toque nos botões acima para trocar a tela.</p></div></div>
+</section>
+<section class="dash"><div class="dash-grid"><div><div class="overline">ÁREA EXCLUSIVA DA FRANQUIA</div><h2>Quem administra também consegue orientar.</h2><p>No painel separado, a franquia pode acompanhar pedidos e revendedores, publicar técnicas de venda e criar campanhas de incentivo.</p><div class="buttons"><a class="btn" href="/franquia/" target="_blank" rel="noopener">Conhecer painel da franquia</a></div><p class="disclaimer">PIN de demonstração: <strong>2026</strong>. O painel online usa dados locais e ainda não sincroniza informações entre celulares diferentes.</p></div>
+<div class="dash-list"><div class="dash-item"><b>✓</b> Aprovar e acompanhar pedidos</div><div class="dash-item"><b>✓</b> Publicar dicas, fotos e vídeos de treinamento</div><div class="dash-item"><b>✓</b> Lançar campanhas, cupons e comunicados</div><div class="dash-item"><b>✓</b> Incentivar vendas com pontos e recompensas</div></div></div></section>
+</main>
+<footer><div class="container footer-row"><span>Moments Paris · Gleik & Estrategista</span><span>Demonstração digital · Sem instalação</span></div></footer>
+<script>
+const panes={
+ orders:{title:"Comprar e organizar, sem complicação.",description:"O revendedor encontra fragrâncias por categoria, monta o pedido, escolhe a retirada e depois acompanha estoque e vendas.",benefits:[["Mais autonomia","Tudo acessível pelo celular."],["Mais controle","Menos planilhas e mensagens avulsas."]]},
+ training:{title:"A franquia ensina. O revendedor aplica.",description:"O proprietário pode disponibilizar técnicas de abordagem, fotos e vídeos. O conteúdo aparece na biblioteca de treinamento do revendedor.",benefits:[["Dicas práticas","Orientação disponível quando precisar."],["Treinamento contínuo","Materiais publicados pela franquia."]]},
+ promo:{title:"Campanhas que movimentam as vendas.",description:"A franquia publica ofertas, cupons e avisos. O revendedor vê as campanhas ativas diretamente no aplicativo.",benefits:[["Incentivo no momento certo","Mais motivos para divulgar os produtos."],["Comunicação centralizada","Uma mensagem para a equipe."]]},
+ loyalty:{title:"Cada venda também rende pontos.",description:"Na regra de demonstração, a cada R$ 10 registrados em vendas, o revendedor recebe 1 ponto. Ao chegar a 100 pontos, pode resgatar R$ 10 de desconto.",benefits:[["Saldo visível","Histórico de pontos no próprio aplicativo."],["Recompensa clara","100 pontos = R$ 10 de desconto."]]}
+};
+const frame=document.getElementById("live-app");const controls=[...document.querySelectorAll(".control")];let current="orders";
+function navigate(){
+ try{
+  const doc=frame.contentDocument;
+  if(!doc || !doc.querySelector(".mobile-nav"))return;
+  const more=["training","promo","loyalty"].includes(current);
+  if(more)doc.querySelector('.mobile-nav [data-tab="more"]')?.click();
+  const match=doc.querySelector('[data-tab="'+current+'"]');
+  match?.click();
+ }catch(e){ /* Continua como prévia interativa manual se bloqueado */ }
+}
+function change(screen){
+ if(!panes[screen])return;
+ current=screen;const p=panes[screen];
+ controls.forEach(b=>{const active=b.dataset.screen===screen;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))});
+ document.getElementById("copy-kicker").textContent="TELA REAL "+String(Object.keys(panes).indexOf(screen)+1).padStart(2,"0")+" / 04";
+ document.getElementById("copy-title").textContent=p.title;document.getElementById("copy-description").textContent=p.description;
+ document.getElementById("benefits").innerHTML=p.benefits.map(([h,d])=>'<div class="benefit"><strong>'+h+'</strong><span>'+d+'</span></div>').join("");
+ document.getElementById("open-screen").href="/?tela="+encodeURIComponent(screen);
+ navigate();
+}
+controls.forEach(b=>b.addEventListener("click",()=>change(b.dataset.screen)));
+frame.addEventListener("load",()=>setTimeout(navigate,180));
+document.getElementById("share").addEventListener("click",async ()=>{
+ const url=location.href;
+ if(navigator.share){try{await navigator.share({title:"Moments Paris | Conheça a plataforma",text:"Veja como o revendedor vende melhor e como a franquia ajuda com dicas, campanhas e pontos.",url})}catch(e){}}
+ else {try{await navigator.clipboard.writeText(url);document.getElementById("share").textContent="Link copiado!";}catch(e){window.prompt("Copie o link:",url)}}
+});
+</script>
+</body></html>
