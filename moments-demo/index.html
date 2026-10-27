@@ -133,7 +133,48 @@ for(let k of ['profile','cart','inventory','priceOverride','retailOverride','pho
 for(let k of ['orders','sales','promo','coupons','notifications','reorder'])state[k]=state[k]||[];
 state.profile={...DEFAULT.profile,...state.profile};
 let tab='home',admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
-const save=()=>{try{localStorage.setItem('moments_rev_demo_v3',JSON.stringify(state))}catch(e){toast('Limite de armazenamento do navegador atingido')}};
+
+const sellerFields=['profile','cart','orders','inventory','sales','reorder','activeCoupon'];
+const copyData=x=>JSON.parse(JSON.stringify(x));
+if(!state.sellerAccounts||typeof state.sellerAccounts!=='object'){
+ const key=(state.profile.code||'REV-DEMO').trim()||'REV-DEMO';
+ state.currentSellerKey=key;
+ state.sellerAccounts={[key]:Object.fromEntries(sellerFields.map(field=>[field,copyData(state[field]??(field==='profile'?DEFAULT.profile:['orders','sales','reorder'].includes(field)?[]:{}))]))};
+}
+if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])state.currentSellerKey=Object.keys(state.sellerAccounts)[0];
+for(const field of sellerFields){if(state.sellerAccounts[state.currentSellerKey][field]!==undefined)state[field]=state.sellerAccounts[state.currentSellerKey][field]}
+state.training=Array.isArray(state.training)?state.training:[];
+const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
+const save=()=>{try{saveActiveSeller();localStorage.setItem('moments_rev_demo_v3',JSON.stringify(state))}catch(e){toast('Espaço para armazenamento esgotado')}};
+const sellerKeys=()=>Object.keys(state.sellerAccounts);
+const allOrders=()=>{saveActiveSeller();return Object.entries(state.sellerAccounts).flatMap(([sellerKey,a])=>(a.orders||[]).map(o=>({...o,sellerKey})))};
+const findOrder=id=>{saveActiveSeller();for(const a of Object.values(state.sellerAccounts)){const o=(a.orders||[]).find(o=>o.id===id);if(o)return o}return null};
+const accountFor=key=>{saveActiveSeller();return state.sellerAccounts[key]||null};
+function switchSeller(key){
+ if(!state.sellerAccounts[key])return toast('Revendedor não encontrado');
+ saveActiveSeller();state.currentSellerKey=key;const a=state.sellerAccounts[key];
+ for(const field of sellerFields)state[field]=a[field]??(field==='profile'?{...DEFAULT.profile}:['orders','sales','reorder'].includes(field)?[]:{});
+ admin=false;adminTab='orders';tab='home';save();closeModal();render(true);toast('Demonstração de '+state.profile.revendedor);
+}
+function createSeller(name){
+ const clean=String(name||'').trim();if(clean.length<2)return toast('Informe o nome do revendedor');
+ const key='REV-'+String(Date.now()).slice(-7)+rand();
+ state.sellerAccounts[key]={profile:{...DEFAULT.profile,revendedor:clean,name:'Revenda de '+clean,code:key},cart:{},orders:[],inventory:{},sales:[],reorder:[],activeCoupon:''};
+ save();render();toast(clean+' adicionado à demonstração');
+}
+const orderState=o=>o.received?'Recebido':({'Solicitado':'Aguardando aprovação','Confirmado':'Aprovado','Entregue':'Pronto para retirada'}[o.status]||o.status||'Aguardando aprovação');
+const approvedState=o=>['Aprovado','Em separação','Pronto para retirada','Recebido'].includes(orderState(o));
+const canReceive=o=>!o.received&&orderState(o)==='Pronto para retirada';
+const orderBadge=o=>'<span class="pill '+(o.received?'green':orderState(o)==='Recusado'?'red':approvedState(o)?'gold':'orange')+'">'+esc(orderState(o))+'</span>';
+function updateOrderStatus(id,next){
+ const o=findOrder(id);if(!o)return toast('Pedido não encontrado');
+ const prev=orderState(o);
+ const valid={'Aguardando aprovação':['Aprovado','Recusado'],'Aprovado':['Em separação','Recusado'],'Em separação':['Pronto para retirada','Recusado'],'Pronto para retirada':[],'Recebido':[],'Recusado':[]};
+ if(!valid[prev]?.includes(next))return toast('Conclua a etapa anterior antes de alterar o pedido');
+ o.status=next;o.approvedAt=next==='Aprovado'?nowISO():o.approvedAt;
+ notify('Status do pedido',o.reseller+': pedido '+o.id+' • '+next,false);
+ save();render();toast('Pedido atualizado: '+next);
+}
 const cost=x=>+((state.priceOverride[x.id]??x.cost)||0),retail=x=>state.retailOverride[x.id]!==undefined?+state.retailOverride[x.id]:(x.retail??null);
 const itemArt=x=>{let photo=state.photoOverride[x.id]||x.image;if(photo)return `<img src="${esc(photo)}" loading="lazy" referrerpolicy="no-referrer" alt="Foto do perfume ${esc(x.name)}" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><span class="photo-unavailable" style="display:none">Foto indisponível</span>`;let b=x.category.includes('Masculino')?'#242b33':x.category.includes('Feminino')?'#b47782':x.category.includes('Maquiagem')?'#8e445b':x.category.includes('Suplementos')?'#627b57':x.category.includes('Capilar')?'#7c99a1':x.category.includes('Acessórios')?'#9a7a61':'#aa9372';let short=x.name.replace(/\s*[•–-]\s*15\s*ml.*/i,'').replace(/\s+\d+\s*(ML|G|KG).*/i,'').slice(0,18);const hasBottle=!x.category.includes('Acessórios');const shape=hasBottle?`<rect x="43" y="45" width="54" height="85" rx="11" fill="${b}"/><rect x="55" y="29" width="30" height="20" rx="4" fill="#c4a367"/><rect x="58" y="22" width="24" height="10" rx="3" fill="#e1c080"/><path d="M49 55v54" stroke="#fff" opacity=".17" stroke-width="6"/><rect x="48" y="70" width="44" height="36" rx="2" fill="#f2ecdf"/><path d="M56 85h28" stroke="#b79c76" stroke-width="1"/>`:`<rect x="39" y="29" width="62" height="102" rx="9" fill="${b}"/><rect x="45" y="45" width="50" height="53" rx="5" fill="#f3eee5"/>`;
 let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 158"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#faf8f3"/><stop offset="1" stop-color="#e6e0d6"/></linearGradient></defs><rect width="140" height="158" fill="url(#g)"/><ellipse cx="70" cy="138" rx="36" ry="6" fill="#444" opacity=".11"/>${shape}<text x="70" y="78" text-anchor="middle" font-family="Georgia" font-size="6" fill="#38372d">MOMENTS</text><text x="70" y="96" text-anchor="middle" font-family="Arial" font-size="5.6" fill="#38372d">PARIS</text><text x="70" y="144" text-anchor="middle" font-family="Arial" font-size="8" font-weight="bold" fill="#555046">${esc(short).replaceAll('&amp;','&amp;')}</text></svg>`;return `<img alt="Ilustração de ${esc(x.name)} — não é foto oficial" loading="lazy" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}">`};
