@@ -151,6 +151,38 @@
 .phone .screen .card strong{color:#503943}
 .phone .screen .owner-row strong{color:#493740}
 @media(max-width:370px){.phone .brand-title{font-size:16px!important}.phone .brand-sub{font-size:7px}.phone .header-actions .icon-btn{height:33px;width:33px;min-width:33px}.phone .app-header{padding-left:10px;padding-right:10px}}
+
+.mc-treatment-list{display:grid;gap:14px}
+.mc-treatment{overflow:hidden;border-radius:19px;background:linear-gradient(135deg,#ffefe6,#e8c4bd);border:1px solid #f5d5c9;box-shadow:0 12px 26px #002c3644;color:#5b3542}
+.mc-treatment>img{display:block;width:100%;height:160px;object-fit:cover;filter:saturate(.83);background:#d8b3ac}
+.mc-treatment-copy{padding:15px 17px 17px}
+.mc-treatment h2{font:normal 25px/1.16 "Playfair Display",Georgia,serif;color:#653949;margin:7px 0 8px}
+.mc-treatment p{font-size:12px;color:#735b60;line-height:1.6;margin:6px 0 10px}
+.mc-treatment-copy>strong{color:#7d4657;display:block;font-size:12px;margin:9px 0}
+.mc-more-benefits{background:linear-gradient(115deg,#9d5962,#7d485c);color:white;border-radius:25px;border:1px solid #e2b4a9;padding:12px 17px;font-size:11px;font-weight:800;width:100%;margin-top:8px}
+.mc-detail-photo{display:block;width:100%;height:150px;object-fit:cover;border-radius:14px;margin:12px 0;filter:saturate(.88)}
+.mc-benefits{display:grid;gap:10px;margin:12px 0}
+.mc-benefit{display:flex;gap:12px;align-items:start;background:#fff1e9;border:1px solid #edd6cc;border-radius:13px;padding:11px 12px}
+.mc-benefit>span{font-size:22px;color:#a45d72;line-height:1.1}
+.mc-benefit p{margin:0;font-size:12px;color:#533f44;line-height:1.55}
+.mc-coupon-box{background:#fbede8;border:1px solid #e5ccc6;border-radius:16px;padding:14px 12px;margin:20px 0 11px;color:#65404a}
+.mc-coupon-box .link{color:#905765!important}
+.mc-coupon-option{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;border:1px dashed #cf9d9f;background:#fffaf5;border-radius:11px;padding:10px;margin-top:9px;color:#693d4b;gap:6px}
+.mc-coupon-option.selected{border:2px solid #267674;background:#e2f3e9}
+.mc-coupon-option b{display:block;font-size:12px;letter-spacing:1px}
+.mc-coupon-option small{display:block;font-size:10px;margin-top:4px;color:#746166}
+.mc-coupon-option>span:last-child{font-size:10px;font-weight:850;white-space:nowrap}
+.mc-quote{border:1px solid #ddc4c2;background:#fff9f2;border-radius:15px;padding:15px;color:#543b42;margin:14px 0}
+.mc-quote .row{font-size:12px;margin:5px 0;gap:5px}
+.mc-quote-final{border-top:1px solid #e2d1ca;padding-top:12px!important;margin-top:12px!important;color:#8b4657}
+.mc-quote-final strong{font-size:20px}
+.mc-quote .tiny{font-size:10px;color:#977980;line-height:1.5;margin:10px 0 0}
+.mc-coupon-list{display:grid;gap:14px;margin-top:14px}
+.mc-coupon-card{border:1px solid #f1cbbf;border-radius:20px;padding:20px;background:radial-gradient(circle at 96% 0%,#dbadb0aa,transparent 36%),linear-gradient(140deg,#fff2e6,#edd2ca);color:#65414b;box-shadow:0 11px 23px #002d3347}
+.mc-coupon-card h2{font:normal 25px "Playfair Display",Georgia,serif;color:#674052;margin:10px 0 7px}
+.mc-coupon-value{font:normal 35px "Playfair Display",Georgia,serif;color:#9a4f60;margin:9px 0}
+.mc-coupon-card p{font-size:11px;margin:6px 0;color:#765c62}
+.mc-coupon-card .btn{margin-top:12px}
 </style></head>
 <body>
 <div class="shell"><div class="phone"><div class="warning">DEMONSTRAÇÃO NÃO OFICIAL · MARCA E SERVIÇOS SUJEITOS À VALIDAÇÃO</div><div id="client"></div></div><aside class="side"><div class="side-text"><div class="eyebrow">MOVE DIGITAL · EXPERIÊNCIA EXCLUSIVA</div><h2>Seu cuidado.<br>Sua jornada.<br>Seu aplicativo.</h2><div class="line"></div><p>Experiência digital desenhada para o universo da Márcia Calixto, valorizando o relacionamento após a avaliação e o acompanhamento de pacotes de sessões.</p><div class="features"><div><b>01</b> Agenda e avaliações organizadas.</div><div><b>02</b> Acompanhamento de sessões e benefícios.</div><div><b>03</b> Painel da proprietária integrado à demonstração.</div></div><a class="btn" href="marcia-site.html">Conhecer a prévia do site ↗</a><p class="tiny" style="margin-top:21px">Nenhuma solicitação é enviada à clínica. Dados demonstrativos locais.</p></div></aside></div>
@@ -220,8 +252,7 @@ const pack=pkg?'<div class="mc-home-card"><div class="row between"><div><span cl
 return '<section class="screen mc-home">'+floral+'<div class="mc-home-body">'+quick+featured+clubBanner+'<div class="section-head mc-heading"><h2 class="section-title">Campanhas e novidades</h2><button class="link" data-action="page" data-id="campaigns">Ver todas →</button></div>'+campaignSpotlight()+'<div class="section-head mc-heading"><h2 class="section-title">Sua jornada</h2><button class="link" data-action="page" data-id="journey">Minhas sessões →</button></div>'+appointment+pack+'<div class="mc-end-decoration">✿ &nbsp; MC · ESTÉTICA &amp; SAÚDE &nbsp; ✿</div>'+foot()+'</div></section>';
 }
 function serviceCard(s){return '<button class="app-service" data-action="detail" data-id="'+s.id+'"><img loading="lazy" src="'+pictures[s.img]+'" alt="Imagem ilustrativa: '+esc(s.name)+'"><div><strong>'+esc(s.name)+'</strong><small>'+esc(s.desc.slice(0,72))+'…</small><span>Saiba mais →</span></div></button>'}
-function servicesView(){return '<section class="screen">'+title('CONHEÇA O ESPAÇO','Seu cuidado, no seu ritmo.','Informações sobre tratamentos identificados em divulgações da clínica, sujeitos à confirmação profissional.')+'<div class="chips">'+['Todos','Avaliações','Facial','Corporal','Bem-estar','Outros'].map(c=>'<button class="'+(serviceFilter===c?'active':'')+'" data-action="serviceFilter" data-id="'+c+'">'+c+'</button>').join('')+'</div><div class="stack">'+services.filter(s=>serviceFilter==='Todos'||s.cat===serviceFilter).map(s=>'<button class="listcard" style="text-align:left;color:inherit;width:100%;cursor:pointer" data-action="detail" data-id="'+s.id+'"><img src="'+pictures[s.img]+'" style="width:74px;height:80px;border-radius:11px;flex-shrink:0" alt="Imagem ilustrativa"><div style="flex:1"><strong>'+esc(s.name)+'</strong><p>'+esc(s.desc.slice(0,115))+'</p><span style="font-size:10px;color:var(--wine);font-weight:900;margin-top:6px;display:block">'+(s.type==='eval'?'Solicitar avaliação →':s.type==='info'?'Solicitar informações →':'Consultar disponibilidade →')+'</span></div></button>').join('')+'</div><div class="notice" style="margin-top:18px">A indicação de procedimentos, contraindicações e condições de atendimento precisam ser validadas pela equipe profissional responsável.</div>'+foot()+'</section>'}
-
+function servicesView(){return '<section class="screen">'+title('CONHEÇA O ESPAÇO','Seu cuidado, no seu ritmo.','Fotos individuais e benefícios potenciais. Valores exclusivamente de demonstração.')+'<div class="chips">'+['Todos','Avaliações','Facial','Corporal','Bem-estar','Outros'].map(c=>'<button class="'+(serviceFilter===c?'active':'')+'" data-action="serviceFilter" data-id="'+c+'">'+c+'</button>').join('')+'</div><div class="mc-treatment-list">'+services.filter(s=>serviceFilter==='Todos'||s.cat===serviceFilter).map(s=>'<article class="mc-treatment"><img src="'+pictures[s.img]+'" alt="Imagem ilustrativa de '+esc(s.name)+'" loading="lazy"><div class="mc-treatment-copy"><span class="mc-chip">'+esc(s.cat)+'</span><h2>'+esc(s.name)+'</h2><p>'+esc(s.desc)+'</p><strong>'+((s.type==='info')?'Disponibilidade sob consulta':'Simulação: '+money(s.price))+'</strong><button data-action="detail" data-id="'+s.id+'" class="mc-more-benefits">Ver mais benefícios →</button></div></article>').join('')+'</div><div class="notice" style="margin-top:18px">Os benefícios não são garantias de resultado. A indicação, contraindicações, profissionais e condições precisam de confirmação.</div>'+foot()+'</section>'}
 function agenda(){let mine=data.bookings.filter(b=>b.owner).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)),q=priceQuote(requestService,selectedCouponId);
 return '<section class="screen">'+title('AGENDAMENTOS','Seu próximo cuidado.','Simule uma reserva com valores e descontos fictícios. Nada é enviado à clínica.')+
 '<div class="section-head"><h2 class="section-title">Meus compromissos</h2></div>'+
@@ -271,7 +302,8 @@ if(action==='ownerMode'){if(nativeClient)return;mode='owner';render();return win
 if(action==='previewCampaigns'){if(nativeClient)return;mode='client';page='campaigns';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='clientMode'){mode='client';render();return window.scrollTo({top:0,behavior:'instant'})}
 if(action==='serviceFilter'){serviceFilter=id;return render()}
-if(action==='detail'){let s=svc(id),cta=s.type==='eval'?'Entender como solicitar avaliação':'Consultar informações';return popup('<div class="eyebrow">TRATAMENTO EM DIVULGAÇÃO</div><h3>'+esc(s.name)+'</h3><p>'+esc(s.desc)+'</p><p class="notice">Não estamos informando valores, disponibilidade real ou indicação médica. Confirme com a equipe da clínica.</p><div class="row" style="flex-wrap:wrap;margin-top:17px"><button class="btn" data-action="chooseService" data-id="'+id+'">'+cta+'</button><button class="btn secondary" data-action="close">Voltar</button></div>')}
+if(action==='detail'){let s=svc(id);return popup('<div class="eyebrow">CUIDADO PERSONALIZADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Foto ilustrativa de '+esc(s.name)+'"><p>'+esc(s.desc)+'</p><p class="small muted">Simulação de valor: '+(s.type==='info'?'Sob consulta':money(s.price))+'</p><button class="btn wide" data-action="showBenefits" data-id="'+s.id+'">Ver mais benefícios ✦</button><p class="notice" style="margin-top:12px">A oferta depende da confirmação de disponibilidade e da avaliação profissional.</p><button class="btn secondary" data-action="close" style="margin-top:12px">Voltar</button>')}
+if(action==='showBenefits'){const s=svc(id),arr=s.benefits||[];return popup('<div class="eyebrow">O QUE VOCÊ PODE GANHAR COM ESSE CUIDADO</div><h3>'+esc(s.name)+'</h3><img class="mc-detail-photo" src="'+pictures[s.img]+'" alt="Imagem demonstrativa"><p>Conheça os benefícios e perguntas importantes antes de decidir:</p><div class="mc-benefits">'+arr.map(x=>'<div class="mc-benefit"><span>✧</span><p>'+esc(x)+'</p></div>').join('')+'</div><p class="notice" style="margin-top:12px">Os efeitos variam. A informação não substitui avaliação profissional, nem representa garantia de resultado.</p><div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">'+(s.type==='info'?'':'<button class="btn" data-action="chooseService" data-id="'+s.id+'">Simular agendamento →</button>')+'<button class="btn secondary" data-action="close">Fechar</button></div>')}
 if(action==='campaignDetail'){const c=data.campaigns.find(x=>x.id==id&&x.active);if(!c)return toast('Campanha indisponível');return popup('<div class="eyebrow">'+esc(c.tag||'CAMPANHA')+'</div><h3>'+esc(c.title)+'</h3><p>'+esc(c.text)+'</p><p class="notice">Campanha de demonstração. Condições, disponibilidade e preços precisam da aprovação da clínica.</p><button class="btn" data-action="close">Entendi</button>')}
 if(action==='chooseService'){close();if(svc(id).type==='info')return popup('<h3>Informações sob consulta</h3><p>Esta especialidade precisa ter modalidade, profissional e habilitações verificadas antes de ser liberada para reserva no aplicativo.</p><button class="btn" data-action="close">Entendi</button>');requestService=id;requestTime='';return changePage('agenda')}
 
