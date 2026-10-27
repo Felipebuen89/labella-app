@@ -26,7 +26,9 @@ if(!app.includes('window.MOVE_NATIVE_CLIENT=true;'))throw Error("Falha ao ativar
 
 await mkdir(resolve(root,"www"),{recursive:true});
 await writeFile(resolve(root,"www/index.html"),app,"utf8");
-await copyFile(resolve(root,"../marcia-flores.svg"),resolve(root,"www/marcia-flores.svg"));
+for(const asset of ["marcia-flores.svg","marcia-app-icon.svg","marcia-manifest.webmanifest","marcia-sw.js"]){
+  await copyFile(resolve(root,"..",asset),resolve(root,"www",asset));
+}
 console.log("Florais da identidade MC incluídos no pacote Android para funcionar offline.");
 console.log("www/index.html criado em modo cliente Android, a partir de marcia-app.html.");
 console.log("Sem login/back-end: build somente para demonstração e teste interno.");
