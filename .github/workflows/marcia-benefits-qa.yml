@@ -21,6 +21,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.58.2
           command -v google-chrome || command -v chromium
+          echo 'Testing Chrome system binary through explicit executablePath'
       - name: Testar interface móvel, rolagem e botões
         run: node marcia-android/scripts/test-benefits.cjs
       - name: Salvar evidências
