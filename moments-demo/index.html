@@ -1053,7 +1053,7 @@ function profile(){showModal('Minha revenda','Personalize os dados que aparecem 
 function notify(title,text,popup){let ob={id:'N-'+rand()+Date.now(),title,text,when:nowISO(),read:false};state.notifications.unshift(ob);save();if(popup&&'Notification' in window&&Notification.permission==='granted'){try{let n=new Notification(title,{body:text,icon:'assets/icon.svg'});setTimeout(()=>n.close(),8000)}catch(e){}}}
 function notificationCenter(){state.notifications.forEach(n=>n.read=true);save();render();showModal('Notificações','Avisos, atualizações e campanhas recebidas.',`${state.notifications.length?state.notifications.slice(0,35).map(n=>`<div class="order-line"><div><strong>${esc(n.title)}</strong><p class="subtext" style="margin:5px 0">${esc(n.text)}</p><small class="small-help">${niceDate(n.when)}</small></div>${ic('bell')}</div>`).join(''):empty('Nenhum aviso ainda','As notificações da franquia e os avisos de estoque aparecerão aqui.','bell')}`,`<button class="btn outline" data-act="notify-permission">${ic('bell')} Ativar avisos no dispositivo</button>`)}
 
-const MOMENTS_PUSH_PUBLIC_KEY='BJm52Urlw9CpPeFhBeaT2SbWETg5qkNBzgWoedThpVa6RxyuFW977pT5_76u9YB7ygwDNWX6wRazrnJ6LSiyuY8';
+const MOMENTS_PUSH_PUBLIC_KEY='BEeHnNRzcI-yqaGMaQ17QI5hkc6vSSQKTyoyp-k2bCsgoXLWA5fGaEmapGTCTXAlfnunXLgm3iwVZsZJ_e3q85I';
 function momentsPushKeyBytes(v){
  const decoded=atob((v.replace(/-/g,'+').replace(/_/g,'/')+'===').slice(0,Math.ceil(v.length/4)*4));
  return Uint8Array.from(decoded,c=>c.charCodeAt(0));
