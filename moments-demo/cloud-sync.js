@@ -37,13 +37,13 @@
   publish:(secret,message)=>rpc('moments_demo_admin_publish',{p_pin:secret,p_message:message}),
   settings:(secret,data)=>rpc('moments_demo_admin_settings',{p_pin:secret,p_data:data}),
   campaignStatus:(secret,id,active)=>rpc('moments_demo_admin_campaign_status',{p_pin:secret,p_campaign_id:id,p_active:active}),
-  subscribe:(token,subscription)=>rpc('moments_demo_push_subscribe',{p_token:token,p_subscription:subscription}),
-  broadcast:async(secret,messageId)=>{
+  subscribe:(token,subscription)=>rpc('moments_demo_subscribe',{p_token:token,p_subscription:subscription}),
+  broadcast:async(messageId)=>{
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),35000);
    try{
-    const response=await fetch('https://moments-paris-original-push.onrender.com/broadcast',{
+    const response=await fetch('https://moments-paris-original-webpush.onrender.com/broadcast',{
      method:'POST',headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({pin:secret,messageId}),signal:controller.signal
+     body:JSON.stringify({message_id:messageId}),signal:controller.signal
     });
     if(!response.ok)throw Error('Servidor de push indisponível ('+response.status+')');
     return response.json();
