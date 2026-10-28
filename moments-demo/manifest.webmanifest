@@ -1,0 +1,18 @@
+{
+  "name": "Moments Paris — Revendedores",
+  "short_name": "Moments Paris",
+  "description": "Pedidos, estoque, campanhas e fidelidade da Moments Paris",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "/assets/moments-logo-original-limpo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
