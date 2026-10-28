@@ -1,0 +1,13 @@
+{
+  "name": "moments-paris-approved-push",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Web Push backend for approved Moments Paris reseller app",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "web-push": "3.6.7"
+  }
+}
