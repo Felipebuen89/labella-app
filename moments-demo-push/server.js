@@ -53,7 +53,7 @@ async function send(messageId,pin){
 }
 http.createServer(async(req,res)=>{
  const origin=req.headers.origin||'';
- if(req.method==='GET'&&req.url==='/health')return result(res,200,{ok:true,service:'moments-paris-original-push'});
+ if(req.method==='GET'&&req.url==='/health')return result(res,200,{ok:true,service:'moments-paris-original-push',vapidPublicKey:VAPID_PUBLIC});
  if(req.method==='OPTIONS'){
   if(!allowedOrigins.has(origin))return result(res,403,{error:'Invalid origin'});
   res.writeHead(204,{'Access-Control-Allow-Origin':origin,'Vary':'Origin',
