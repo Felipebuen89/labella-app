@@ -38,16 +38,43 @@
   settings:(secret,data)=>rpc('moments_demo_admin_settings',{p_pin:secret,p_data:data}),
   campaignStatus:(secret,id,active)=>rpc('moments_demo_admin_campaign_status',{p_pin:secret,p_campaign_id:id,p_active:active}),
   subscribe:(token,subscription)=>rpc('moments_demo_subscribe',{p_token:token,p_subscription:subscription}),
-  broadcast:async(messageId)=>{
-   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),35000);
+  // Acessar a aba Campanhas pode acordar o servidor gratuito do Render.
+  // Este GET não envia mensagens e não usa credenciais.
+  warmPush:async()=>{
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
    try{
-    const response=await fetch('https://moments-paris-original-webpush.onrender.com/broadcast',{
-     method:'POST',headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({message_id:messageId}),signal:controller.signal
+    const response=await fetch('https://moments-paris-original-webpush.onrender.com/health',{
+     method:'GET',cache:'no-store',signal:controller.signal
     });
-    if(!response.ok)throw Error('Servidor de push indisponível ('+response.status+')');
-    return response.json();
-   }finally{clearTimeout(timer)}
+    return response.ok;
+   }catch{return false}
+   finally{clearTimeout(timer)}
+  },
+  broadcast:async(messageId)=>{
+   // O servidor guarda o ID de cada mensagem, impedindo push duplicado.
+   // Repetir a mesma requisição após 503/timeout é seguro e reduz falhas
+   // quando a instância gratuita do Render está acordando.
+   let lastError;
+   for(let attempt=0;attempt<2;attempt++){
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),42000);
+    try{
+     const response=await fetch('https://moments-paris-original-webpush.onrender.com/broadcast',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message_id:messageId}),signal:controller.signal
+     });
+     if(!response.ok){
+      const error=Error('Servidor push indisponível ('+response.status+')');
+      error.status=response.status;
+      throw error;
+     }
+     return await response.json();
+    }catch(error){
+     lastError=error;
+     if(error.status && ![408,425,429,500,502,503,504].includes(error.status))throw error;
+     if(attempt===0)await new Promise(resolve=>setTimeout(resolve,6000));
+    }finally{clearTimeout(timer)}
+   }
+   throw lastError;
   }
  };
 })();
