@@ -28,7 +28,7 @@ function providerAllowed(endpoint){
  }catch{return false}
 }
 async function getPayload(pin,messageId){
- const response=await fetch(BASE+'/rest/v1/rpc/moments_demo_admin_push_payload',{
+ const response=await fetch(BASE+'/rest/v1/rpc/moments_demo_push_targets',{
   method:'POST',headers:{apikey:API_KEY,'Content-Type':'application/json','Accept':'application/json'},
   body:JSON.stringify({p_pin:pin,p_message_id:messageId}),signal:AbortSignal.timeout(15000)
  });
@@ -37,9 +37,9 @@ async function getPayload(pin,messageId){
 }
 async function send(messageId,pin){
  const data=await getPayload(pin,messageId);
- const subscribers=(data.subscribers||[]).filter(s=>providerAllowed(s.endpoint) &&
+ const subscribers=(data.subscriptions||[]).filter(s=>providerAllowed(s.endpoint) &&
   typeof s.keys?.p256dh==='string'&&typeof s.keys?.auth==='string').slice(0,4000);
- const payload=JSON.stringify({title:data.title,body:data.body,tag:'moments-paris-'+messageId});
+ const payload=JSON.stringify({title:data.message?.title,body:data.message?.body,tag:'moments-paris-'+messageId});
  let delivered=0,failed=0;
  for(let i=0;i<subscribers.length;i+=12){
   const batch=subscribers.slice(i,i+12);
