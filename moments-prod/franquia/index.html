@@ -72,13 +72,23 @@ $('dashboard').append(intakeSection);
 async function loadResellerApplications(){
  if(!me||!['franchise_admin','platform_admin'].includes(me.role))return;
  const target=document.getElementById('resellerApplicationsList');target.textContent='Consultando...';
- const {data:rows,error}=await sb.from('reseller_applications').select('full_name,city,phone,created_at,status').order('created_at',{ascending:false}).limit(100);
+ const {data:rows,error}=await sb.from('reseller_applications').select('id,full_name,city,phone,created_at,status').order('created_at',{ascending:false}).limit(100);
  if(error){target.textContent='Não foi possível consultar os cadastros: '+error.message;return}
  resellerApplications=rows||[];target.replaceChildren();
  if(!resellerApplications.length){target.textContent='Nenhum cadastro recebido.';renderFranchise();return}
  const grid=document.createElement('table');const head=document.createElement('tr');
- for(const label of ['Nome','Cidade','Telefone','Situação','Cadastro']){const th=document.createElement('th');th.textContent=label;head.append(th)}grid.append(head);
- for(const item of resellerApplications){const tr=document.createElement('tr');for(const value of [item.full_name,item.city,item.phone,item.status==='new'?'Novo':item.status,new Date(item.created_at).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value||'';tr.append(td)}grid.append(tr)}target.append(grid);renderFranchise();
+ for(const label of ['Nome','Cidade','Telefone','Situação','Cadastro','Ação']){const th=document.createElement('th');th.textContent=label;head.append(th)}grid.append(head);
+ for(const item of resellerApplications){const tr=document.createElement('tr');for(const value of [item.full_name,item.city,item.phone,item.status==='new'?'Novo':item.status==='contacted'?'Contatado':item.status==='rejected'?'Arquivado':item.status==='approved'?'Aprovado':item.status,new Date(item.created_at).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value||'';tr.append(td)}
+ const actions=document.createElement('td');if(item.status==='new'){const b=document.createElement('button');b.type='button';b.textContent='Marcar contato';b.dataset.applicationId=item.id;b.dataset.applicationStatus='contacted';actions.append(b)}
+ if(item.status!=='rejected'){const b=document.createElement('button');b.type='button';b.textContent='Arquivar';b.className='secondary';b.dataset.applicationId=item.id;b.dataset.applicationStatus='rejected';actions.append(b)}
+ tr.append(actions);grid.append(tr)}target.append(grid);
+ target.querySelectorAll('[data-application-id]').forEach(b=>b.onclick=async()=>{
+  if(b.dataset.applicationStatus==='rejected'&&!confirm('Arquivar este cadastro?'))return;
+  b.disabled=true;const{error}=await sb.from('reseller_applications').update({status:b.dataset.applicationStatus}).eq('id',b.dataset.applicationId);
+  if(error){notice('Não foi possível atualizar: '+error.message,true);b.disabled=false;return}
+  notice('Situação do cadastro atualizada.');await loadResellerApplications();
+ });
+ renderFranchise();
 }
 document.getElementById('loadResellerApplications').onclick=loadResellerApplications;
 
