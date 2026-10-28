@@ -50,11 +50,11 @@
   },
   pushPublicKey:'BEeHnNRzcI-yqaGMaQ17QI5hkc6vSSQKTyoyp-k2bCsgoXLWA5fGaEmapGTCTXAlfnunXLgm3iwVZsZJ_e3q85I',
   subscribe:(token,subscription)=>rpc('moments_demo_subscribe',{p_token:token,p_subscription:subscription}),
-  async broadcast(pin,messageId){
+  async broadcast(messageId){
    const r=await fetch('https://moments-paris-original-webpush.onrender.com/broadcast',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({admin_pin:pin,message_id:messageId}),
+    body:JSON.stringify({message_id:messageId}),
     signal:AbortSignal.timeout?AbortSignal.timeout(35000):undefined
    });
    if(!r.ok)throw Error('Serviço de push não confirmou o envio ('+r.status+')');
