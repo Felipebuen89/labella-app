@@ -1104,15 +1104,19 @@ function exportCSV(){let csv=[['Data','Produto','Quantidade','Preco unitario','C
 function editProduct(id){let x=P[id];if(!x)return;showModal('Editar produto','Ajuste somente os valores do revendedor e a imagem cadastrada.',`<form id="edit-product-form"><input type="hidden" name="id" value="${esc(id)}"><div class="form-group"><label class="form-label">Produto</label><input class="field" readonly value="${esc(x.name)}"></div><div class="form-grid"><div class="form-group"><label class="form-label">Preço de compra do revendedor</label><input type="number" min="0" step="0.01" name="cost" class="field" value="${cost(x)}" required></div><div class="form-group"><label class="form-label">Preço sugerido de venda</label><input type="number" min="0" step="0.01" name="retail" class="field" value="${retail(x)??''}" required></div></div><div class="form-group"><label class="form-label">URL de foto do produto (opcional)</label><input type="url" name="image" class="field" value="${esc(state.photoOverride[id]||'')}" placeholder="https://.../foto-do-produto.jpg"><p class="small-help">Use apenas a foto correspondente a este produto. Se vazio, é exibida uma ilustração.</p></div><button class="btn gold block" type="submit">Salvar alterações</button></form>`)}
 function reportPushDelivery(promise,subject){
  promise.then(result=>{
-  if((result.accepted||0)>0)toast(subject+': '+result.accepted+' envio(s) aceito(s) pelo serviço push');
-  else if((result.subscribers||0)===0)toast(subject+' publicada no aplicativo. Nenhum aparelho ativou push ainda.');
-  else toast(subject+' publicada no aplicativo; push sem entrega confirmada.');
- }).catch(err=>{console.warn(subject+' salvo, mas push falhou:',err.message);toast(subject+' publicada no aplicativo; notificações push indisponíveis.');});
+  if((result.accepted||0)>0)toast(subject+': '+result.accepted+' envio(s) aceito(s) pelo servidor push.'+((result.failed||0)>0?' Falhas: '+result.failed+'.':''));
+  else if(result.already_processed)toast(subject+': aviso já processado pelo servidor; confira o dispositivo.');
+  else if((result.subscribers||0)===0)toast(subject+' publicada no aplicativo. Nenhum dispositivo tem push ativo.');
+  else toast(subject+': '+(result.failed||0)+' falha(s) de push; aviso disponível no aplicativo.');
+ }).catch(err=>{
+  console.warn(subject+' salva, mas push falhou:',err.message);
+  toast(subject+' salva no aplicativo, porém o push não foi confirmado. Abra Campanhas e tente enviar novo aviso.');
+ });
 }
 function setupEventHandlers(){document.addEventListener('click',async e=>{const el=e.target.closest('[data-act],[data-tab],[data-admin-tab],[data-qty],[data-add],[data-remove],[data-category],[data-stockfilter],[data-period],[data-sell],[data-editprice],[data-receive],[data-orderdetail],[data-status],[data-pdf],[data-share],[data-togglepromo],[data-editproduct],[data-approve],[data-seller-detail],[data-seller-switch],[data-remove-training],[data-training-toggle],[data-remove-raffle],[data-backdrop]');if(!el)return;
 if(el.dataset.backdrop&&e.target===el){closeModal();return}
 if(el.dataset.tab){if(FRANCHISE_PORTAL)return;admin=false;tab=el.dataset.tab;filter='Todos';query='';render(true);return}
-if(el.dataset.adminTab){if(!FRANCHISE_PORTAL||!admin)return;let t=el.dataset.adminTab.slice(4);if(t==='exit'){admin=false;tab='home'}else{admin=true;adminTab=t;query='';filter='Todos'}render(true);return}
+if(el.dataset.adminTab){if(!FRANCHISE_PORTAL||!admin)return;let t=el.dataset.adminTab.slice(4);if(t==='exit'){admin=false;tab='home'}else{admin=true;adminTab=t;query='';filter='Todos';if(t==='campaigns')CLOUD?.warmPush?.()}render(true);return}
 if(el.dataset.qty){if(FRANCHISE_PORTAL)return;let id=el.dataset.qty,amt=Number(el.dataset.delta);state.cart[id]=Math.max(0,qtyIn(id)+amt);if(!state.cart[id])delete state.cart[id];save();render();return}
 if(el.dataset.add){if(FRANCHISE_PORTAL)return;let id=el.dataset.add;state.cart[id]=qtyIn(id)+1;if(tab!=='orders'&&!admin){tab='orders';filter='Todos';query='';render(true)}else if(admin){admin=false;tab='orders';render(true)}else render();toast(P[id]?.name+' adicionado ao pedido');return}
 if(el.dataset.remove){delete state.cart[el.dataset.remove];save();render();return}
