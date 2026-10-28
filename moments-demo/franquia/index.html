@@ -596,7 +596,7 @@ state.accessLog=state.sellerAccounts[state.currentSellerKey].accessLog||[];
 state.sellerAccounts[state.currentSellerKey].loyalty=state.loyalty;
 state.sellerAccounts[state.currentSellerKey].accessLog=state.accessLog;
 const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
-const save=()=>{try{saveActiveSeller();localStorage.setItem('moments_rev_demo_v4_zero_20261027',JSON.stringify(state));if(!cloudPulling)cloudQueueSave()}catch(e){toast('Espaço para armazenamento esgotado')}};
+const save=()=>{try{if(!FRANCHISE_PORTAL){saveActiveSeller();localStorage.setItem('moments_rev_demo_v4_zero_20261027',JSON.stringify(state))}if(!cloudPulling)cloudQueueSave()}catch(e){toast('Espaço para armazenamento esgotado')}};
 
 const CLOUD=window.MomentsCloud;
 const cloudProfile=()=>({profile:state.profile,cart:state.cart,inventory:state.inventory,sales:state.sales,reorder:state.reorder,notifications:state.notifications,loyalty:state.loyalty,accessLog:state.accessLog,retailOverride:state.retailOverride});
@@ -639,9 +639,14 @@ function cloudApplySeller(snap,initial=false){
  state.promo=state.promo||[];state.coupons=state.coupons||[];
  for(const msg of campaigns){
   const p=msg.campaign;if(!p||!p.id)continue;
-  if(!state.promo.some(x=>x.id===p.id))state.promo.push(p);
-  if(p.coupon&&p.percent&&!state.coupons.some(x=>x.code===p.coupon))
-   state.coupons.push({code:p.coupon,percent:p.percent,active:p.active!==false,end:p.end||''});
+  const i=state.promo.findIndex(x=>x.id===p.id);
+  if(i===-1){state.promo.push(p);added=true}
+  else if(JSON.stringify(state.promo[i])!==JSON.stringify(p)){state.promo[i]=p;added=true}
+  if(p.coupon&&p.percent){
+   const cp=state.coupons.find(c=>c.code===p.coupon);
+   if(!cp){state.coupons.push({code:p.coupon,percent:p.percent,active:p.active!==false,end:p.end||''});added=true}
+   else if(cp.active!==(p.active!==false)){cp.active=p.active!==false;added=true}
+  }
  }
  const settings=snap.settings||{};
  for(const k of ['loyaltyRule','training','raffles','priceOverride','photoOverride'])if(settings[k]!==undefined)state[k]=settings[k];
@@ -687,7 +692,7 @@ async function cloudStart(){
  if(!CLOUD)return;
  if(FRANCHISE_PORTAL)return;
  const token=CLOUD.deviceToken();
- if(token){cloudReady=true;await cloudPoll(true)}
+ if(token){cloudReady=true;await cloudPoll(true);logSellerAccess('abertura do app')}
  else cloudRegisterModal();
 }
 
@@ -1116,7 +1121,7 @@ if(el.dataset.receive){receiveOrder(el.dataset.receive);return}
 if(el.dataset.orderdetail){orderDetail(el.dataset.orderdetail);return}
 if(el.dataset.pdf){downloadOrder(el.dataset.pdf);return}
 if(el.dataset.share){await shareOrder(el.dataset.share);return}
-if(el.dataset.togglepromo){let p=state.promo.find(p=>p.id===el.dataset.togglepromo);if(p){p.active=p.active===false;let cp=state.coupons.find(c=>c.code===p.coupon);if(cp)cp.active=p.active;save();render()}return}
+if(el.dataset.togglepromo){let p=state.promo.find(p=>p.id===el.dataset.togglepromo);if(p){const enabled=p.active===false;if(FRANCHISE_PORTAL){try{await CLOUD.campaignStatus(cloudAdminSecret,p.id,enabled)}catch(err){return toast('Não foi possível alterar a campanha: '+err.message)}}p.active=enabled;let cp=state.coupons.find(c=>c.code===p.coupon);if(cp)cp.active=p.active;save();render()}return}
 if(el.dataset.editproduct){editProduct(el.dataset.editproduct);return}
 const a=el.dataset.act;
 switch(a){case 'redeem-loyalty':redeemLoyalty();break;case 'toggle-categories':categoriesExpanded=!categoriesExpanded;render();break;case 'close':closeModal();break;case 'notifications':notificationCenter();break;case 'notify-permission':permission();break;case 'checkout':checkout();break;case 'apply-coupon':applyCoupon();break;case 'profile':profile();break;case 'scroll-cart':document.getElementById('cart-panel')?.scrollIntoView({behavior:'smooth',block:'center'});break;case 'admin-login':if(FRANCHISE_PORTAL)adminLogin();break;case 'admin-exit':admin=false;cloudAdminSecret='';adminTab='orders';tab='home';closeModal();render(true);break;case 'reorder-all':state.reorder.filter(id=>P[id]&&(state.inventory[id]?.qty||0)===0).forEach(id=>state.cart[id]=Math.max(1,qtyIn(id)));tab='orders';save();render(true);toast('Itens zerados adicionados ao carrinho');break;case 'export-csv':exportCSV();break;case 'install':if(installer){installer.prompt();installer.userChoice.then(()=>installer=null)}else toast('Use “Adicionar à Tela de Início” no menu do navegador');break;default:break;}});
@@ -1136,7 +1141,7 @@ if(formId==='cloud-register-form'){
   state.orders=[];state.sales=[];state.inventory={};state.notifications=[];state.loyalty=blankLoyalty();state.reorder=[];state.cart={};state.accessLog=[];
   CLOUD.saveToken(token);cloudReady=true;
   await CLOUD.save(token,cloudProfile());
-  await cloudPoll(true);closeModal();render(true);toast('Cadastro recebido pela franquia! Seus pedidos já podem ser enviados.');
+  await cloudPoll(true);logSellerAccess('primeiro cadastro');closeModal();render(true);toast('Cadastro recebido pela franquia! Seus pedidos já podem ser enviados.');
  }catch(err){toast('Cadastro não confirmado: '+err.message)}
  finally{if(submit)submit.disabled=false}
  return;
@@ -1170,6 +1175,6 @@ let mpFeedItems=[];let mpFeedSeen='';
 function mpFeedOpen(){const item=mpFeedItems[0];if(!item)return;const box=document.getElementById('mp-shared-feed');if(!box)return;box.innerHTML='';const h=document.createElement('strong');h.textContent=item.title;const p=document.createElement('p');p.textContent=item.body;const kind=document.createElement('small');kind.textContent=item.kind==='campanha'?'Campanha da Moments Paris':'Comunicado da Moments Paris';const close=document.createElement('button');close.textContent='Entendi';close.onclick=()=>{localStorage.setItem('mp-feed-seen',item.id);mpFeedSeen=item.id;box.remove()};box.append(kind,h,p,close)}
 async function mpFeedCheck(){if(CLOUD)return;try{const response=await fetch(MP_FEED_URL,{headers:{apikey:MP_PUBLIC_KEY}});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data)||!data.length)return;mpFeedItems=data;const item=data[0];if(item.id===mpFeedSeen||item.id===localStorage.getItem('mp-feed-seen'))return;let box=document.getElementById('mp-shared-feed');if(!box){box=document.createElement('aside');box.id='mp-shared-feed';box.setAttribute('role','status');document.body.append(box)}mpFeedOpen()}catch(e){/* network may be unavailable offline */}}
 if(!FRANCHISE_PORTAL){mpFeedSeen=localStorage.getItem('mp-feed-seen')||'';mpFeedCheck();setInterval(()=>{if(!document.hidden)mpFeedCheck()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)mpFeedCheck()})}
-function init(){setupEventHandlers();if(!FRANCHISE_PORTAL)logSellerAccess('abertura do app');render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e.message));}init();
+function init(){setupEventHandlers();render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e.message));}init();
 })();
 </script></body></html>
