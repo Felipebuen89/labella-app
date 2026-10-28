@@ -40,7 +40,7 @@ const safeEndpoint=value=>{
 };
 const server=http.createServer(async(req,res)=>{
  const origin=req.headers.origin||'';
- if(req.method==='GET'&&req.url==='/health')return send(res,200,{status:'ok',service:'moments-paris-original-push'},origin);
+ if(req.method==='GET'&&req.url==='/health')return send(res,200,{status:'ok',service:'moments-paris-original-push',vapidPublicKey:VAPID_PUBLIC},origin);
  if(req.method==='OPTIONS'&&req.url==='/broadcast'){
   if(origin!==ORIGIN)return send(res,403,{error:'Origin rejected'},origin);
   res.writeHead(204,{'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'content-type','Access-Control-Max-Age':'600'});return res.end();
