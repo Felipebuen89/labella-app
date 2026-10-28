@@ -64,5 +64,21 @@ $('loginForm').onsubmit=async e=>{e.preventDefault();try{const{error}=await sb.a
 $('logout').onclick=async()=>{await sb.auth.signOut();await refresh()};
 $('orderForm').onsubmit=async e=>{e.preventDefault();try{const{error}=await sb.rpc('place_order',{p_items:[{product_id:$('orderProduct').value,quantity:Number($('orderQty').value)}]});if(error)throw error;notice('Pedido enviado para aprovação.');await refresh()}catch(e){notice(e.message,true)}};
 $('saleForm').onsubmit=async e=>{e.preventDefault();try{const{error}=await sb.rpc('record_sale',{p_items:[{product_id:$('saleProduct').value,quantity:Number($('saleQty').value)}]});if(error)throw error;notice('Venda registrada e estoque atualizado.');await refresh()}catch(e){notice(e.message,true)}};
+
+// Cadastros espontaneos: consulta protegida pelas politicas RLS do Supabase.
+const intakeSection=document.createElement('section');
+intakeSection.innerHTML='<h2>Novos revendedores</h2><p class="muted">Cadastros recebidos pelo aplicativo.</p><button type="button" id="loadResellerApplications">Atualizar cadastros</button><div id="resellerApplicationsList" class="scroll" aria-live="polite"></div>';
+document.querySelector('main')?.append(intakeSection);
+document.getElementById('loadResellerApplications').onclick=async()=>{
+ const target=document.getElementById('resellerApplicationsList');target.textContent='Consultando...';
+ const {data,error}=await sb.from('reseller_applications').select('full_name,city,phone,created_at').order('created_at',{ascending:false}).limit(100);
+ if(error){target.textContent='Não foi possível consultar os cadastros: '+error.message;return}
+ target.replaceChildren();
+ if(!data.length){target.textContent='Nenhum cadastro recebido.';return}
+ const table=document.createElement('table');const head=document.createElement('tr');
+ for(const label of ['Nome','Cidade','Telefone','Cadastro']){const th=document.createElement('th');th.textContent=label;head.append(th)}table.append(head);
+ for(const item of data){const tr=document.createElement('tr');for(const value of [item.full_name,item.city,item.phone,new Date(item.created_at).toLocaleString('pt-BR')]){const td=document.createElement('td');td.textContent=value||'';tr.append(td)}table.append(tr)}target.append(table);
+};
+
 refresh().catch(e=>notice(e.message,true));
 </script></body></html>
