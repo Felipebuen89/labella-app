@@ -753,7 +753,7 @@ async function updateOrderStatus(id,next){
  const prev=orderState(o);
  const valid={'Aguardando aprovação':['Aprovado','Recusado'],'Aprovado':['Em separação','Recusado'],'Em separação':['Pronto para retirada','Recusado'],'Pronto para retirada':[],'Recebido':[],'Recusado':[]};
  if(!valid[prev]?.includes(next))return toast('Conclua a etapa anterior antes de alterar o pedido');
- if(FRANCHISE_PORTAL){if(!cloudAdminSecret)return toast('Entre novamente no painel da franquia');try{await CLOUD.status(cloudAdminSecret,id,next)}catch(e){return toast('Status NÃO atualizado: '+e.message)}}
+ if(FRANCHISE_PORTAL){if(!cloudAdminSecret)return toast('Entre novamente no painel da franquia');try{const result=await CLOUD.status(cloudAdminSecret,id,next);if(result?.message_id)reportPushDelivery(CLOUD.broadcast(result.message_id),'Atualização do pedido')}catch(e){return toast('Status NÃO atualizado: '+e.message)}}
  o.status=next;o.approvedAt=next==='Aprovado'?nowISO():o.approvedAt;
  sendSellerMessage(sellerKeyForOrder(o.id),'Pedido atualizado','O pedido '+o.id+' agora está '+next+'.');
  save();render();toast('Pedido atualizado: '+next);
