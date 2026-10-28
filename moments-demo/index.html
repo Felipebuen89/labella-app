@@ -1047,22 +1047,32 @@ function editRetail(id){let x=P[id];if(!x)return;showModal('Preço de venda','Pe
 function profile(){showModal('Minha revenda','Personalize os dados que aparecem nos pedidos e no PDF.',`<form id="profile-form"><div class="form-group"><label class="form-label">Seu nome / nome do revendedor</label><input class="field" name="revendedor" required maxlength="65" value="${esc(state.profile.revendedor)}"></div><div class="form-group"><label class="form-label">Nome da sua loja</label><input class="field" name="name" maxlength="65" value="${esc(state.profile.name)}"></div><div class="form-group"><label class="form-label">Franquia ou CD para retirada</label><input class="field" name="branch" required maxlength="85" value="${esc(state.profile.branch)}"></div><div class="form-grid"><div class="form-group"><label class="form-label">Seu código de revendedor</label><input class="field" name="code" maxlength="40" value="${esc(state.profile.code)}"></div><div class="form-group"><label class="form-label">WhatsApp (opcional)</label><input class="field" name="whatsapp" maxlength="30" value="${esc(state.profile.whatsapp)}"></div></div><button class="btn block gold" type="submit">Salvar meus dados</button></form><div class="notice">Seus dados foram cadastrados na franquia. O celular identifica seu acesso neste aparelho.</div>`,`<button class="btn outline" data-act="admin-login">${ic('shield')} Painel da franquia</button>`)}
 function notify(title,text,popup){let ob={id:'N-'+rand()+Date.now(),title,text,when:nowISO(),read:false};state.notifications.unshift(ob);save();if(popup&&'Notification' in window&&Notification.permission==='granted'){try{let n=new Notification(title,{body:text,icon:'assets/icon.svg'});setTimeout(()=>n.close(),8000)}catch(e){}}}
 function notificationCenter(){state.notifications.forEach(n=>n.read=true);save();render();showModal('Notificações','Avisos, atualizações e campanhas recebidas.',`${state.notifications.length?state.notifications.slice(0,35).map(n=>`<div class="order-line"><div><strong>${esc(n.title)}</strong><p class="subtext" style="margin:5px 0">${esc(n.text)}</p><small class="small-help">${niceDate(n.when)}</small></div>${ic('bell')}</div>`).join(''):empty('Nenhum aviso ainda','As notificações da franquia e os avisos de estoque aparecerão aqui.','bell')}`,`<button class="btn outline" data-act="notify-permission">${ic('bell')} Ativar avisos no dispositivo</button>`)}
-async function permission(){
- if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return toast('Para receber alertas, instale o aplicativo na tela inicial e use navegador compatível.');
- if(!CLOUD?.deviceToken())return cloudRegisterModal();
- try{
-  const allowed=await Notification.requestPermission();
-  if(allowed!=='granted')return toast('Permissão para notificações não concedida.');
-  const reg=await navigator.serviceWorker.ready;
-  const key=CLOUD.pushPublicKey;
-  const padded=(key.replace(/-/g,'+').replace(/_/g,'/')+'===').slice(0,Math.ceil(key.length/4)*4);
-  const bytes=Uint8Array.from(atob(padded),x=>x.charCodeAt(0));
-  let sub=await reg.pushManager.getSubscription();
-  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
-  await CLOUD.subscribe(CLOUD.deviceToken(),sub.toJSON());
-  toast('Aparelho cadastrado para receber notificações da franquia.');
- }catch(err){toast('Falha ao ativar notificações: '+err.message)}
+
+const MOMENTS_PUSH_PUBLIC_KEY='BJm52Urlw9CpPeFhBeaT2SbWETg5qkNBzgWoedThpVa6RxyuFW977pT5_76u9YB7ygwDNWX6wRazrnJ6LSiyuY8';
+function momentsPushKeyBytes(v){
+ const decoded=atob((v.replace(/-/g,'+').replace(/_/g,'/')+'===').slice(0,Math.ceil(v.length/4)*4));
+ return Uint8Array.from(decoded,c=>c.charCodeAt(0));
 }
+async function permission(){
+ if(!CLOUD?.deviceToken())return cloudRegisterModal();
+ if(!('Notification' in window)||!('serviceWorker' in navigator)){
+  return toast('Para ativar notificações no iPhone, instale o aplicativo na tela inicial.')
+ }
+ try{
+  const granted=await Notification.requestPermission();
+  if(granted!=='granted')return toast('Notificações não autorizadas neste aparelho');
+  const registration=await Promise.race([
+   navigator.serviceWorker.ready,
+   new Promise((_,reject)=>setTimeout(()=>reject(Error('Não foi possível iniciar as notificações neste aparelho')),12000))
+  ]);
+  if(!registration.pushManager)return toast('Este navegador não oferece envio push. No iPhone, abra o app pela tela inicial.');
+  let sub=await registration.pushManager.getSubscription();
+  if(!sub)sub=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:momentsPushKeyBytes(MOMENTS_PUSH_PUBLIC_KEY)});
+  await CLOUD.subscribe(CLOUD.deviceToken(),sub.toJSON());
+  toast('Aparelho cadastrado para receber mensagens e campanhas da franquia');
+ }catch(e){console.warn('Moments push opt-in:',e);toast('Não foi possível ativar avisos: '+e.message)}
+}
+
 function orderDetail(id){let o=findOrder(id);if(!o)return;showModal('Pedido '+esc(id),'Pedido de '+esc(o.reseller)+' • '+niceDate(o.createdAt),`<div class="notice">Retirada: ${niceDate(o.pickupDate)} às ${esc(o.pickupTime)}<br>Destino: ${esc(o.branch)}<br>Status: ${esc(orderState(o))}</div>${o.items.map(i=>`<div class="order-line"><div><strong>${esc(i.name)}</strong><p class="subtext">${i.qty} unidade(s) × ${money(i.unitCost)}</p></div><strong>${money(i.unitCost*i.qty)}</strong></div>`).join('')}<div class="sum-row"><span>Subtotal</span><strong>${money(o.subtotal)}</strong></div><div class="sum-row"><span>Desconto</span><strong>− ${money(o.discount)}</strong></div><div class="sum-row total"><span>Total</span><strong>${money(o.total)}</strong></div>${o.notes?`<p class="subtext">Obs.: ${esc(o.notes)}</p>`:''}`,`<button class="btn outline" data-pdf="${o.id}">Baixar PDF</button><button class="btn gold" data-share="${o.id}">Compartilhar PDF</button>`,true)}
 function simpleAscii(str){return String(str??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u2018\u2019]/g,"'").replace(/[\u2013\u2014]/g,'-').replace(/[\u2022]/g,'-').replace(/[^\x20-\x7e]/g,'');}
 function pdfEsc(s){return simpleAscii(s).replace(/[\\()]/g,'\\$&')}
@@ -1154,7 +1164,7 @@ const MP_FEED_URL='https://jpnuezounmnnnnztocxn.supabase.co/rest/v1/moments_anno
 const MP_PUBLIC_KEY='sb_publishable_yrujwXvWHWPCFyjqia9kgA_MXcbsH0D';
 let mpFeedItems=[];let mpFeedSeen='';
 function mpFeedOpen(){const item=mpFeedItems[0];if(!item)return;const box=document.getElementById('mp-shared-feed');if(!box)return;box.innerHTML='';const h=document.createElement('strong');h.textContent=item.title;const p=document.createElement('p');p.textContent=item.body;const kind=document.createElement('small');kind.textContent=item.kind==='campanha'?'Campanha da Moments Paris':'Comunicado da Moments Paris';const close=document.createElement('button');close.textContent='Entendi';close.onclick=()=>{localStorage.setItem('mp-feed-seen',item.id);mpFeedSeen=item.id;box.remove()};box.append(kind,h,p,close)}
-async function mpFeedCheck(){try{const response=await fetch(MP_FEED_URL,{headers:{apikey:MP_PUBLIC_KEY}});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data)||!data.length)return;mpFeedItems=data;const item=data[0];if(item.id===mpFeedSeen||item.id===localStorage.getItem('mp-feed-seen'))return;let box=document.getElementById('mp-shared-feed');if(!box){box=document.createElement('aside');box.id='mp-shared-feed';box.setAttribute('role','status');document.body.append(box)}mpFeedOpen()}catch(e){/* network may be unavailable offline */}}
+async function mpFeedCheck(){if(CLOUD)return;try{const response=await fetch(MP_FEED_URL,{headers:{apikey:MP_PUBLIC_KEY}});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data)||!data.length)return;mpFeedItems=data;const item=data[0];if(item.id===mpFeedSeen||item.id===localStorage.getItem('mp-feed-seen'))return;let box=document.getElementById('mp-shared-feed');if(!box){box=document.createElement('aside');box.id='mp-shared-feed';box.setAttribute('role','status');document.body.append(box)}mpFeedOpen()}catch(e){/* network may be unavailable offline */}}
 if(!FRANCHISE_PORTAL){mpFeedSeen=localStorage.getItem('mp-feed-seen')||'';mpFeedCheck();setInterval(()=>{if(!document.hidden)mpFeedCheck()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)mpFeedCheck()})}
 function init(){setupEventHandlers();if(!FRANCHISE_PORTAL)logSellerAccess('abertura do app');render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e.message));}init();
 })();
