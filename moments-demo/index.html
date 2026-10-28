@@ -1101,8 +1101,36 @@ let objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';objs[3]='<< /Type /Font 
 for(let p of pages){let id=next++,sid=next++;kids.push(id+' 0 R');let cmds=p.join('\n')+'\n';objs[id]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${sid} 0 R >>`;objs[sid]=`<< /Length ${cmds.length} >>\nstream\n${cmds}endstream`};objs[2]=`<< /Type /Pages /Count ${pages.length} /Kids [${kids.join(' ')}] >>`;
 let src='%PDF-1.4\n%MPDF\n',offsets=[0];for(let i=1;i<next;i++){offsets.push(src.length);src+=`${i} 0 obj\n${objs[i]}\nendobj\n`};let xref=src.length;src+=`xref\n0 ${next}\n0000000000 65535 f \n`;for(let i=1;i<next;i++)src+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';src+=`trailer\n<< /Size ${next} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;return new Blob([src],{type:'application/pdf'})}
 function pdfFile(o){return new File([pdfOrder(o)],'Pedido_'+o.id+'.pdf',{type:'application/pdf'})}
-function downloadOrder(id){let o=findOrder(id);if(!o)return;const blob=pdfOrder(o),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Pedido_'+o.id+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);toast('PDF do pedido gerado!')}
-async function shareOrder(id){let o=findOrder(id);if(!o)return;const f=pdfFile(o);try{if(navigator.canShare?.({files:[f]})){await navigator.share({title:'Pedido Moments Paris '+o.id,text:`Pedido de revendedor ${o.reseller} • ${money(o.total)} • retirar ${niceDate(o.pickupDate)} às ${o.pickupTime}`,files:[f]});return}}catch(e){if(e.name==='AbortError')return;}downloadOrder(id);toast('PDF baixado. Envie-o ao contato da sua franquia.');}
+async function downloadOrder(id,action='download'){
+ const o=findOrder(id);if(!o)return false;
+ let file;
+ try{file=pdfFile(o)}catch(error){console.warn('Moments PDF:',error);toast('Não foi possível gerar o PDF do pedido.');return false}
+ const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ // Installed iOS PWAs do not reliably open downloaded blob URLs. Use the native share sheet, which offers "Save to Files".
+ if((isIOS||action==='share')&&typeof navigator.share==='function'){
+  let supported=false;
+  try{supported=typeof navigator.canShare==='function'&&navigator.canShare({files:[file]})}catch(error){console.warn('Moments PDF share capability:',error)}
+  if(supported){
+   try{
+    await navigator.share({title:'Pedido Moments Paris '+o.id,text:'Pedido '+o.id+' da Moments Paris',files:[file]});
+    return true;
+   }catch(error){
+    if(error?.name==='AbortError')return false;
+    console.warn('Moments PDF native share:',error);
+   }
+  }
+ }
+ try{
+  const url=URL.createObjectURL(file);
+  const a=document.createElement('a');
+  a.href=url;a.download=file.name;a.rel='noopener';a.style.display='none';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  toast(isIOS?'PDF solicitado. Para salvar no iPhone, use Compartilhar PDF e escolha Salvar em Arquivos.':'PDF do pedido disponível para download.');
+  return true;
+ }catch(error){console.warn('Moments PDF fallback:',error);toast('Não foi possível abrir o PDF neste aparelho.');return false}
+}
+async function shareOrder(id){return downloadOrder(id,'share')}
 function exportCSV(){let csv=[['Data','Produto','Quantidade','Preco unitario','Custo total','Valor da venda','Lucro']].concat(state.sales.map(s=>[s.date,s.name,s.qty,s.unitPrice,s.cost,s.total,s.profit])).map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\r\n');let url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));let a=document.createElement('a');a.href=url;a.download='Moments_Paris_Vendas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Planilha de vendas exportada')}
 function editProduct(id){let x=P[id];if(!x)return;showModal('Editar produto','Ajuste somente os valores do revendedor e a imagem cadastrada.',`<form id="edit-product-form"><input type="hidden" name="id" value="${esc(id)}"><div class="form-group"><label class="form-label">Produto</label><input class="field" readonly value="${esc(x.name)}"></div><div class="form-grid"><div class="form-group"><label class="form-label">Preço de compra do revendedor</label><input type="number" min="0" step="0.01" name="cost" class="field" value="${cost(x)}" required></div><div class="form-group"><label class="form-label">Preço sugerido de venda</label><input type="number" min="0" step="0.01" name="retail" class="field" value="${retail(x)??''}" required></div></div><div class="form-group"><label class="form-label">URL de foto do produto (opcional)</label><input type="url" name="image" class="field" value="${esc(state.photoOverride[id]||'')}" placeholder="https://.../foto-do-produto.jpg"><p class="small-help">Use apenas a foto correspondente a este produto. Se vazio, é exibida uma ilustração.</p></div><button class="btn gold block" type="submit">Salvar alterações</button></form>`)}
 function reportPushDelivery(promise,subject){
