@@ -36,6 +36,7 @@
   status:(secret,id,status)=>rpc('moments_demo_admin_status',{p_pin:secret,p_order_id:id,p_status:status}),
   publish:(secret,message)=>rpc('moments_demo_admin_publish',{p_pin:secret,p_message:message}),
   settings:(secret,data)=>rpc('moments_demo_admin_settings',{p_pin:secret,p_data:data}),
+  campaignStatus:(secret,id,active)=>rpc('moments_demo_admin_campaign_status',{p_pin:secret,p_campaign_id:id,p_active:active}),
   subscribe:(token,subscription)=>rpc('moments_demo_push_subscribe',{p_token:token,p_subscription:subscription}),
   broadcast:async(secret,messageId)=>{
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),35000);
