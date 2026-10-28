@@ -1,5 +1,5 @@
 /* Moments Paris original: app shell and optional Web Push receiver */
-const CACHE='moments-paris-original-shell-v4-mobile-bell-20261028';
+const CACHE='moments-paris-original-shell-v5-notifications-modal-20261028';
 const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-original-limpo.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
