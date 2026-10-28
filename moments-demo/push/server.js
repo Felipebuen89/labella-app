@@ -4,10 +4,11 @@ const webpush=require('web-push');
 const PORT=Number(process.env.PORT||10000);
 const BASE=process.env.SUPABASE_URL||'';
 const KEY=process.env.SUPABASE_PUBLISHABLE_KEY||'';
+const SERVICE_KEY=process.env.MOMENTS_PUSH_SERVICE_KEY||'';
 const VAPID_PUBLIC=process.env.VAPID_PUBLIC_KEY||'';
 const VAPID_PRIVATE=process.env.VAPID_PRIVATE_KEY||'';
 const ORIGIN='https://moments-paris-demo-revendedores.onrender.com';
-if(!BASE||!KEY||!VAPID_PUBLIC||!VAPID_PRIVATE){
+if(!BASE||!KEY||!SERVICE_KEY||!VAPID_PUBLIC||!VAPID_PRIVATE){
  console.error('Missing required backend settings');process.exit(1);
 }
 webpush.setVapidDetails('mailto:felipebuen1989@gmail.com',VAPID_PUBLIC,VAPID_PRIVATE);
@@ -16,13 +17,19 @@ function send(res,status,data,origin){
  if(origin===ORIGIN){headers['Access-Control-Allow-Origin']=origin;headers['Vary']='Origin'}
  res.writeHead(status,headers);res.end(JSON.stringify(data));
 }
-async function authorizedDelivery(pin,id){
- const r=await fetch(BASE+'/rest/v1/rpc/moments_demo_admin_delivery',{
+async function authorizedDelivery(id){
+ const r=await fetch(BASE+'/rest/v1/rpc/moments_demo_claim_push',{
   method:'POST',headers:{apikey:KEY,'Content-Type':'application/json','Accept':'application/json'},
-  body:JSON.stringify({p_pin:pin,p_message_id:id}),signal:AbortSignal.timeout(18000)
+  body:JSON.stringify({p_service_key:SERVICE_KEY,p_message_id:id}),signal:AbortSignal.timeout(18000)
  });
- if(!r.ok)throw Object.assign(Error('Rejected admin authorization or message'),{status:r.status===400?403:r.status});
+ if(!r.ok)throw Object.assign(Error('Push claim rejected'),{status:r.status===400?403:r.status});
  return r.json();
+}
+async function completeDelivery(id){
+ try{await fetch(BASE+'/rest/v1/rpc/moments_demo_complete_push',{
+  method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},
+  body:JSON.stringify({p_service_key:SERVICE_KEY,p_message_id:id}),signal:AbortSignal.timeout(18000)
+ })}catch(err){console.error('Delivery receipt error:',err.message)}
 }
 const uuid=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v||'');
 const safeEndpoint=value=>{
@@ -42,9 +49,10 @@ const server=http.createServer(async(req,res)=>{
  if(origin!==ORIGIN)return send(res,403,{error:'Origin rejected'},origin);
  try{
   let raw='';for await(const part of req){raw+=part.toString();if(raw.length>4096)throw Object.assign(Error('Too large'),{status:413})}
-  const {admin_pin,message_id}=JSON.parse(raw);
-  if(typeof admin_pin!=='string'||admin_pin.length<20||admin_pin.length>80||!uuid(message_id))return send(res,400,{error:'Invalid request'},origin);
-  const data=await authorizedDelivery(admin_pin,message_id);
+  const {message_id}=JSON.parse(raw);
+  if(!uuid(message_id))return send(res,400,{error:'Invalid request'},origin);
+  const data=await authorizedDelivery(message_id);
+  if(!data.claimed)return send(res,200,{published:true,already_processed:true,subscribers:0,accepted:0,failed:0},origin);
   const recipients=(data.subscribers||[]).filter(x=>safeEndpoint(x.endpoint)&&x.keys?.auth&&x.keys?.p256dh);
   const payload=JSON.stringify({title:data.title,body:data.body,tag:'moments-'+message_id});
   let accepted=0,failed=0;
@@ -55,6 +63,7 @@ const server=http.createServer(async(req,res)=>{
    },payload,{TTL:21600,urgency:'normal'})));
    for(const x of completed){if(x.status==='fulfilled')accepted++;else failed++}
   }
+  await completeDelivery(message_id);
   return send(res,200,{published:true,subscribers:recipients.length,accepted,failed},origin);
  }catch(err){console.error('Web Push send failed:',err.message);
   return send(res,err.status===403?403:500,{error:err.status===403?'Access denied':'Push delivery error'},origin)}
