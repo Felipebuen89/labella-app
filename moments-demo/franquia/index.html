@@ -1087,47 +1087,113 @@ async function permission(){
 function orderDetail(id){let o=findOrder(id);if(!o)return;showModal('Pedido '+esc(id),'Pedido de '+esc(o.reseller)+' • '+niceDate(o.createdAt),`<div class="notice">Retirada: ${niceDate(o.pickupDate)} às ${esc(o.pickupTime)}<br>Destino: ${esc(o.branch)}<br>Status: ${esc(orderState(o))}</div>${o.items.map(i=>`<div class="order-line"><div><strong>${esc(i.name)}</strong><p class="subtext">${i.qty} unidade(s) × ${money(i.unitCost)}</p></div><strong>${money(i.unitCost*i.qty)}</strong></div>`).join('')}<div class="sum-row"><span>Subtotal</span><strong>${money(o.subtotal)}</strong></div><div class="sum-row"><span>Desconto</span><strong>− ${money(o.discount)}</strong></div><div class="sum-row total"><span>Total</span><strong>${money(o.total)}</strong></div>${o.notes?`<p class="subtext">Obs.: ${esc(o.notes)}</p>`:''}`,`<button class="btn outline" data-pdf="${o.id}">Baixar PDF</button><button class="btn gold" data-share="${o.id}">Compartilhar PDF</button>`,true)}
 function simpleAscii(str){return String(str??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\u2018\u2019]/g,"'").replace(/[\u2013\u2014]/g,'-').replace(/[\u2022]/g,'-').replace(/[^\x20-\x7e]/g,'');}
 function pdfEsc(s){return simpleAscii(s).replace(/[\\()]/g,'\\$&')}
-function pdfOrder(o){let pages=[],page=[],y=790;
-const text=(str,x,yy,size=11)=>{page.push(`BT /F1 ${size} Tf ${x} ${yy} Td (${pdfEsc(str)}) Tj ET`)};
-const line=(yy)=>page.push(`0.85 G 42 ${yy} m 553 ${yy} l S 0 G`);
-const newpage=()=>{if(page.length)pages.push(page);page=[];y=790;text('MOMENTS PARIS  /  PEDIDO DE REVENDEDOR',42,y,18);text('CONTROLE DE PEDIDOS • DOCUMENTO GERADO PELO APLICATIVO',42,y-22,8);line(y-33);y-=56;};
-newpage();text('PEDIDO: '+o.id,42,y,12);y-=20;text('Revendedor: '+o.reseller,42,y,10);y-=16;text('Codigo: '+(o.code||'-'),42,y,10);y-=16;text('Local de retirada: '+o.branch,42,y,10);y-=16;text('Data e horario: '+niceDate(o.pickupDate)+' as '+o.pickupTime,42,y,10);y-=16;text('Criado em: '+niceDate(o.createdAt),42,y,10);y-=20;line(y);y-=21;text('PRODUTO',42,y,10);text('QTD',402,y,10);text('TOTAL',485,y,10);y-=14;line(y);y-=20;
-for(let i of o.items){if(y<105){newpage();text('CONTINUACAO DOS ITENS DO PEDIDO '+o.id,42,y,10);y-=28;text('PRODUTO',42,y,10);text('QTD',402,y,10);text('TOTAL',485,y,10);y-=22}let name=i.name.replace(/\s+/g,' ');if(name.length>49)name=name.slice(0,46)+'...';text(name,42,y,9);text(String(i.qty),410,y,9);text('R$ '+(i.qty*i.unitCost).toFixed(2),478,y,9);y-=20}
-if(y<156)newpage();line(y);y-=20;text('Subtotal: R$ '+o.subtotal.toFixed(2),342,y,10);y-=18;text('Desconto: R$ '+o.discount.toFixed(2),342,y,10);y-=23;text('TOTAL DO PEDIDO: R$ '+o.total.toFixed(2),305,y,13);y-=28;if(o.coupon){text('Cupom: '+o.coupon,42,y,9);y-=19}if(o.notes){text('Observacoes: '+o.notes.slice(0,75),42,y,9);y-=20}text('Lista de solicitacao sujeita a confirmacao da franquia.',42,54,8);text('Moments Paris • App demonstrativo de controle do revendedor',42,42,8);pages.push(page);
-let objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';let kids=[];let next=4;
-for(let p of pages){let id=next++,sid=next++;kids.push(id+' 0 R');let cmds=p.join('\n')+'\n';objs[id]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents ${sid} 0 R >>`;objs[sid]=`<< /Length ${cmds.length} >>\nstream\n${cmds}endstream`};objs[2]=`<< /Type /Pages /Count ${pages.length} /Kids [${kids.join(' ')}] >>`;
-let src='%PDF-1.4\n%MPDF\n',offsets=[0];for(let i=1;i<next;i++){offsets.push(src.length);src+=`${i} 0 obj\n${objs[i]}\nendobj\n`};let xref=src.length;src+=`xref\n0 ${next}\n0000000000 65535 f \n`;for(let i=1;i<next;i++)src+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';src+=`trailer\n<< /Size ${next} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;return new Blob([src],{type:'application/pdf'})}
-function pdfFile(o){return new File([pdfOrder(o)],'Pedido_'+o.id+'.pdf',{type:'application/pdf'})}
+function pdfOrder(o){
+ if(!o||typeof o!=='object')throw Error('Pedido inválido para PDF');
+ const items=Array.isArray(o.items)?o.items:[];
+ const num=(value,defaultValue=0)=>{let n=typeof value==='string'?Number(value.trim().replace(',','.')):Number(value);return Number.isFinite(n)?n:defaultValue};
+ const moneyPdf=value=>'R$ '+num(value).toFixed(2);
+ const subtotal=num(o.subtotal,items.reduce((sum,item)=>sum+Math.max(0,num(item.qty))*Math.max(0,num(item.unitCost)),0));
+ const discount=Math.max(0,num(o.discount));
+ const total=num(o.total,Math.max(0,subtotal-discount));
+ let pages=[],page=[],y=790;
+ const text=(value,x,yy,size=11)=>{page.push('BT /F1 '+size+' Tf '+x+' '+yy+' Td ('+pdfEsc(value)+') Tj ET')};
+ const line=yy=>page.push('0.85 G 42 '+yy+' m 553 '+yy+' l S 0 G');
+ const newpage=()=>{if(page.length)pages.push(page);page=[];y=790;text('MOMENTS PARIS  /  PEDIDO DE REVENDEDOR',42,y,18);text('CONTROLE DE PEDIDOS - DOCUMENTO GERADO PELO APLICATIVO',42,y-22,8);line(y-33);y-=56};
+ const fit=(value,max)=>{const str=simpleAscii(value).replace(/\s+/g,' ').trim();return str.length>max?str.slice(0,max-3)+'...':str};
+ newpage();
+ text('PEDIDO: '+fit(o.id||'Sem codigo',75),42,y,12);y-=20;
+ text('Revendedor: '+fit(o.reseller||o.seller||'Nao informado',79),42,y,10);y-=16;
+ text('Codigo: '+fit(o.code||'-',85),42,y,10);y-=16;
+ text('Local de retirada: '+fit(o.branch||'-',78),42,y,10);y-=16;
+ text('Data e horario: '+fit(niceDate(o.pickupDate)+' as '+(o.pickupTime||'-'),72),42,y,10);y-=16;
+ text('Criado em: '+fit(niceDate(o.createdAt),85),42,y,10);y-=20;
+ line(y);y-=21;
+ text('PRODUTO',42,y,10);text('QTD',402,y,10);text('TOTAL',485,y,10);y-=14;line(y);y-=20;
+ if(!items.length){text('Nenhum produto registrado neste pedido',42,y,10);y-=23}
+ for(const item of items){
+  if(y<112){newpage();text('ITENS DO PEDIDO '+fit(o.id||'',60)+' (continuacao)',42,y,10);y-=28;text('PRODUTO',42,y,10);text('QTD',402,y,10);text('TOTAL',485,y,10);y-=22}
+  const name=fit(item?.name||'Produto',55);
+  const qty=Math.max(0,num(item?.qty));
+  text(name,42,y,9);text(String(qty),410,y,9);text(moneyPdf(qty*Math.max(0,num(item?.unitCost))),478,y,9);y-=20;
+ }
+ if(y<183)newpage();
+ line(y);y-=20;text('Subtotal: '+moneyPdf(subtotal),342,y,10);y-=18;
+ text('Desconto: '+moneyPdf(discount),342,y,10);y-=23;
+ text('TOTAL DO PEDIDO: '+moneyPdf(total),305,y,13);y-=28;
+ if(o.coupon){if(y<105)newpage();text('Cupom: '+fit(o.coupon,75),42,y,9);y-=19}
+ const notes=simpleAscii(o.notes||'').replace(/\s+/g,' ').trim();
+ if(notes){for(let i=0;i<Math.min(notes.length,300);i+=90){if(y<90)newpage();text((i?'':'Observacoes: ')+notes.slice(i,i+90),42,y,9);y-=18}}
+ text('Solicitacao sujeita a aprovacao da franquia.',42,54,8);
+ text('Moments Paris - documento de pedido do revendedor',42,42,8);
+ pages.push(page);
+ const objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
+ objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+ const kids=[];let next=4;
+ for(const lines of pages){
+  const pageId=next++,streamId=next++;kids.push(pageId+' 0 R');
+  const cmds=lines.join('\n')+'\n';
+  objs[pageId]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents '+streamId+' 0 R >>';
+  objs[streamId]='<< /Length '+cmds.length+' >>\nstream\n'+cmds+'endstream';
+ }
+ objs[2]='<< /Type /Pages /Count '+pages.length+' /Kids ['+kids.join(' ')+'] >>';
+ let source='%PDF-1.4\n%MPDF\n',offsets=[0];
+ for(let i=1;i<next;i++){offsets.push(source.length);source+=i+' 0 obj\n'+objs[i]+'\nendobj\n'}
+ const xref=source.length;source+='xref\n0 '+next+'\n0000000000 65535 f \n';
+ for(let i=1;i<next;i++)source+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+ source+='trailer\n<< /Size '+next+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+ return new Blob([source],{type:'application/pdf'});
+}
+function pdfFile(o){
+ const blob=pdfOrder(o);
+ const name='Pedido_'+String(o?.id||'Moments_Paris').replace(/[^a-zA-Z0-9_-]/g,'_')+'.pdf';
+ return typeof File==='function'?new File([blob],name,{type:'application/pdf'}):Object.assign(blob,{name});
+}
 async function downloadOrder(id,action='download'){
- const o=findOrder(id);if(!o)return false;
+ const o=findOrder(id);if(!o){toast('Pedido não encontrado para gerar o PDF.');return false}
  let file;
  try{file=pdfFile(o)}catch(error){console.warn('Moments PDF:',error);toast('Não foi possível gerar o PDF do pedido.');return false}
  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
- // Installed iOS PWAs do not reliably open downloaded blob URLs. Use the native share sheet, which offers "Save to Files".
- if((isIOS||action==='share')&&typeof navigator.share==='function'){
-  let supported=false;
-  try{supported=typeof navigator.canShare==='function'&&navigator.canShare({files:[file]})}catch(error){console.warn('Moments PDF share capability:',error)}
-  if(supported){
+ if((isIOS||action==='share')&&typeof navigator.share==='function'&&typeof File==='function'){
+  let allowed=true;
+  try{if(typeof navigator.canShare==='function')allowed=navigator.canShare({files:[file]})}catch(e){allowed=false}
+  if(allowed){
    try{
-    await navigator.share({title:'Pedido Moments Paris '+o.id,text:'Pedido '+o.id+' da Moments Paris',files:[file]});
+    await navigator.share({title:'Pedido Moments Paris '+(o.id||''),text:'Pedido '+(o.id||'')+' da Moments Paris',files:[file]});
     return true;
    }catch(error){
     if(error?.name==='AbortError')return false;
-    console.warn('Moments PDF native share:',error);
+    console.warn('Moments PDF compartilhamento:',error);
    }
   }
  }
+ let url;
  try{
-  const url=URL.createObjectURL(file);
+  url=URL.createObjectURL(file);
+  // Installed iOS apps may ignore the download attribute on blob links.
+  // Open the native PDF preview so that "Compartilhar > Salvar em Arquivos" remains accessible.
+  if(isIOS){
+   const preview=window.open(url,'_blank');
+   if(preview){
+    setTimeout(()=>URL.revokeObjectURL(url),300000);
+    toast('PDF aberto. Para salvar, toque em Compartilhar e depois Salvar em Arquivos.');
+    return true;
+   }
+  }
   const a=document.createElement('a');
-  a.href=url;a.download=file.name;a.rel='noopener';a.style.display='none';
+  a.href=url;a.download=file.name||('Pedido_'+id+'.pdf');a.rel='noopener';a.style.display='none';
   document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
-  toast(isIOS?'PDF solicitado. Para salvar no iPhone, use Compartilhar PDF e escolha Salvar em Arquivos.':'PDF do pedido disponível para download.');
+  setTimeout(()=>URL.revokeObjectURL(url),300000);
+  toast(isIOS?'PDF solicitado. Se não abrir, use Compartilhar PDF.':'Download do PDF iniciado.');
   return true;
- }catch(error){console.warn('Moments PDF fallback:',error);toast('Não foi possível abrir o PDF neste aparelho.');return false}
+ }catch(error){
+  if(url)URL.revokeObjectURL(url);
+  console.warn('Moments PDF fallback:',error);
+  toast('Não foi possível abrir o PDF. Tente o botão Compartilhar PDF.');
+  return false;
+ }
 }
 async function shareOrder(id){return downloadOrder(id,'share')}
+
 function exportCSV(){let csv=[['Data','Produto','Quantidade','Preco unitario','Custo total','Valor da venda','Lucro']].concat(state.sales.map(s=>[s.date,s.name,s.qty,s.unitPrice,s.cost,s.total,s.profit])).map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\r\n');let url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));let a=document.createElement('a');a.href=url;a.download='Moments_Paris_Vendas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);toast('Planilha de vendas exportada')}
 function editProduct(id){let x=P[id];if(!x)return;showModal('Editar produto','Ajuste somente os valores do revendedor e a imagem cadastrada.',`<form id="edit-product-form"><input type="hidden" name="id" value="${esc(id)}"><div class="form-group"><label class="form-label">Produto</label><input class="field" readonly value="${esc(x.name)}"></div><div class="form-grid"><div class="form-group"><label class="form-label">Preço de compra do revendedor</label><input type="number" min="0" step="0.01" name="cost" class="field" value="${cost(x)}" required></div><div class="form-group"><label class="form-label">Preço sugerido de venda</label><input type="number" min="0" step="0.01" name="retail" class="field" value="${retail(x)??''}" required></div></div><div class="form-group"><label class="form-label">URL de foto do produto (opcional)</label><input type="url" name="image" class="field" value="${esc(state.photoOverride[id]||'')}" placeholder="https://.../foto-do-produto.jpg"><p class="small-help">Use apenas a foto correspondente a este produto. Se vazio, é exibida uma ilustração.</p></div><button class="btn gold block" type="submit">Salvar alterações</button></form>`)}
 function reportPushDelivery(promise,subject){
