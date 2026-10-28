@@ -1,6 +1,6 @@
 /* Moments Paris original: app shell and optional Web Push receiver */
-const CACHE='moments-paris-original-shell-v1';
-const STATIC=['/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-original-limpo.svg'];
+const CACHE='moments-paris-original-shell-v2';
+const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-original-limpo.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   for(const url of STATIC){try{await cache.add(url)}catch(e){}}
@@ -14,10 +14,11 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;
  if(event.request.mode==='navigate'){
+  const target=new URL(event.request.url).pathname.startsWith('/franquia/')?'/franquia/':'/';
   event.respondWith(fetch(event.request).then(response=>{
-   if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put('/',copy)).catch(()=>{})}
+   if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(target,copy)).catch(()=>{})}
    return response;
-  }).catch(()=>caches.match('/')));
+  }).catch(()=>caches.match(target)));
  }
 });
 self.addEventListener('push',event=>{
