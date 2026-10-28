@@ -838,7 +838,7 @@ function adminSellerDetail(key){
  const saleRows=(a.sales||[]).slice().reverse();
  const invRows=Object.entries(a.inventory||{}).filter(([id,v])=>v.qty>0).sort((x,y)=>y[1].qty-x[1].qty);
  return `<div class="panel seller-details"><div class="panel-head"><div><p class="eyebrow">REVendedor · ${esc(info.code)}</p><h3 class="panel-title">${esc(info.name)}</h3></div><span class="pill">Painel de acompanhamento</span></div>
- <div class="seller-kpis"><span>Acessos: <strong>${info.accessCount}</strong></span><span>Último acesso: <strong>${info.lastAccess?niceDate(info.lastAccess):'Não registrado'}</strong></span><span>Fidelidade: <strong>${info.loyaltyPoints} pontos</strong></span><span>Vendas: <strong>${money(info.revenue)}</strong></span><span>Lucro bruto: <strong>${money(info.profit)}</strong></span><span>Unidades vendidas: <strong>${info.units}</strong></span><span>Estoque: <strong>${info.qty} unidades</strong></span></div>
+ <p class="subtext">Cidade: ${esc(a.profile?.city||'Não informada')} · Celular: ${esc(a.profile?.whatsapp||'Não informado')}</p><div class="seller-kpis"><span>Acessos: <strong>${info.accessCount}</strong></span><span>Último acesso: <strong>${info.lastAccess?niceDate(info.lastAccess):'Não registrado'}</strong></span><span>Fidelidade: <strong>${info.loyaltyPoints} pontos</strong></span><span>Vendas: <strong>${money(info.revenue)}</strong></span><span>Lucro bruto: <strong>${money(info.profit)}</strong></span><span>Unidades vendidas: <strong>${info.units}</strong></span><span>Estoque: <strong>${info.qty} unidades</strong></span></div>
  <div class="panel-head mt20"><h4>Estoque por produto</h4><span class="pill">${invRows.length} produtos</span></div>
  ${invRows.length?invRows.map(([id,v])=>`<div class="order-line"><span>${esc(P[id]?.name||id)}</span><strong>${v.qty} un. · ${money(v.qty*v.avgCost)}</strong></div>`).join(''):empty('Estoque vazio','Nenhum pedido recebido neste perfil.','boxes')}
  <div class="panel-head mt20"><h4>Vendas registradas</h4><span class="pill">${saleRows.length}</span></div>
@@ -1074,7 +1074,7 @@ if(el.dataset.category!==undefined){filter=el.dataset.category;render();return}
 if(el.dataset.stockfilter){stockFilter=el.dataset.stockfilter;render();return}
 if(el.dataset.period){salesPeriod=el.dataset.period;render();return}
 
-if(el.dataset.approve){updateOrderStatus(el.dataset.approve,el.dataset.next);return}
+if(el.dataset.approve){await updateOrderStatus(el.dataset.approve,el.dataset.next);return}
 if(el.dataset.sellerDetail){selectedSeller=el.dataset.sellerDetail;render();return}
 if(el.dataset.sellerSwitch){return toast('Gestão independente: visualize sem trocar de perfil')}
 if(el.dataset.trainingToggle){if(!admin)return toast('Apenas a franquia pode alterar materiais');const x=state.training.find(x=>x.id===el.dataset.trainingToggle);if(x){x.active=x.active===false;save();render();toast(x.active?'Material publicado':'Material ocultado')}return}
