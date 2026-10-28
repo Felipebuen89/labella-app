@@ -661,7 +661,7 @@ function cloudApplySeller(snap,initial=false){
 }
 function cloudApplyAdmin(snap){
  if(!FRANCHISE_PORTAL)return;
- const old=JSON.stringify(Object.values(state.sellerAccounts||{}).map(a=>(a.orders||[]).map(o=>o.status)));
+ const old=JSON.stringify(Object.entries(state.sellerAccounts||{}).map(([key,a])=>[key,a.profile?.revendedor,(a.sales||[]).length,(a.orders||[]).map(o=>o.status)]));
  const accounts={};
  for(const x of snap.sellers||[]){
   const d=x.payload||{},profile={...DEFAULT.profile,...(d.profile||{}),revendedor:x.name,city:x.city,whatsapp:x.phone,code:x.accountKey};
@@ -674,7 +674,7 @@ function cloudApplyAdmin(snap){
  const campaigns=(snap.messages||[]).filter(m=>m.kind==='campanha'&&m.campaign).map(m=>m.campaign);
  state.promo=campaigns;state.coupons=campaigns.filter(x=>x.coupon&&x.percent).map(x=>({code:x.coupon,percent:x.percent,active:x.active!==false,end:x.end||''}));
  cloudPulling=false;
- if(admin&&(old!==JSON.stringify(Object.values(accounts).map(a=>(a.orders||[]).map(o=>o.status)))||!cloudInitialised))render();
+ if(admin&&(old!==JSON.stringify(Object.entries(accounts).map(([key,a])=>[key,a.profile?.revendedor,(a.sales||[]).length,(a.orders||[]).map(o=>o.status)]))||!cloudInitialised))render();
  cloudInitialised=true;
 }
 async function cloudPoll(initial=false){
@@ -852,11 +852,11 @@ function adminSellers(){
  const details=entries.map(([key,a])=>sellerSummary(key,a));
  const totalRevenue=details.reduce((n,x)=>n+x.revenue,0),totalUnits=details.reduce((n,x)=>n+x.units,0),totalStock=details.reduce((n,x)=>n+x.qty,0);
  return title('Meus revendedores','Acompanhe cada revendedor: estoque, vendas, quantidade e canal de venda.','','PAINEL DA FRANQUIA')+
- '<div class="admin-mini">'+stat('Revendedores',details.length,'Perfis locais nesta demo','user')+stat('Vendas da rede',money(totalRevenue),'Faturamento informado','chart')+stat('Unidades disponíveis',totalStock,'Estoques somados','boxes')+stat('Acessos registrados',details.reduce((n,x)=>n+x.accessCount,0),'Somente este navegador','user')+'</div>'+
- '<div class="panel"><div class="panel-head"><h3 class="panel-title">Cadastrar revendedor de demonstração</h3><span class="pill">Sem conta real</span></div><form id="seller-form" class="seller-form"><input class="field" name="name" maxlength="65" required placeholder="Nome do revendedor"><button class="btn gold" type="submit">'+ic('plus')+' Adicionar</button></form></div>'+
+ '<div class="admin-mini">'+stat('Revendedores',details.length,'Cadastros recebidos da rede','user')+stat('Vendas da rede',money(totalRevenue),'Faturamento informado','chart')+stat('Unidades disponíveis',totalStock,'Estoques somados','boxes')+stat('Acessos registrados',details.reduce((n,x)=>n+x.accessCount,0),'Acessos informados pelos revendedores','user')+'</div>'+
+ '<div class="panel"><h3 class="panel-title">Cadastro automático de revendedores</h3><p class="subtext">O revendedor informa nome, cidade e celular no próprio aplicativo. O cadastro aparece automaticamente neste painel.</p></div>'+
  '<div class="seller-cards">'+details.map(x=>`<button type="button" class="seller-card ${selectedSeller===x.key?'selected':''}" data-seller-detail="${esc(x.key)}"><span class="seller-name">${esc(x.name)} <small>${esc(x.code)}</small></span><span class="seller-data"><strong>${money(x.revenue)}</strong><small>${x.units} vendidos · ${x.qty} em estoque · ${x.loyaltyPoints} pontos · ${x.accessCount} acessos</small></span><span class="seller-chevron">›</span></button>`).join('')+'</div>'+
  (selectedSeller?adminSellerDetail(selectedSeller):'<p class="small-help">Toque no nome de um revendedor para ver o estoque, todas as vendas e como foram realizadas.</p>')+
- '<div class="notice">Cada perfil desta demonstração existe apenas neste navegador. Para acompanhar revendedores em aparelhos diferentes, será necessário o banco de dados e o login real.</div>';
+ '<div class="notice">Cadastros e pedidos são sincronizados no servidor. O proprietário acompanha os registros dos revendedores que concluíram o cadastro.</div>';
 }
 function validMediaUrl(value){
  const s=String(value||'').trim();
@@ -1111,7 +1111,7 @@ if(formId==='cloud-register-form'){
   await CLOUD.enroll(token,name,city,phone);
   if(!localStorage.getItem('moments_paris_legacy_backup'))localStorage.setItem('moments_paris_legacy_backup',JSON.stringify(state));
   state.profile={...DEFAULT.profile,name:'Revenda de '+name,revendedor:name,city,whatsapp:phone};
-  state.orders=[];state.sales=[];state.inventory={};state.notifications=[];state.loyalty=blankLoyalty();state.reorder=[];state.cart={};
+  state.orders=[];state.sales=[];state.inventory={};state.notifications=[];state.loyalty=blankLoyalty();state.reorder=[];state.cart={};state.accessLog=[];
   CLOUD.saveToken(token);cloudReady=true;
   await CLOUD.save(token,cloudProfile());
   await cloudPoll(true);closeModal();render(true);toast('Cadastro recebido pela franquia! Seus pedidos já podem ser enviados.');
@@ -1129,7 +1129,7 @@ if(formId==='loyalty-rule-form'){
  }if(formId==='checkout-form'){if(!d.get('pickupTime'))return toast('Selecione o horário de retirada');if(d.get('pickupDate')<today())return toast('Escolha uma data atual ou futura');await createOrder(d)}if(formId==='profile-form'){state.profile={...state.profile,...Object.fromEntries(d)};save();closeModal();render();toast('Dados da revenda salvos')}if(formId==='sale-form')recordSale(d);if(formId==='retail-form'){state.retailOverride[d.get('id')]=Number(d.get('price'));save();closeModal();render();toast('Preço de venda atualizado')}
 if(formId==='campaign-form'){if(!admin||!FRANCHISE_PORTAL)return;let title=String(d.get('title')).trim(),message=String(d.get('text')).trim(),coupon=String(d.get('coupon')||'').trim().toUpperCase(),percent=Number(d.get('percent')||0);if(coupon&&(!percent||percent>80))return toast('Digite um desconto de 1% a 80% para o cupom');if(percent&&!coupon)return toast('Informe o código do cupom para aplicar o desconto');let campaign={id:'CP-'+rand()+Date.now(),title,text:message,coupon,percent,end:String(d.get('end')||''),active:true,createdAt:nowISO()};if(!cloudAdminSecret)return toast('Entre novamente na franquia');try{await CLOUD.publish(cloudAdminSecret,{kind:'campanha',title,body:message,campaign})}catch(err){return toast('Campanha NÃO enviada: '+err.message)}state.promo.push(campaign);if(coupon){state.coupons=state.coupons.filter(c=>c.code!==coupon);state.coupons.push({code:coupon,percent,active:true,end:campaign.end})}broadcastSellerMessage('Nova promoção: '+title,message);save();render();toast('Campanha publicada para demonstração')}
 if(formId==='notification-form'){if(!admin||!FRANCHISE_PORTAL)return;const title=String(d.get('title')).trim(),body=String(d.get('text')).trim();if(!cloudAdminSecret)return toast('Entre novamente na franquia');try{await CLOUD.publish(cloudAdminSecret,{kind:'notificacao',title,body})}catch(err){return toast('Aviso NÃO enviado: '+err.message)}broadcastSellerMessage(title,body);save();render();toast('Aviso enviado aos revendedores cadastrados')}
-if(formId==='admin-login-form'){if(!FRANCHISE_PORTAL)return toast('Acesse o endereço da franquia');const candidate=String(d.get('pin')||'').trim();try{const snap=await CLOUD.admin(candidate);cloudAdminSecret=candidate;cloudApplyAdmin(snap)}catch(err){return toast('Código de acesso inválido ou conexão indisponível')}admin=true;adminTab='orders';closeModal();render(true);toast('Painel da franquia sincronizado')}
+if(formId==='admin-login-form'){if(!FRANCHISE_PORTAL)return toast('Acesse o endereço da franquia');const candidate=String(d.get('pin')||'').trim();try{const snap=await CLOUD.admin(candidate);cloudAdminSecret=candidate;cloudReady=true;cloudApplyAdmin(snap)}catch(err){return toast('Código de acesso inválido ou conexão indisponível')}admin=true;adminTab='orders';closeModal();render(true);toast('Painel da franquia sincronizado')}
 if(formId==='edit-product-form'){let id=d.get('id'),url=String(d.get('image')||'').trim(),c=Number(d.get('cost')),r=Number(d.get('retail'));if(!P[id]||c<0||r<0)return toast('Confira os valores');state.priceOverride[id]=c;if(String(d.get('retail')).trim())state.retailOverride[id]=r;else delete state.retailOverride[id];if(url&&/^https:\/\//i.test(url))state.photoOverride[id]=url;else delete state.photoOverride[id];save();closeModal();render();toast('Produto atualizado')}});
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installer=e});window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});}
 function adminLogin(){showModal('Acesso da franquia','Área separada para os responsáveis pela loja.',`<form id="admin-login-form"><div class="form-group"><label class="form-label">Código de acesso da franquia</label><input class="field" name="pin" type="password" autocomplete="off" minlength="20" maxlength="80" required placeholder="Código exclusivo da franquia"></div><button class="btn block gold" type="submit">Entrar no painel</button></form><div class="notice">Acesso protegido no servidor. Use o código exclusivo da franquia. Revendedores não precisam desse código.</div>`)}
