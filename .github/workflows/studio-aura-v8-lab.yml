@@ -1,0 +1,27 @@
+name: Studio Aura V8 - smoke tests
+on:
+  push:
+    branches:
+      - 'experimentos/design-taste-2026-10-30'
+    paths:
+      - 'studio-aura-v8-lab.html'
+      - 'tests/studio-aura-v8-lab.test.mjs'
+      - '.github/workflows/studio-aura-v8-lab.yml'
+  pull_request:
+    paths:
+      - 'studio-aura-v8-lab.html'
+      - 'tests/studio-aura-v8-lab.test.mjs'
+      - '.github/workflows/studio-aura-v8-lab.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node version
+        run: node --version
+      - name: Smoke tests (no dependencies)
+        run: node --test tests/studio-aura-v8-lab.test.mjs
