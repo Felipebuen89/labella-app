@@ -7,7 +7,7 @@ import {resolve, dirname} from 'node:path';
 
 const dirnameHere=dirname(fileURLToPath(import.meta.url));
 const html=readFileSync(resolve(dirnameHere,'../studio-aura-v8-lab.html'),'utf8');
-const source=html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 const key='move_digital_premium_demo_v8_lab';
 
 function boot(search='',store={}){
@@ -40,8 +40,8 @@ test('HTML contém aviso de protótipo e bloqueio de indexação',()=>{
 });
 test('V8 não compartilha armazenamento e links com V7',()=>{
   assert.match(html,/move_digital_premium_demo_v8_lab/);
-  assert.doesNotMatch(html,/studio-aura-v7\\.html/);
-  assert.doesNotMatch(source,/fetch\\s*\\(/);
+  assert.doesNotMatch(html,/studio-aura-v7\.html/);
+  assert.doesNotMatch(source,/fetch\s*\(/);
 });
 test('cliente abre telas de agendamento e clube',()=>{
   const app=boot();
@@ -54,7 +54,7 @@ test('cliente abre telas de agendamento e clube',()=>{
 test('painel abre e navega para campanhas sem sair da V8',()=>{
   const app=boot('?painel=1');
   assert.match(app.root.innerHTML,/PAINEL DO PROPRIETÁRIO/);
-  assert.match(app.root.innerHTML,/studio-aura-v8-lab\\.html/);
+  assert.match(app.root.innerHTML,/studio-aura-v8-lab\.html/);
   app.click('admin-go','campanhas');
   assert.match(app.root.innerHTML,/Campanhas/);
 });
