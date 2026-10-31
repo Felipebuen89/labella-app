@@ -25,9 +25,9 @@ const h=(value)=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt
 const money=(n)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(n)||0);
 const fmt=(d)=>new Date(d).toLocaleDateString("pt-BR");
 const id=()=>Math.random().toString(36).slice(2,9).toUpperCase();
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/Sao_Paulo"});
 const sellerNav=[["home","Início","home"],["catalog","Pedidos","bag"],["stock","Estoque","stock"],["finance","Financeiro","chart"],["benefits","Benefícios","gift"]];
-const adminNav=[["admin-home","Visão geral","home"],["admin-orders","Pedidos","bag"],["admin-sellers","Revendedores","users"],["admin-campaigns","Campanhas","gift"],["admin-brand","Configurações","settings"]];
+const adminNav=[["admin-home","Visão geral","home"],["admin-orders","Pedidos","bag"],["admin-sellers","Revendedores","users"],["admin-campaigns","Campanhas","gift"],["admin-catalog","Catálogo","stock"],["admin-brand","Configurações","settings"]];
 const params=new URLSearchParams(location.search);
 let tenantId=Object.hasOwn(TENANTS,params.get("rede"))?params.get("rede"):"aurora";
 let state=loadTenantState(tenantId);
@@ -46,7 +46,7 @@ function logo(){return '<div class="brand-badge">'+(safeLogo()?'<img src="'+h(sa
 function brandBar(){return '<div class="brand-lockup">'+logo()+'<div class="brand-copy"><div class="brand-name">'+h(currentName())+'</div><div class="brand-kicker">'+h(brand().subtitle||BRAND_DEFAULTS.subtitle)+'</div></div></div>'}
 function modeSwitch(){return '<button class="btn small ghost" data-action="toggle-mode" title="Alternar visão demonstrativa">'+ico("swap")+(mode==="seller"?"Ver franquia":"Ver revendedor")+'</button>'}
 function menu(){const nav=mode==="seller"?sellerNav:adminNav;return nav.map(([key,label,icon])=>'<button type="button" class="menu-btn '+(page===key?"active":"")+'" data-page="'+key+'">'+ico(icon)+h(label)+'</button>').join("")}
-function mobileMenu(){const nav=mode==="seller"?sellerNav:adminNav;return nav.map(([key,label,icon])=>'<button type="button" class="'+(page===key?"active":"")+'" data-page="'+key+'" aria-label="'+h(label)+'">'+ico(icon)+'<span>'+h(label)+'</span></button>').join("")}
+function mobileMenu(){const nav=mode==="seller"?sellerNav:adminNav.filter(item=>item[0]!=="admin-catalog");return nav.map(([key,label,icon])=>'<button type="button" class="'+(page===key?"active":"")+'" data-page="'+key+'" aria-label="'+h(label)+'">'+ico(icon)+'<span>'+h(label)+'</span></button>').join("")}
 function header(title,sub,action=""){return '<div class="view-header"><div><p class="eyebrow">'+(mode==="seller"?"ESPAÇO DO REVENDEDOR":"GESTÃO DA REDE")+'</p><h1>'+h(title)+'</h1><p class="sub">'+h(sub)+'</p></div><div class="actions">'+action+'</div></div>'}
 function button(label,action,cls=""){return '<button type="button" class="btn '+cls+'" data-action="'+action+'">'+h(label)+'</button>'}
 function cardTitle(title,action=""){return '<div class="panel-head"><h3>'+h(title)+'</h3>'+action+'</div>'}
@@ -60,7 +60,7 @@ function totals(){
  return {stockQty,invested,revenue,profit,pending:state.orders.filter(o=>o.status==="Pendente").length};
 }
 function row(title,sub,side,icon="bag"){return '<div class="row-item"><div class="row-icon">'+ico(icon)+'</div><div class="row-main"><strong>'+h(title)+'</strong><small>'+h(sub)+'</small></div>'+side+'</div>'}
-function activeCampaign(){return state.campaigns.find(c=>c.active!==false)||null}
+function activeCampaign(){return state.campaigns.filter(c=>c.active!==false).at(-1)||null}
 function hero(){
  return '<section class="hero"><div class="hero-left"><p class="eyebrow">INTELIGÊNCIA PARA SUA REDE</p><h2>Mais controle.<br><em>Mais crescimento.</em></h2><p>Pedidos, estoque, resultados e oportunidades em uma experiência simples, feita para evoluir com seu negócio.</p><button type="button" class="btn primary" data-page="catalog">Explorar catálogo '+ico("arrow")+'</button></div><div class="hero-right" aria-hidden="true"><div class="hero-visual">'+h(brandShort())+'</div><div class="hero-mini">● &nbsp;Sua operação em um só lugar</div></div></section>';
 }
@@ -336,7 +336,7 @@ document.addEventListener("submit",e=>{
  if(form.id==="sell-form")sell(fd);
  if(form.id==="campaign-form"){
    const title=String(fd.get("title")||"").trim(),body=String(fd.get("body")||"").trim(),coupon=String(fd.get("coupon")||"").trim().toUpperCase(),percent=Number(fd.get("percent")||0);
-   if(!title||!body||percent<0||percent>80)return notify("Confira os dados da campanha.");
+   if(title.length<3||body.length<5||!Number.isFinite(percent)||percent<0||percent>80)return notify("Confira os dados da campanha.");
    state.campaigns.push({id:id(),title,body,coupon,percent,active:true});save();render(true);notify("Campanha publicada na demonstração.");
  }
  if(form.id==="product-form"){
