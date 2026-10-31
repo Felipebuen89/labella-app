@@ -1,0 +1,1 @@
+{"name":"redeos-franchise-demo","version":"1.0.0","private":true,"type":"module","description":"Versão demonstrativa e local, não pronta para produção.","scripts":{"test":"node --test tests/*.test.mjs"}}
