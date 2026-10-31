@@ -338,7 +338,18 @@ var now=new Date(),w=[];
 for(var i=6;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i),key=today(d);w.push({date:key,name:D[d.getDay()],count:state.sessions.filter(function(s){return s.date===key;}).length});}
 return w;
 }
-function currentIdx(){return ((new Date().getDay()+6)%7)%state.days.length;}
+function currentIdx(){
+ if(!state.days.length)return 0;
+ var indexes=state.days.map(function(day,i){return day.ex&&day.ex.length?i:-1;}).filter(function(i){return i>=0;});
+ if(!indexes.length)return 0;
+ if(state.settings.mode==='manual'){
+   var recent=(state.sessions||[]).slice().reverse().find(function(x){return Number.isInteger(x.dayIndex)&&Number(x.cycle)===Number(state.cycle);});
+   if(recent){return indexes.find(function(i){return i>recent.dayIndex;})??indexes[0];}
+   return indexes[0];
+ }
+ var todayIndex=((new Date().getDay()+6)%7)%state.days.length;
+ return indexes.includes(todayIndex)?todayIndex:indexes[0];
+}
 function btn(text,action,cls,attr){return '<button class="btn '+(cls||'')+'" data-action="'+action+'" '+(attr||'')+'>'+text+'</button>';}
 function top(title,subtitle){return '<span class="eyebrow">TreinoLab</span><h1 class="hello">'+title+'</h1><p class="sub">'+subtitle+'</p>';}
 function stats(){
@@ -357,11 +368,11 @@ return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1
 function home(){
 if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e responda à avaliação para receber um treino compatível com seus objetivos e com o tempo disponível.')+
 '<section class="hero"><span class="eyebrow">Avaliação inicial</span><h2>Treinos personalizados para sua rotina</h2><p>Frequência, duração, experiência, limitações e datas de revisão.</p>'+btn('Gerar treino automático','builder')+' <span style="display:inline-block;margin-top:9px">'+btn('Montar o meu do zero','manualWizard','outline')+'</span></section><div class="panel"><strong>Como funciona</strong><p class="sub">Você responde à avaliação, o sistema sugere séries e repetições e acompanha suas cargas informadas. Ao fim do ciclo, sugere uma reavaliação.</p></div><div class="notice warn">As sugestões são educativas e não substituem avaliação profissional. Para quem tem lipedema, o treino deve ser individualizado com a equipe de saúde.</div>';
-var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0);
+var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0),built=state.days.reduce(function(n,day){return n+(day.ex&&day.ex.length?1:0);},0);
 return top('Olá, '+safe((s.name||'atleta').split(' ')[0])+'!','Seu plano de '+s.minutes+' minutos, com progressão e reavaliação programada.')+
 cycleBanner()+
-'<div class="row" style="gap:10px;flex-wrap:wrap;margin-bottom:14px">'+btn('＋ Montar treino do zero','manualWizard','small ghost')+'</div>'+ 
-'<section class="hero"><span class="eyebrow">Seu próximo treino</span><h2>'+safe(d.name)+'</h2><p>'+d.ex.length+' exercícios · '+s.minutes+' minutos, incluindo aquecimento e retorno à calma.</p><div class="chips"><span class="chip">'+safe(s.goal)+'</span><span class="chip">'+safe(s.level)+'</span>'+(s.lipedema?'<span class="chip">Baixo impacto</span>':'')+'</div>'+btn('▶ Começar treino','start','','data-idx="'+i+'"')+'</section>'+
+'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Compartilhar treino','sharePlan','small outline')+'</div></div>'+ 
+'<section class="hero"><span class="eyebrow">'+(s.mode==='manual'?'Montado por você':'Seu próximo treino')+'</span><h2>'+safe(d.name)+'</h2><p>'+d.ex.length+' exercícios · '+(d.minutes||s.minutes)+' minutos previstos.</p><div class="chips"><span class="chip">'+safe(s.mode==='manual'?'Treino manual':s.goal)+'</span><span class="chip">'+built+' dia(s) prontos</span>'+(s.lipedema?'<span class="chip">Atenção às limitações</span>':'')+'</div>'+(d.ex.length?'<p class="muted mini" style="margin-bottom:15px">'+d.ex.slice(0,4).map(function(ex){var x=get(ex.id);return x?safe(exerciseName(x)):'';}).filter(Boolean).join(' · ')+'</p>'+btn('▶ Começar treino','start','','data-idx="'+i+'"'):btn('＋ Escolher exercícios','goLibrary',''))+'</section>'+
 stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-tab="progress">Ver evolução →</button></div><div class="panel"><div class="row spread"><div><strong>'+done+' de '+s.days+' treinos</strong><p class="muted mini" style="margin-bottom:0">Meta semanal indicativa</p></div><strong style="color:var(--lime);font-size:25px">'+Math.min(100,Math.round(done/s.days*100))+'%</strong></div><div style="height:9px;background:#344135;border-radius:30px;margin-top:15px;overflow:hidden"><div style="width:'+Math.min(100,done/s.days*100)+'%;height:100%;background:var(--lime);border-radius:30px"></div></div></div>'+
 (s.lipedema?'<div class="notice"><strong>Modo cuidado com as pernas:</strong> exercícios de baixo impacto e progressão mais conservadora. Se houver dor que aumente ou inchaço novo, não force e procure avaliação.</div>':'')+
 '<div class="sectionhead"><h3>Próximos treinos</h3><button class="link" data-tab="plan">Todos →</button></div>'+state.days.slice(0,3).map(function(day,j){return cardDay(day,j,true);}).join('')+
@@ -370,7 +381,7 @@ stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-t
 function plan(){
 if(!state.days.length)return home();
 return top('Meus treinos','Rotina com revisão programada. Você pode ajustar a divisão e a execução.')+cycleBanner()+
-'<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>'+safe(state.settings.days)+' dias por semana • '+state.settings.minutes+' min</strong><p class="muted mini" style="margin:6px 0 0">'+safe(state.settings.mode==='manual'?'Montado por você':state.settings.goal)+' · '+safe(state.settings.level)+'</p></div><div class="row" style="flex-wrap:wrap">'+btn('Novo treino livre','manualWizard','small ghost')+' '+btn('Gerar plano','builder','small')+'</div></div></div>'+
+'<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>'+safe(state.settings.days)+' dias por semana • '+state.settings.minutes+' min</strong><p class="muted mini" style="margin:6px 0 0">'+safe(state.settings.mode==='manual'?'Montado por você':state.settings.goal)+' · '+safe(state.settings.level)+'</p></div><div class="row" style="flex-wrap:wrap">'+btn('Compartilhar treino','sharePlan','small outline')+' '+btn('Novo treino livre','manualWizard','small ghost')+' '+btn('Gerar plano','builder','small')+'</div></div></div>'+
 state.days.map(function(d,i){return cardDay(d,i,false);}).join('')+
 '<div class="notice">Inclua 4–5 min de aquecimento e 3 min de retorno à calma em cada sessão. Selecione “Ver vídeos” no exercício para abrir demonstrações. Mantenha pelo menos um dia de recuperação entre treinos muito intensos do mesmo grupo muscular.</div>';
 }
@@ -414,6 +425,7 @@ function library(){
  var counts=exerciseModeCounts();
  var modes=[['Todos','Todos'],['Maquinas','Máquinas / polias'],['Livres','Pesos livres'],['Corporal','Peso corporal'],['Elasticos','Elásticos']];
  return top('Escolha seu exercício','Visualize a execução na miniatura e monte os treinos por músculo, aparelhos ou pesos livres.')+
+ (state.days.some(function(day){return day.ex&&day.ex.length;})?'<div class="panel"><div class="row spread" style="flex-wrap:wrap"><strong>Treino salvo!</strong>'+btn('Concluir e ver início','goHome','small')+'</div><p class="muted mini" style="margin-bottom:0">Ao compartilhar, os exercícios escolhidos também aparecerão no celular de quem receber.</p></div>':'')+
  '<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>Montar treino do zero</strong><p class="muted mini" style="margin:5px 0">Crie dias e adicione seus movimentos.</p></div>'+btn('＋ Criar treino','manualWizard','small')+'</div></div>'+
  '<div class="panel">'+(state.days.length?'<div class="field"><label for="selectedDay">Adicionar ao treino</label><select id="selectedDay">'+state.days.map(function(d,i){return '<option value="'+i+'" '+(selectedDay===i?'selected':'')+'>'+safe(d.name)+' ('+d.ex.length+')</option>';}).join('')+'</select></div>':'<div class="notice">Crie um treino antes de adicionar exercícios. Você ainda pode visualizar todo o catálogo.</div>')+'</div>'+
  '<input class="search" id="search" placeholder="⌕ Buscar exercício ou aparelho..." value="'+safe(term)+'" aria-label="Buscar exercício">'+
@@ -563,7 +575,7 @@ if(!entries.length){alert('Marque pelo menos um exercício como feito.');return;
 var pain=Number(session.pain||0);
 entries.forEach(function(x){x.pain=pain;});
 var volume=entries.reduce(function(sum,x){var reps=Number(x.actualReps)||parseInt(x.reps,10)||0;return sum+((Number(x.weight)||0)*(Number(x.actualSets)||Number(x.sets)||0)*reps);},0);
-state.sessions.push({date:today(),name:state.days[session.day].name,done:entries.length,minutes:Math.max(1,Math.round((Date.now()-session.started)/60000)),volume:volume,pain:pain,cycle:state.cycle,exercises:entries});
+state.sessions.push({date:today(),name:state.days[session.day].name,done:entries.length,minutes:Math.max(1,Math.round((Date.now()-session.started)/60000)),volume:volume,pain:pain,cycle:state.cycle,dayIndex:session.day,exercises:entries});
 delete state.active;save();modal=null;tab='progress';render();
 if(pain>=4)alert('Treino registrado. Como houve desconforto, evite aumentar a carga e avalie os sintomas com profissional de saúde.');else alert('Treino registrado! A carga será reavaliada com base nas próximas sessões.');
 }
@@ -596,6 +608,9 @@ var nav=ev.target.closest('[data-tab]');if(nav){tab=nav.dataset.tab;filter='Todo
 var el=ev.target.closest('[data-action]');if(!el)return;
 var a=el.dataset.action,i=Number(el.dataset.idx),id=Number(el.dataset.id);
 if(a==='builder'){modal='builder';render();}
+else if(a==='goHome'){modal=null;tab='home';render();window.scrollTo(0,0);}
+else if(a==='goLibrary'){tab='library';render();}
+else if(a==='sharePlan'){sharePlan();}
 else if(a==='manualWizard'){modal='manualWizard';render();}
 else if(a==='customExercise'){modal='customExercise';render();}
 else if(a==='showMore'){libraryLimit=Math.min(allExercises().length,libraryLimit+40);render();}
