@@ -213,3 +213,28 @@ test('Sem exercício, iniciar treino não inicia sessão',()=>{
  assert.equal(state(a).active,undefined);
  a.close();
 });
+
+test('Treino criado manualmente pode ser iniciado e concluído sem medidas corporais',()=>{
+ const a=open();
+ manual(a,{manName:'Aluno manual',manDays:2,manMinutes:30});
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="plan"]');
+ click(a.d,'[data-action="start"][data-idx="0"]');
+ assert.ok(a.d.querySelector('[data-done="0"]'),'Abriu sessão de treino manual');
+ const done=a.d.querySelector('[data-done="0"]');done.checked=true;done.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+ click(a.d,'[data-action="finish"]');
+ assert.equal(state(a).sessions.length,1);
+ assert.equal(state(a).sessions[0].done,1);
+ assert.equal(state(a).settings.mode,'manual');
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Tempo estimado e edição de treinos aparecem em Meus treinos',()=>{
+ const a=open();manual(a);
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="plan"]');
+ assert.match(a.d.getElementById('main').textContent,/Tempo estimado de execução/);
+ assert.ok(a.d.querySelector('[data-action="addFromDay"]'));
+ assert.ok(a.d.querySelector('[data-action="expand"]'));
+ a.close();
+});
