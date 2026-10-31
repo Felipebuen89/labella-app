@@ -371,7 +371,7 @@ if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e res
 var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0),built=state.days.reduce(function(n,day){return n+(day.ex&&day.ex.length?1:0);},0);
 return top('Olá, '+safe((s.name||'atleta').split(' ')[0])+'!','Seu plano de '+s.minutes+' minutos, com progressão e reavaliação programada.')+
 cycleBanner()+
-'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Compartilhar treino','sharePlan','small outline')+'</div></div>'+ 
+'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Compartilhar treino','sharePlan','small outline')+' '+btn('Copiar link','copyPlan','small ghost')+'</div></div>'+ 
 '<section class="hero"><span class="eyebrow">'+(s.mode==='manual'?'Montado por você':'Seu próximo treino')+'</span><h2>'+safe(d.name)+'</h2><p>'+d.ex.length+' exercícios · '+(d.minutes||s.minutes)+' minutos previstos.</p><div class="chips"><span class="chip">'+safe(s.mode==='manual'?'Treino manual':s.goal)+'</span><span class="chip">'+built+' dia(s) prontos</span>'+(s.lipedema?'<span class="chip">Atenção às limitações</span>':'')+'</div>'+(d.ex.length?'<p class="muted mini" style="margin-bottom:15px">'+d.ex.slice(0,4).map(function(ex){var x=get(ex.id);return x?safe(exerciseName(x)):'';}).filter(Boolean).join(' · ')+'</p>'+btn('▶ Começar treino','start','','data-idx="'+i+'"'):btn('＋ Escolher exercícios','goLibrary',''))+'</section>'+
 stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-tab="progress">Ver evolução →</button></div><div class="panel"><div class="row spread"><div><strong>'+done+' de '+s.days+' treinos</strong><p class="muted mini" style="margin-bottom:0">Meta semanal indicativa</p></div><strong style="color:var(--lime);font-size:25px">'+Math.min(100,Math.round(done/s.days*100))+'%</strong></div><div style="height:9px;background:#344135;border-radius:30px;margin-top:15px;overflow:hidden"><div style="width:'+Math.min(100,done/s.days*100)+'%;height:100%;background:var(--lime);border-radius:30px"></div></div></div>'+
 (s.lipedema?'<div class="notice"><strong>Modo cuidado com as pernas:</strong> exercícios de baixo impacto e progressão mais conservadora. Se houver dor que aumente ou inchaço novo, não force e procure avaliação.</div>':'')+
@@ -581,6 +581,112 @@ if(pain>=4)alert('Treino registrado. Como houve desconforto, evite aumentar a ca
 }
 function timerStart(sec){clearInterval(timerHandle);timerLeft=sec;updateTimer();timerHandle=setInterval(function(){timerLeft=Math.max(0,timerLeft-1);updateTimer();if(!timerLeft){clearInterval(timerHandle);if(navigator.vibrate)navigator.vibrate([140,80,140]);}},1000);}
 function updateTimer(){var el=document.getElementById('timerLabel');if(el)el.textContent=timerLeft?timerLeft+'s':'Pronto';}
+
+/* Compartilhamento sem backend: o link leva somente a divisão e os exercícios.
+   Sem nome, peso, dados clínicos, evolução ou cargas executadas. */
+function compactSharePlan(){
+ var selected=(state.days||[]).filter(function(d){return d.ex&&d.ex.length;});
+ if(!selected.length)throw Error('Escolha pelo menos um exercício antes de compartilhar.');
+ var customIds=new Set(selected.flatMap(function(d){return d.ex.map(function(e){return Number(e.id);});}));
+ var own=(state.customExercises||[]).filter(function(x){return customIds.has(Number(x.id));})
+ .map(function(x){return [Number(x.id),String(x.n).slice(0,75),String(x.g).slice(0,35),String(x.e).slice(0,12),String(x.material||'').slice(0,32),String(x.tip||'').slice(0,160),x.impact==='alto'?1:0];});
+ return {v:1,s:String(state.settings.start||today()),w:Number(state.settings.weeks)||6,m:Number(state.settings.minutes)||45,
+ d:selected.map(function(day){return [String(day.name).slice(0,55),Number(day.minutes)||45,day.ex.map(function(e){return [Number(e.id),Number(e.sets)||3,String(e.reps||'10-12').slice(0,20),Number(e.rest)||0,String(e.weight||'').slice(0,12)];})];}),
+ c:own};
+}
+function encodeSharePayload(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function decodeSharePayload(code){
+ if(!/^[A-Za-z0-9_-]{20,18000}$/.test(code))throw Error('Link do treino inválido ou grande demais.');
+ var ascii=atob(code.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-code.length%4)%4));
+ return JSON.parse(decodeURIComponent(escape(ascii)));
+}
+function createShareLink(){
+ var p=compactSharePlan();
+ var host=window.location.origin+window.location.pathname;
+ var url=host+'#plano='+encodeSharePayload(p);
+ if(url.length>18000)throw Error('Plano muito grande para compartilhar por link. Use Exportar backup.');
+ return url;
+}
+function sharePlan(){
+ var link;
+ try{link=createShareLink();}catch(e){alert(e.message);return;}
+ var message='Meu treino pronto no TreinoLab. Abra o link para colocar os exercícios na sua tela inicial.';
+ if(navigator.share){
+   try{navigator.share({title:'TreinoLab — meu treino',text:message,url:link}).catch(function(){});}catch(e){window.prompt('Copie o link do treino:',link);}
+ }else if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(link).then(function(){alert('Link do seu treino copiado! Cole no WhatsApp e envie.');}).catch(function(){window.prompt('Copie o link para WhatsApp:',link);});
+ }else{
+   window.prompt('Copie o link do treino e envie pelo WhatsApp:',link);
+ }
+}
+function copyPlanLink(){
+ var link;
+ try{link=createShareLink();}catch(e){alert(e.message);return;}
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(link).then(function(){alert('Link copiado. Envie à pessoa que receberá o treino.');}).catch(function(){window.prompt('Copie este link:',link);});
+ }else{window.prompt('Copie este link:',link);}
+}
+function validateIncomingShare(p){
+ if(!p||p.v!==1||!Array.isArray(p.d)||p.d.length<1||p.d.length>7||!Array.isArray(p.c)||p.c.length>100)throw Error('Formato do treino incompatível.');
+ var start=String(p.s||''),weeks=Number(p.w),minutes=Number(p.m);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||weeks<4||weeks>12||minutes<20||minutes>120)throw Error('Datas ou duração inválidas.');
+ var customs=p.c.map(function(c){
+   if(!Array.isArray(c)||c.length<6||!Number.isSafeInteger(Number(c[0]))||Number(c[0])<100000||String(c[1]).length<3||String(c[1]).length>75)throw Error('Exercício próprio inválido.');
+   return {id:Number(c[0]),n:String(c[1]),g:String(c[2]).slice(0,35),e:['ambos','academia','casa'].includes(c[3])?c[3]:'ambos',material:String(c[4]).slice(0,32),tip:String(c[5]).slice(0,160),impact:c[6]?'alto':'habitual',ico:'✳',custom:true};
+ });
+ var validIds=new Set(DB.map(function(x){return x.id;}));
+ customs.forEach(function(x){if(validIds.has(x.id))throw Error('ID de exercício duplicado.');validIds.add(x.id);});
+ var days=p.d.map(function(row){
+  if(!Array.isArray(row)||row.length<3||!Array.isArray(row[2])||row[2].length>25||String(row[0]).length>55||String(row[0]).length<1)throw Error('Dia de treino inválido.');
+  var mins=Number(row[1]);if(mins<20||mins>120)throw Error('Duração do dia inválida.');
+  var entries=row[2].map(function(ex){
+    if(!Array.isArray(ex)||ex.length<4||!validIds.has(Number(ex[0])))throw Error('Exercício não encontrado na biblioteca.');
+    var sets=Number(ex[1]),rest=Number(ex[3]),reps=String(ex[2]);
+    if(!Number.isInteger(sets)||sets<1||sets>12||!Number.isFinite(rest)||rest<0||rest>900||!reps||reps.length>20)throw Error('Séries, repetições ou descanso inválidos.');
+    var weight=ex[4]==null?'':String(ex[4]).slice(0,12);
+    return {id:Number(ex[0]),sets:sets,reps:reps,rest:rest,weight:weight};
+  });
+  if(entries.length<1)throw Error('Treino compartilhado sem exercícios.');
+  return {name:String(row[0]),minutes:mins,warmup:5,cooldown:3,cardioMinutes:0,ex:entries};
+ });
+ return {start:start,weeks:weeks,minutes:minutes,days:days,custom:customs};
+}
+function importSharedPlanFromUrl(){
+ var hash=String(window.location.hash||'');
+ if(!hash.startsWith('#plano='))return false;
+ var plan;
+ try{plan=validateIncomingShare(decodeSharePayload(hash.slice(7)));}
+ catch(e){alert('Não foi possível abrir o treino compartilhado: '+e.message);return false;}
+ if(state.days.length&&!confirm('Você recebeu um treino pronto. Deseja substituir o plano deste perfil? O plano atual ficará no histórico de ciclos e os treinos realizados serão preservados.'))return false;
+ if(state.days.length){
+  state.cycles=state.cycles||[];
+  state.cycles.push({cycle:state.cycle||1,start:state.settings.start,end:endDate(),days:JSON.parse(JSON.stringify(state.days)),settings:Object.assign({},state.settings)});
+  state.cycles=state.cycles.slice(-12);
+  state.cycle=(Number(state.cycle)||1)+1;
+ }
+ state.customExercises=state.customExercises||[];
+ /* Evita colisão de IDs locais de exercícios próprios. */
+ var replacements=new Map();
+ plan.custom.forEach(function(x){
+   var prev=state.customExercises.find(function(y){return y.id===x.id;});
+   if(prev&&prev.n===x.n)return;
+   if(prev){
+     var old=x.id,id=Date.now();while(DB.some(function(q){return q.id===id;})||state.customExercises.some(function(q){return q.id===id;})||plan.custom.some(function(q){return q!==x&&q.id===id;}))id++;
+     x.id=id;replacements.set(old,id);
+   }
+   state.customExercises.push(x);
+ });
+ plan.days.forEach(function(day){day.ex.forEach(function(ex){if(replacements.has(ex.id))ex.id=replacements.get(ex.id);});});
+ state.settings=Object.assign({},state.settings,{mode:'manual',goal:'Treino compartilhado',days:plan.days.length,minutes:plan.minutes,start:plan.start,weeks:plan.weeks});
+ state.days=plan.days;
+ delete state.active;
+ selectedDay=0;tab='home';modal=null;
+ save();
+ if(window.history&&window.history.replaceState)window.history.replaceState(null,'',window.location.pathname+window.location.search);
+ alert('Treino recebido e salvo! Ele já está na tela inicial, pronto para começar. Confira os exercícios e suas limitações antes de treinar.');
+ return true;
+}
+
 function download(){
 var blob=new Blob([JSON.stringify({app:'TreinoLab',version:1,data:state},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='treinolab-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
@@ -611,6 +717,7 @@ if(a==='builder'){modal='builder';render();}
 else if(a==='goHome'){modal=null;tab='home';render();window.scrollTo(0,0);}
 else if(a==='goLibrary'){tab='library';render();}
 else if(a==='sharePlan'){sharePlan();}
+else if(a==='copyPlan'){copyPlanLink();}
 else if(a==='manualWizard'){modal='manualWizard';render();}
 else if(a==='customExercise'){modal='customExercise';render();}
 else if(a==='showMore'){libraryLimit=Math.min(allExercises().length,libraryLimit+40);render();}
@@ -714,7 +821,7 @@ if(el.dataset.log){var entry=state.active&&state.active.entries[Number(el.datase
 if(el.id==='importFile'){importBackup(el.files&&el.files[0]);}
 });
 window.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&modal){modal=null;render();}});
-load();render();
+load();importSharedPlanFromUrl();render();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js?v=4').catch(function(){});});}
 })();
 </script>
