@@ -32,6 +32,16 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 .overlay{position:fixed;inset:0;background:#000b;z-index:30;display:flex;align-items:end;justify-content:center}.sheet{max-width:650px;width:100%;max-height:91dvh;overflow:auto;background:#1b241d;border-radius:25px 25px 0 0;padding:26px 20px calc(25px + env(safe-area-inset-bottom));border:1px solid #53654e;box-shadow:0 -12px 65px #0009}.sheet h2{font-size:23px;margin:3px 0 8px}.sheet .sub{margin-bottom:20px}
 .tick{width:24px;height:24px;accent-color:var(--lime)}.sessionrow{border:1px solid var(--line);background:#19211a;border-radius:15px;padding:15px;margin-bottom:10px}.sessionrow.done{border-color:#6a8e50;background:#20301f}.sessionrow h4{margin:0 0 4px;font-size:14px}.sessionrow .formgrid{grid-template-columns:repeat(3,1fr);margin-top:12px}.sessionrow .field input{padding:9px}.timer{font-variant-numeric:tabular-nums;color:var(--lime);font-size:19px;font-weight:900}
 @media(min-width:650px){.app{padding-top:32px}.hello{font-size:40px}.hero{padding:34px}.hero h2{font-size:30px}.grid2{grid-template-columns:repeat(2,1fr)}}@media(max-width:360px){.formgrid{grid-template-columns:1fr}.formwide{grid-column:auto}.hero h2,.hero p{max-width:100%}.stat strong{font-size:18px}}
+
+.exphoto{height:68px;width:68px;min-width:68px;background:#292f29;border:1px solid #455045;border-radius:12px;display:grid;place-items:center;position:relative;overflow:hidden;color:#d5ecd3;}
+.exphoto img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block;background:#efefec;}
+.exphoto .photo-fallback{font-size:23px;position:absolute;inset:0;display:grid;place-items:center;}
+.exphoto.no-photo{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;border-style:dashed;color:var(--muted);}
+.exphoto.no-photo span{font-size:23px}.exphoto.no-photo small{font-size:9px;line-height:1.1}
+.exphoto.large{height:150px;width:150px;min-width:150px;border-radius:16px}.exphoto.large .photo-fallback{font-size:43px}
+.exercise{align-items:center}.exmain{overflow-wrap:anywhere}.exmain strong{font-size:13px;line-height:1.3}.exmain small{display:block;margin-top:4px;line-height:1.35}
+@media(max-width:400px){.exphoto{height:60px;width:60px;min-width:60px}.exercise .btn.small{padding:7px 9px;font-size:11px}.exercise{gap:7px}}
+
 </style>
 </head>
 <body>
@@ -54,10 +64,11 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 <button data-tab="progress"><span class="ico">↗</span>Evolução</button>
 </nav>
 <div id="modal"></div>
+<script src="./treinolab/foto-catalogo.js?v=2"></script>
 <script>
 (function(){
 'use strict';
-var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null,libraryLimit=40,equipmentFilter='Todos',environmentFilter='Todos';
+var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null,libraryLimit=40,equipmentFilter='Todos',environmentFilter='Todos',modalityFilter='Todos';
 var D=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 var DB=[
 ['Supino reto com barra','Peito','academia','🏋','Mantenha os pés apoiados e controle a descida.'],
@@ -173,6 +184,28 @@ DB.forEach(function(x){
  x.impact=/pular|salto|corrida|polichinelo/.test(k)?'alto':'habitual';
 });
 function normalizeLegacy(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+
+/* Fotografias por exercício: yuhonas/free-exercise-db / Unlicense.
+   Não substitua movimentos diferentes pela mesma fotografia: sem correspondência, mostre aviso. */
+var PHOTO_ROOT='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+var photoExtras=(window.TREINOLAB_PHOTO_RECORDS||[]);
+photoExtras.forEach(function(x){if(x.id>=5000&&x.id<6000&&x.n&&x.photo&&!DB.some(function(y){return y.id===x.id;})){x.impact=x.impact||'habitual';DB.push(x);}});
+function categoryMode(x){
+ var mat=x.material||'';
+ if(['Máquina','Polia','Smith'].includes(mat))return 'Maquinas';
+ if(['Halteres','Barra/Anilha','Kettlebell','Barra W'].includes(mat))return 'Livres';
+ if(mat==='Elástico')return 'Elasticos';
+ return 'Corporal';
+}
+function exerciseName(x){return x.n;}
+function exercisePhoto(x,large){
+ var cls=large?'exphoto large':'exphoto',ico=safe(x.ico||'💪');
+ if(!x.photo)return '<span class="'+cls+' no-photo" aria-label="Foto ainda não disponível"><span>'+ico+'</span><small>Sem foto</small></span>';
+ var url=PHOTO_ROOT+encodeURI(x.photo);
+ return '<span class="'+cls+'"><span class="photo-fallback">'+ico+'</span><img src="'+safe(url)+'" alt="Demonstração: '+safe(x.n)+'" loading="'+(large?'eager':'lazy')+'" decoding="async" onerror="this.remove()"></span>';
+}
+function photoAttribution(){return '<p class="muted mini" style="margin-top:10px">Fotos demonstrativas: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer" style="color:var(--lime)">Free Exercise DB (Unlicense)</a>. As imagens mostram exercícios específicos, não uma prescrição individual. Sem foto significa que não há correspondência fotográfica verificada.</p>';}
+
 function allExercises(){return DB.concat((state&&Array.isArray(state.customExercises))?state.customExercises:[]);}
 function groupLabel(x){return x.region||x.g;}
 function normalizeTerm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
