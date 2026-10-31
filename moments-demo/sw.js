@@ -1,6 +1,6 @@
-/* Moments Paris original: app shell and optional Web Push receiver */
-const CACHE='moments-paris-original-shell-v5-notifications-modal-20261028';
-const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-original-limpo.svg'];
+/* White-label demo: app shell e notificação opcional */
+const CACHE='franchise-white-label-shell-v1';
+const STATIC=['/','/franquia/','/brand-config.js','/white-label.css','/manifest.webmanifest','/icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   for(const url of STATIC){try{await cache.add(url)}catch(e){}}
@@ -8,7 +8,7 @@ self.addEventListener('install',event=>{
 });
 self.addEventListener('activate',event=>{
  event.waitUntil(caches.keys().then(keys=>Promise.all(
-  keys.filter(key=>key.startsWith('moments-paris-original-shell-')&&key!==CACHE).map(key=>caches.delete(key))
+  keys.filter(key=>key.startsWith('franchise-white-label-shell-')&&key!==CACHE).map(key=>caches.delete(key))
  )).then(()=>self.clients.claim()));
 });
 self.addEventListener('fetch',event=>{
@@ -23,10 +23,10 @@ self.addEventListener('fetch',event=>{
 });
 self.addEventListener('push',event=>{
  let data={};try{data=event.data?event.data.json():{}}catch{data={body:event.data?.text()||''}}
- event.waitUntil(self.registration.showNotification(String(data.title||'Moments Paris'),{
+ event.waitUntil(self.registration.showNotification(String(data.title||'Sua Franquia'),{
   body:String(data.body||'Novo aviso da franquia'),
-  icon:'/assets/moments-logo-original-limpo.svg',
-  tag:String(data.tag||'moments-paris'),data:{url:'/'}
+  icon:'/icon.svg',
+  tag:String(data.tag||'franchise-white-label'),data:{url:'/'}
  }));
 });
 self.addEventListener('notificationclick',event=>{
