@@ -216,13 +216,13 @@ var photoPortugueseMap={};
 photoExtras.forEach(function(x){
  var translated=PT_PHOTO_NAMES[x.n];
  if(translated && x.photo){
-  var key=translated.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+  var key=normalizeTerm(translated).trim();
   if(!photoPortugueseMap[key])photoPortugueseMap[key]=x;
  }
 });
 DB.forEach(function(x){
  if(x.en||x.photo)return;
- var key=x.n.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+ var key=normalizeTerm(x.n).trim();
  var matching=photoPortugueseMap[key];
  if(matching){x.photo=matching.photo;x.photo2=matching.photo2;}
 });
