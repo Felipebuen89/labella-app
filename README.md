@@ -1,3 +1,20 @@
+# TreinoLab — montador de treino gratuito (PWA)
+
+**Aplicativo principal:** https://felipebuen89.github.io/labella-app/
+
+A página inicial do repositório foi transformada no TreinoLab em 31/10/2026, a pedido do proprietário do repositório. A versão anterior do salão La'Bella está preservada na branch \`backup-labella-2026-10-31\`.
+
+**Recursos:** gerar treino por objetivo (hipertrofia, emagrecimento, condicionamento ou força), nível e 2–6 dias por semana; exercícios de casa ou academia; editar planos, séries e repetições; cronômetro de descanso; registrar exercícios feitos, pesos e repetições; histórico e gráficos; backup JSON de exportação/importação.
+
+**Dados e limitações:** não exige login nem mensalidade; informações ficam apenas no localStorage do dispositivo e navegador. Não há sincronização entre aparelhos, IA, conta, banco de dados nem orientação profissional individual. Limpar os dados do navegador pode apagar os registros; exporte backups regularmente. O app apresenta sugestões gerais, não substitui orientação profissional.
+
+**Instalação:** iPhone Safari → Compartilhar → Adicionar à Tela de Início. Android Chrome → menu → Instalar app/Adicionar à tela inicial.
+
+**Escopo da migração:** somente \`index.html\`, \`manifest.webmanifest\`, \`sw.js\`, \`icon.svg\`, os ícones gerados por GitHub Actions e documentação foram adaptados. Pastas e arquivos de outros protótipos no repositório não foram apagados.
+
+---
+
+## Histórico do protótipo La'Bella (preservado)
 # La'Bella Hair Company — demonstração
 
 Protótipo mobile-first para apresentação de uma proposta de aplicativo ao salão La'Bella Hair Company.
