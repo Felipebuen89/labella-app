@@ -2,10 +2,14 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {JSDOM,VirtualConsole}=require('jsdom');
+const vm=require('node:vm');
+const photoContext={window:{}};
+vm.runInNewContext(fs.readFileSync('treinolab/foto-catalogo.js','utf8'),photoContext);
+const publicPhotos=photoContext.window.TREINOLAB_PHOTO_RECORDS;
 function open(){
  const errors=[],alerts=[],vc=new VirtualConsole();
  vc.on('jsdomError',e=>errors.push(String(e)));
- const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.scrollTo=()=>{};}});
+ const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.TREINOLAB_PHOTO_RECORDS=publicPhotos;w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.scrollTo=()=>{};}});
  return {w:w.window,d:w.window.document,errors,alerts,close:()=>w.window.close()};
 }
 function click(d,s){let e=d.querySelector(s);assert.ok(e,'Elemento não encontrado: '+s);e.click();}
@@ -142,7 +146,7 @@ test('Catálogo supera 400 variações e cobre todos os membros',()=>{
  const a=open();
  click(a.d,'[data-tab="library"]');
  const txt=a.d.getElementById('libResults').textContent;
- assert.match(txt,/414/);
+ assert.match(txt,/1287/);
  const groups=['Quadríceps','Posterior de coxa','Adutores','Abdutores','Panturrilhas','Tibial anterior','Antebraços','Peito','Costas','Ombros','Core','Mobilidade'];
  const opts=Array.from(a.d.getElementById('muscleFilter').options).map(e=>e.value);
  for(const g of groups)assert.ok(opts.includes(g),'faltou '+g);
@@ -236,5 +240,45 @@ test('Tempo estimado e edição de treinos aparecem em Meus treinos',()=>{
  assert.match(a.d.getElementById('main').textContent,/Tempo estimado de execução/);
  assert.ok(a.d.querySelector('[data-action="addFromDay"]'));
  assert.ok(a.d.querySelector('[data-action="expand"]'));
+ a.close();
+});
+
+test('Catálogo de fotos usa registros individuais, não imagens genéricas',()=>{
+ const a=open();
+ assert.equal(publicPhotos.length,873);
+ click(a.d,'[data-tab="library"]');
+ const pics=a.d.querySelectorAll('#libResults .exphoto img');
+ assert.ok(pics.length>=20,'Esperadas ao menos 20 fotos visíveis');
+ assert.ok(Array.from(pics).every(x=>x.src.includes('free-exercise-db/main/exercises/')));
+ assert.notEqual(pics[0].src,pics[1].src,'fotos precisam pertencer a exercícios distintos');
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Filtros de máquinas e pesos livres encontram muitas opções de peito, costas e ombros',()=>{
+ const a=open();click(a.d,'[data-tab="library"]');
+ for(const muscle of ['Peito','Costas','Ombros','Bíceps','Tríceps','Core','Quadríceps']){
+   input(a.w,a.d,'muscleFilter',muscle);
+   input(a.w,a.d,'modalityFilter','Maquinas');
+   const num=parseInt(a.d.querySelector('#libResults .muted strong').textContent,10);
+   assert.ok(num>=10,muscle+' tem menos de dez opções de máquinas e polias: '+num);
+   assert.ok(a.d.querySelector('#libResults .exphoto img'),'Miniatura ausente em '+muscle);
+   input(a.w,a.d,'modalityFilter','Livres');
+   const libre=parseInt(a.d.querySelector('#libResults .muted strong').textContent,10);
+   assert.ok(libre>=10,muscle+' tem menos de dez pesos livres: '+libre);
+ }
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Fotografia também aparece ao abrir detalhes e iniciar treino',()=>{
+ const a=open();manual(a);
+ click(a.d,'#libResults [data-action="details"]');
+ assert.ok(a.d.querySelector('#modal .exphoto.large img'));
+ click(a.d,'#modal [data-action="close"]');
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="plan"]');
+ assert.ok(a.d.querySelector('#main .exphoto img'));
+ click(a.d,'[data-action="start"][data-idx="0"]');
+ assert.ok(a.d.querySelector('#modal .exphoto img'));
+ assert.deepEqual(a.errors,[]);
  a.close();
 });
