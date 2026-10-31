@@ -42,7 +42,7 @@ verify("Home fictícia aparece",app.innerHTML.includes("Aurora Cosméticos"));
 verify("Foto de proprietários não faz parte da home",!app.innerHTML.includes("hero-photo"));
 verify("Marcas demonstrativas diferentes",TENANTS.aurora.name!==TENANTS.viva.name);
 click({page:"catalog"});
-verify("Catálogo abre",app.innerHTML.includes("Catálogo & pedidos"));
+verify("Catálogo abre",app.innerHTML.includes("Catálogo &amp; pedidos"));
 click({qty:"1",id:"a1"});
 verify("Item colocado no carrinho",saved("aurora").cart.a1===1);
 click({action:"checkout"});
