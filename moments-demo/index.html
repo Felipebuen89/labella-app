@@ -673,7 +673,7 @@ for(let k of ['orders','sales','promo','coupons','raffles','notifications','reor
 state.profile={...DEFAULT.profile,...state.profile};
 state.activeCoupon=typeof state.activeCoupon==='string'?state.activeCoupon:'';
 let cloudAdminSecret='',cloudSaveTimer=null,cloudReady=false,cloudPulling=false,cloudPollBusy=false,cloudInitialised=false;
-let tab='home',admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
+let tab=(new URLSearchParams(location.search).get('tela')==='beneficios'?'benefits':'home'),admin=false,adminTab='orders',filter='Todos',query='',categoriesExpanded=false,stockFilter='Todos',salesPeriod='mes',overlay='',installer=null;
 
 const sellerFields=['profile','cart','orders','inventory','sales','reorder','activeCoupon','notifications','loyalty','accessLog'];
 const copyData=x=>JSON.parse(JSON.stringify(x));
@@ -1128,7 +1128,7 @@ function benefitsView(){
  '<div class="mp-luxe-progress-label"><span>'+progressText+'</span><strong>'+Math.min(points,target)+' / '+target+'</strong></div>'+
  '<button class="btn gold" data-tab="loyalty">Ver extrato e resgates →</button></div>'+
  '<aside class="mp-luxe-reward" aria-label="Próxima recompensa"><span class="mp-luxe-reward-icon">'+ic('gift')+'</span><span class="mp-luxe-label">PRÓXIMO BENEFÍCIO</span><strong class="mp-luxe-reward-value">'+reward+'</strong><small>'+target+' pontos para resgatar</small></aside></section>'+
- '<div class="mp-luxe-divider"><h2>Explore seus benefícios</h2><span>Toque para ver detalhes</span></div>'+
+ '<div class="mp-luxe-divider"><h2>Explore seus benefícios</h2><span>Novidade · Edição premium</span></div>'+
  '<div class="mp-luxe-list">'+
  card('Campanhas e ofertas','Ofertas e novidades para vender mais',campaigns.length?campaigns.length+' ativa'+(campaigns.length===1?'':'s'):'Em breve',!campaigns.length,'gift',
  (campaigns.length?campaigns.slice().reverse().slice(0,6).map(p=>'<div class="mp-luxe-entry"><strong>'+esc(p.title)+'</strong><p>'+esc(p.text||'')+'</p></div>').join(''):'<p>Nenhuma campanha ativa no momento.</p>')+'<button class="btn outline small" data-tab="promo">Ver campanhas</button>')+
@@ -1407,6 +1407,6 @@ let mpFeedItems=[];let mpFeedSeen='';
 function mpFeedOpen(){const item=mpFeedItems[0];if(!item)return;const box=document.getElementById('mp-shared-feed');if(!box)return;box.innerHTML='';const h=document.createElement('strong');h.textContent=item.title;const p=document.createElement('p');p.textContent=item.body;const kind=document.createElement('small');kind.textContent=item.kind==='campanha'?'Campanha da Moments Paris':'Comunicado da Moments Paris';const close=document.createElement('button');close.textContent='Entendi';close.onclick=()=>{localStorage.setItem('mp-feed-seen',item.id);mpFeedSeen=item.id;box.remove()};box.append(kind,h,p,close)}
 async function mpFeedCheck(){if(CLOUD)return;try{const response=await fetch(MP_FEED_URL,{headers:{apikey:MP_PUBLIC_KEY}});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data)||!data.length)return;mpFeedItems=data;const item=data[0];if(item.id===mpFeedSeen||item.id===localStorage.getItem('mp-feed-seen'))return;let box=document.getElementById('mp-shared-feed');if(!box){box=document.createElement('aside');box.id='mp-shared-feed';box.setAttribute('role','status');document.body.append(box)}mpFeedOpen()}catch(e){/* network may be unavailable offline */}}
 if(!FRANCHISE_PORTAL){mpFeedSeen=localStorage.getItem('mp-feed-seen')||'';mpFeedCheck();setInterval(()=>{if(!document.hidden)mpFeedCheck()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)mpFeedCheck()})}
-function init(){setupEventHandlers();render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e.message));}init();
+function init(){setupEventHandlers();render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js?rev=beneficios-20261031-v3',{updateViaCache:'none'}).then(reg=>reg.update().catch(()=>{})).catch(e=>console.warn('SW:',e.message));}init();
 })();
 </script></body></html>
