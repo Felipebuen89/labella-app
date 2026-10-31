@@ -27,6 +27,7 @@ test('Tela inicial e plano inicial de treinos',()=>{
 });
 test('Gerar plano de 4 dias, objetivo e local casa',()=>{
  const a=openApp();
+ click(a.d,'[data-tab="plan"]');
  click(a.d,'[data-action="builder"]');
  assert.ok(a.d.querySelector('#builderForm'));
  a.d.querySelector('#days').value='4';
