@@ -666,7 +666,7 @@ function cloudApplySeller(snap,initial=false){
  if(changed)render();
  if(added&&cloudInitialised&&'Notification' in window&&Notification.permission==='granted'){
   const newest=state.notifications[0];
-  if('serviceWorker' in navigator)navigator.serviceWorker.ready.then(reg=>reg.showNotification('Sua Franquia · '+newest.title,{body:newest.text,icon:'/icon.svg',tag:'franquia-'+newest.id})).catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.ready.then(reg=>reg.showNotification(BRAND.name+' · '+newest.title,{body:newest.text,icon:'/icon.svg',tag:'franquia-'+newest.id})).catch(()=>{});
  }
  cloudInitialised=true;
 }
@@ -816,7 +816,7 @@ function history(){
  return `${title('Meus pedidos','Acompanhe o status, a aprovação, a retirada e a entrada no estoque.',`<button class="btn gold" data-tab="orders">${ic('plus')} Novo pedido</button>`)}<div class="order-step-legend"><b>1. Aguardando</b><span>2. Aprovado</span><span>3. Preparação</span><span>4. Recebido</span></div>
  ${orders.length?buckets.map(([group,ar])=>!ar.length?'':`<div class="orders-group"><h3>${esc(group)} <small>${ar.length}</small></h3>${ar.map(o=>`<div class="order-card"><div class="order-flex"><div><div class="eyebrow">PEDIDO ${esc(o.id)}</div><h3>${money(o.total)}</h3></div>${orderBadge(o)}</div><div class="order-meta">${o.items.reduce((a,i)=>a+i.qty,0)} unidade(s) • Criado ${niceDate(o.createdAt)} • Retirada ${niceDate(o.pickupDate)} às ${esc(o.pickupTime)}</div><div class="action-row mt20"><button class="btn light small" data-pdf="${o.id}">${ic('download')} PDF</button><button class="btn outline small" data-share="${o.id}">${ic('send')} Compartilhar</button><button class="btn outline small" data-orderdetail="${o.id}">Detalhes</button>${canReceive(o)?`<button class="btn green small" data-receive="${o.id}">${ic('check')} Recebi os produtos</button>`:''}</div></div>`).join('')}</div>`).join(''):empty('Nenhum pedido ainda','Selecione produtos no catálogo para começar.','bag',`<button class="btn gold" data-tab="orders">Fazer pedido</button>`)}${footer()}`;
 }
-const footer=()=>`<div class="footer-note">Sua Franquia • Ferramenta de apoio ao revendedor. Produtos ilustrativos para demonstração; substitua-os pelo catálogo oficial de cada franquia. Demonstração: cada nova rede precisa de sua própria configuração e conexão segura.</div>`;
+const footer=()=>`<div class="footer-note">${esc(BRAND.name)} • Ferramenta de apoio ao revendedor. Produtos ilustrativos para demonstração; substitua-os pelo catálogo oficial de cada franquia. Demonstração: cada nova rede precisa de sua própria configuração e conexão segura.</div>`;
 
 
 const ADMIN_TABS=[['orders','Pedidos','bag'],['sellers','Revendedores','user'],['access','Acessos','user'],['campaigns','Campanhas','gift'],['benefits','Benefícios','gift'],['raffles','Sorteios','gift'],['training','Técnicas','sparkle'],['settings','Gestão','settings']];
@@ -1004,7 +1004,7 @@ function more(){return `${title('Mais opções','Acesse suas promoções, acompa
 
 function franchiseGate(){if(DEMO_MODE)return '<div class="franchise-standalone"><div class="franchise-signin"><div class="franchise-signin-logo">'+brandIdentity('admin')+'</div><div class="eyebrow">PAINEL DA REDE · DEMONSTRAÇÃO</div><h1>Gestão da franquia</h1><p>Conheça a experiência de gestão. Nesta demonstração, dados ficam apenas neste navegador.</p><button class="btn gold block" type="button" data-act="demo-admin">Explorar painel de gestão</button></div></div>';
  return '<div class="franchise-standalone"><div class="franchise-signin"><div class="franchise-signin-logo">'+brandIdentity('admin')+'</div>'+
- '<div class="eyebrow">ACESSO EXCLUSIVO DA FRANQUIA</div><h1>Gestão Sua Franquia</h1>'+
+ '<div class="eyebrow">ACESSO EXCLUSIVO DA FRANQUIA</div><h1>Gestão '+esc(BRAND.name)+'</h1>'+ 
  '<p>Pedidos, revendedores, campanhas e técnicas de venda em um painel separado.</p>'+
  '<form id="admin-login-form" class="franchise-login-form"><label class="form-label">Código de acesso da franquia</label>'+
  '<input class="field" name="pin" type="password" minlength="20" maxlength="80" autocomplete="off" placeholder="Código exclusivo" required>'+
@@ -1125,7 +1125,7 @@ function pdfOrder(o){
  const notes=simpleAscii(o.notes||'').replace(/\s+/g,' ').trim();
  if(notes){for(let i=0;i<Math.min(notes.length,300);i+=90){if(y<90)newpage();text((i?'':'Observacoes: ')+notes.slice(i,i+90),42,y,9);y-=18}}
  text('Solicitacao sujeita a aprovacao da franquia.',42,54,8);
- text('Sua Franquia - documento de pedido do revendedor',42,42,8);
+ text(BRAND.name+' - documento de pedido do revendedor',42,42,8);
  pages.push(page);
  const objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
  objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
@@ -1159,7 +1159,7 @@ async function downloadOrder(id,action='download'){
   try{if(typeof navigator.canShare==='function')allowed=navigator.canShare({files:[file]})}catch(e){allowed=false}
   if(allowed){
    try{
-    await navigator.share({title:'Pedido Sua Franquia '+(o.id||''),text:'Pedido '+(o.id||'')+' da Sua Franquia',files:[file]});
+    await navigator.share({title:'Pedido '+BRAND.name+' '+(o.id||''),text:'Pedido '+(o.id||'')+' da '+BRAND.name,files:[file]});
     return true;
    }catch(error){
     if(error?.name==='AbortError')return false;
