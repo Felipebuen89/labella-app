@@ -202,7 +202,13 @@ function normalizeLegacy(s){return String(s).normalize('NFD').replace(/[\u0300-\
    Não substitua movimentos diferentes pela mesma fotografia: sem correspondência, mostre aviso. */
 var PHOTO_ROOT='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 var photoExtras=(window.TREINOLAB_PHOTO_RECORDS||[]);
-photoExtras.forEach(function(x){if(x.id>=5000&&x.id<6000&&x.n&&x.photo&&!DB.some(function(y){return y.id===x.id;})){x.impact=x.impact||'habitual';DB.push(x);}});
+photoExtras.forEach(function(x){
+ if(x.id>=5000&&x.id<6000&&x.n&&x.photo&&!DB.some(function(y){return y.id===x.id;})){
+  var risky=/jump|hop|sprint|burpee|plyometric|bound|depth|power clean|snatch|box squat jump|jerk|explosive/i.test(x.n)||/plyometrics|olympic weightlifting|strongman/i.test(x.cat||'');
+  x.impact=risky?'alto':'habitual';
+  DB.push(x);
+ }
+});
 function categoryMode(x){
  var mat=x.material||'';
  if(['Máquina','Polia','Smith'].includes(mat))return 'Maquinas';
@@ -291,7 +297,7 @@ function planFor(arg,level,days,equip){
   pat.slice(1).concat(pat.slice(1)).forEach(function(g,j){
    if(chosen.length>=maxSlots)return;
    if(severe&&g==='Pernas'&&chosen.some(function(o){return get(o.id).g==='Pernas';}))return;
-   var pool=DB.filter(function(x){return x.g===g&&(x.e===p.equip||x.e==='ambos')&&(!lip||!/Afundo|Polichinelo|Subida em degrau|Agachamento sumô/.test(x.n));});
+   var pool=DB.filter(function(x){return x.id<5000&&x.g===g&&(x.e===p.equip||x.e==='ambos')&&(!lip||(x.impact!=='alto'&&!/Afundo|Polichinelo|Subida em degrau|Agachamento sumô/.test(x.n)));});
    if(lip&&g==='Pernas')pool.sort(function(x,y){return Number(/Sentar e levantar|panturrilha sentada|Leg press/.test(y.n))-Number(/Sentar e levantar|panturrilha sentada|Leg press/.test(x.n));});
    if(!pool.length)return;
    var k=(i+j+cycle-1)%pool.length,x=pool[k],tries=0;
