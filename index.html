@@ -55,6 +55,20 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 .muscle-choice button.active{background:var(--lime);color:var(--black);border-color:var(--lime);font-weight:800}
 .exercise-meta{font-size:11px;color:var(--muted);line-height:1.45;display:block;margin-top:4px}
 @media(max-width:420px){.exercise-option{gap:8px}.exercise-option .exphoto{width:64px;min-width:64px;height:68px}.exercise-option .btn.small{padding:7px 9px;font-size:11px}}
+
+/* Home minimalista de planos montados manualmente */
+.manual-workout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.manual-workout-option{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:15px;min-height:96px;padding:14px;text-align:left;display:flex;align-items:center;gap:12px;width:100%;transition:background .15s,border-color .15s}
+.manual-workout-option .manual-letter{background:var(--surface2);color:var(--lime);font-weight:800;font-size:22px;border-radius:12px;display:grid;place-items:center;min-width:42px;height:48px}
+.manual-workout-option .manual-option-name{font-size:13px;font-weight:700;display:block;line-height:1.35;overflow-wrap:anywhere}
+.manual-workout-option .manual-option-count{font-size:11px;color:var(--muted);display:block;margin-top:4px}
+.manual-workout-option.is-selected{border-color:var(--lime);background:#2a3829;box-shadow:inset 0 0 0 1px var(--lime)}
+.manual-workout-option.is-selected .manual-letter{background:var(--lime);color:var(--black)}
+.manual-workout-option:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.manual-summary-list{margin:12px 0 16px;padding-left:19px}
+.manual-summary-list li{margin:7px 0;font-size:13px;color:var(--text)}
+.manual-summary-list span{color:var(--muted);font-size:12px}
+@media(max-width:380px){.manual-workout-option{padding:10px;gap:8px}.manual-workout-option .manual-letter{min-width:34px;width:34px;height:40px}}
 </style>
 </head>
 <body>
@@ -343,6 +357,7 @@ function currentIdx(){
  var indexes=state.days.map(function(day,i){return day.ex&&day.ex.length?i:-1;}).filter(function(i){return i>=0;});
  if(!indexes.length)return 0;
  if(state.settings.mode==='manual'){
+   if(Number.isInteger(state.selectedWorkout)&&state.selectedWorkout>=0&&state.selectedWorkout<state.days.length)return state.selectedWorkout;
    var recent=(state.sessions||[]).slice().reverse().find(function(x){return Number.isInteger(x.dayIndex)&&Number(x.cycle)===Number(state.cycle);});
    if(recent){return indexes.find(function(i){return i>recent.dayIndex;})??indexes[0];}
    return indexes[0];
@@ -365,7 +380,34 @@ return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1
 '<div class="row" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap">'+btn(expanded===i?'Concluir edição':'Editar treino','expand','small ghost','data-idx="'+i+'"')+btn('Adicionar exercício','addFromDay','small outline','data-idx="'+i+'"')+'</div>'+
 (expanded===i?'<div class="divider"></div><div class="field"><label>Nome do treino</label><input data-day-name="'+i+'" maxlength="55" value="'+safe(d.name)+'"></div><p class="muted mini">Ajuste séries, repetições e descanso abaixo:</p>'+d.ex.map(function(ex,j){var x=get(ex.id);return '<div class="panel" style="padding:11px"><strong class="mini">'+safe(x?x.n:'Exercício')+'</strong><div class="formgrid" style="margin-top:10px"><div class="field"><label>Séries</label><input type="number" min="1" max="12" value="'+safe(ex.sets)+'" data-edit="sets" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Repetições ou tempo</label><input value="'+safe(ex.reps)+'" maxlength="20" data-edit="reps" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Descanso (seg)</label><input type="number" min="0" max="900" value="'+safe(ex.rest)+'" data-edit="rest" data-idx="'+i+'" data-ex="'+j+'"></div></div></div>';}).join(''):'') )+'</div>';
 }
+function manualHome(){
+ var chosen=Number.isInteger(state.selectedWorkout)?state.selectedWorkout:0;
+ if(chosen<0||chosen>=state.days.length)chosen=0;
+ var day=state.days[chosen]||{name:'Treino A',ex:[],minutes:state.settings.minutes||45};
+ var letter=String.fromCharCode(65+chosen);
+ var counts=state.days.map(function(d){return (d.ex||[]).length;});
+ return top('Montado por você','Escolha qual treino deseja fazer hoje.')+
+ '<div class="manual-workout-grid" role="group" aria-label="Escolha seu treino">'+
+ state.days.map(function(d,i){
+  var dayLetter=String.fromCharCode(65+i),count=(d.ex||[]).length;
+  return '<button type="button" class="manual-workout-option '+(i===chosen?'is-selected':'')+'" data-action="selectWorkout" data-idx="'+i+'" aria-pressed="'+(i===chosen?'true':'false')+'">'+
+  '<span class="manual-letter">'+dayLetter+'</span><span><strong class="manual-option-name">'+safe(d.name||'Treino '+dayLetter)+'</strong>'+
+  '<span class="manual-option-count">'+count+' exercício'+(count===1?'':'s')+'</span></span></button>';
+ }).join('')+'</div>'+
+ '<section class="panel" aria-label="Treino selecionado"><span class="eyebrow">Treino '+letter+' selecionado</span>'+
+ '<h2 style="margin:8px 0">'+safe(day.name)+'</h2>'+
+ '<p class="muted mini" style="margin:0 0 12px">'+counts[chosen]+' exercício'+(counts[chosen]===1?'':'s')+' · '+(day.minutes||state.settings.minutes||45)+' minutos planejados</p>'+
+ (counts[chosen]?'<ul class="manual-summary-list">'+day.ex.slice(0,6).map(function(ex){
+    var x=get(ex.id);
+    return '<li>'+safe(x?exerciseName(x):'Exercício')+' <span>· '+safe(ex.sets)+' × '+safe(ex.reps)+'</span></li>';
+  }).join('')+(day.ex.length>6?'<li><span>e mais '+(day.ex.length-6)+' exercício(s)</span></li>':'')+'</ul>'+
+  btn('▶ Começar treino '+letter,'start','full','data-idx="'+chosen+'"'):
+  '<div class="notice">Este dia ainda não tem exercícios. Escolha os movimentos que deseja incluir.</div>'+btn('＋ Adicionar exercícios','addSelectedWorkout','full','data-idx="'+chosen+'"'))+
+ '</section>';
+}
+
 function home(){
+if(state.days.length&&state.settings.mode==='manual')return manualHome();
 if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e responda à avaliação para receber um treino compatível com seus objetivos e com o tempo disponível.')+
 '<section class="hero"><span class="eyebrow">Avaliação inicial</span><h2>Treinos personalizados para sua rotina</h2><p>Frequência, duração, experiência, limitações e datas de revisão.</p>'+btn('Gerar treino automático','builder')+' <span style="display:inline-block;margin-top:9px">'+btn('Montar o meu do zero','manualWizard','outline')+'</span><div style="margin-top:14px">'+btn('Receber treino pelo WhatsApp','receivePaste','small ghost')+'</div></section><div class="panel"><strong>Como funciona</strong><p class="sub">Você responde à avaliação, o sistema sugere séries e repetições e acompanha suas cargas informadas. Ao fim do ciclo, sugere uma reavaliação.</p></div><div class="notice warn">As sugestões são educativas e não substituem avaliação profissional. Para quem tem lipedema, o treino deve ser individualizado com a equipe de saúde.</div>';
 var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0),built=state.days.reduce(function(n,day){return n+(day.ex&&day.ex.length?1:0);},0);
@@ -507,6 +549,7 @@ function makeManual(p){
   state.cycles=state.cycles.slice(-12);
  }
  state.cycle=state.days.length?(Number(state.cycle)||1)+1:1;
+ state.selectedWorkout=0;
  state.settings=Object.assign({},state.settings,p,{mode:'manual',goal:'Treino livre',redFlags:false});
  state.days=Array.from({length:p.days},function(_,i){return {name:'Treino '+String.fromCharCode(65+i),ex:[],minutes:p.minutes,warmup:5,cooldown:3,cardioMinutes:0};});
  delete state.active;
@@ -560,6 +603,7 @@ document.body.style.overflow=modal?'hidden':'';
 }
 function openSession(i){
 if(!state.days[i]||!state.days[i].ex.length){alert('Adicione exercícios a este dia antes de começar.');return;}
+if(state.settings.mode==='manual'){state.selectedWorkout=i;selectedDay=i;save();}
 if(state.settings.mode!=='manual'&&(!Number(state.settings.weight)||!Number(state.settings.height))){modal='builder';render();alert('Preencha a avaliação antes de iniciar.');return;}
 if(state.active && state.active.day!==i && !confirm('Já existe outro treino iniciado. Substituir o treino em andamento?'))return;
 if(!state.active||state.active.day!==i){state.active={day:i,started:Date.now(),entries:state.days[i].ex.map(function(x){return Object.assign({},x,{done:false,actualReps:'',actualSets:x.sets,actualRir:''});}),pain:0};save();}
@@ -738,7 +782,7 @@ function acceptSharedPlan(){
  plan.days.forEach(function(d){d.ex.forEach(function(e){if(replacements.has(e.id))e.id=replacements.get(e.id);});});
  state.customExercises=previousCustom;
  state.settings=Object.assign({},state.settings,{mode:'manual',goal:'Treino compartilhado',days:plan.days.length,minutes:plan.minutes,start:plan.start,weeks:plan.weeks});
- state.days=plan.days;delete state.active;
+ state.days=plan.days;state.selectedWorkout=0;delete state.active;
  selectedDay=0;tab='home';modal=null;incomingPlan=null;incomingCode='';incomingError='';
  save();clearShareLink();render();
  alert('Treino recebido e salvo no seu celular! Confira os exercícios e depois use “Começar treino”.');
@@ -771,7 +815,13 @@ document.addEventListener('click',function(ev){
 var nav=ev.target.closest('[data-tab]');if(nav){tab=nav.dataset.tab;filter='Todos';term='';expanded=-1;render();window.scrollTo(0,0);return;}
 var el=ev.target.closest('[data-action]');if(!el)return;
 var a=el.dataset.action,i=Number(el.dataset.idx),id=Number(el.dataset.id);
-if(a==='builder'){modal='builder';render();}
+if(a==='selectWorkout'){
+ if(state.settings.mode==='manual'&&state.days[i]){
+  state.selectedWorkout=i;selectedDay=i;save();render();
+ }
+}
+else if(a==='addSelectedWorkout'){if(state.days[i]){selectedDay=i;tab='library';filter='Todos';term='';render();}}
+else if(a==='builder'){modal='builder';render();}
 else if(a==='goHome'){modal=null;tab='home';render();window.scrollTo(0,0);}
 else if(a==='goLibrary'){tab='library';render();}
 else if(a==='sharePlan'){sharePlan();}
