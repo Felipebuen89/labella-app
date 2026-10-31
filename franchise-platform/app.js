@@ -37,7 +37,7 @@ function save(){try{saveTenantState(tenantId,state)}catch(_){notify("Armazenamen
 function notify(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove("show"),2800)}
 function tenant(){return TENANTS[tenantId]}
 function brand(){return state.brand}
-function products(){return tenant().products}
+function products(){return state.catalog}
 function product(productId){return products().find(p=>p.id===productId)}
 function currentName(){return String(brand().displayName||tenant().name)}
 function brandShort(){return (currentName().split(/\s+/).map(v=>v[0]).slice(0,2).join("")||"RF").toUpperCase()}
@@ -158,8 +158,10 @@ function adminCampaigns(){
  '<div class="row-item"><div class="row-main"><strong>'+h(c.title)+'</strong><small>'+h(c.body)+'</small><small>'+h(c.coupon||"Sem cupom")+' · '+Number(c.percent||0)+'% de desconto</small></div><button class="btn small '+(c.active!==false?"ghost":"primary")+'" data-campaign="'+h(c.id)+'">'+(c.active!==false?"Desativar":"Ativar")+'</button></div>').join(""):empty("Nenhuma campanha","Publique sua primeira campanha."))+'</section></div>';
 }
 function adminCatalog(){
- return header("Catálogo da rede","Produtos de demonstração configurados separadamente por tipo de franquia.",'<button class="btn ghost" data-page="admin-brand">Configurar marca</button>')+
- '<section class="panel">'+cardTitle("Produtos disponíveis")+'<div class="table-scroll"><table class="table"><thead><tr><th>Produto</th><th>Categoria</th><th>Custo</th><th>Venda sugerida</th></tr></thead><tbody>'+products().map(p=>'<tr><td>'+h(p.emoji)+' &nbsp;'+h(p.name)+'</td><td>'+h(p.category)+'</td><td>'+money(p.cost)+'</td><td>'+money(p.suggested)+'</td></tr>').join("")+'</tbody></table></div><p class="sub">Na versão de produção, estes produtos serão cadastrados por cada franquia em banco de dados próprio.</p></section>';
+ return header("Catálogo da rede","Cadastre produtos e preços desta franquia, sem afetar os outros modelos.",'<button class="btn primary" data-action="add-product">'+ico("plus")+' Adicionar produto</button>')+
+ '<section class="panel">'+cardTitle("Produtos disponíveis")+'<div class="table-scroll"><table class="table"><thead><tr><th>Produto</th><th>Categoria</th><th>Custo</th><th>Venda sugerida</th><th>Ações</th></tr></thead><tbody>'+
+ (products().map(p=>'<tr><td>'+h(p.emoji)+' &nbsp;'+h(p.name)+'</td><td>'+h(p.category)+'</td><td>'+money(p.cost)+'</td><td>'+money(p.suggested)+'</td><td><div class="actions"><button class="btn small ghost" data-editproduct="'+h(p.id)+'">Editar</button><button class="btn small danger" data-removeproduct="'+h(p.id)+'">Excluir</button></div></td></tr>').join("")||'<tr><td colspan="5">Catálogo vazio: adicione um produto.</td></tr>')+
+ '</tbody></table></div><p class="sub">Os dados editados ficam apenas neste navegador. Na versão comercial o catálogo será sincronizado com sua franquia.</p></section>';
 }
 function brandSettings(){
  return header("Marca & configurações","Personalize a experiência sem alterar o código do aplicativo.")+
@@ -253,6 +255,24 @@ function sell(form){
  entry.qty-=qty;state.sales.push({id:id(),productId:pid,name:p.name,qty,unitPrice:price,total,costTotal,profit:total-costTotal,date:new Date().toISOString()});
  save();overlay="";render(true);notify("Venda registrada · Lucro bruto "+money(total-costTotal));
 }
+function productModal(pid){
+ const p=pid?product(pid):null;
+ modal(p?"Editar produto":"Novo produto",
+ '<form id="product-form"><input type="hidden" name="productId" value="'+h(p?.id||"")+'">'+
+ '<div class="form-field"><label>Nome do produto</label><input class="field" name="name" required minlength="2" maxlength="90" value="'+h(p?.name||"")+'"></div>'+
+ '<div class="form-field"><label>Categoria</label><input class="field" name="category" required minlength="2" maxlength="55" value="'+h(p?.category||"")+'" placeholder="Ex.: Skincare, acessórios, kits"></div>'+
+ '<div class="form-grid"><div class="form-field"><label>Custo de compra (R$)</label><input class="field" name="cost" type="number" min="0" step="0.01" required value="'+h(p?.cost??"")+'"></div>'+
+ '<div class="form-field"><label>Preço sugerido (R$)</label><input class="field" name="suggested" type="number" min="0" step="0.01" required value="'+h(p?.suggested??"")+'"></div></div>'+
+ '<div class="form-field"><label>Ícone/emoji do catálogo</label><input class="field" name="emoji" maxlength="8" value="'+h(p?.emoji||"📦")+'"></div>'+
+ '<button class="btn primary block" type="submit">'+ico("check")+' Salvar produto</button></form>');
+}
+function removeProduct(pid){
+ const p=product(pid);if(!p)return;
+ const inUse=(state.stock[pid]?.qty||0)>0||state.orders.some(o=>o.items.some(i=>i.productId===pid))||state.sales.some(s=>s.productId===pid);
+ if(inUse)return notify("Produto com movimentações: exclusão bloqueada para preservar o histórico.");
+ if(!confirm("Excluir "+p.name+" do catálogo desta demonstração?"))return;
+ state.catalog=state.catalog.filter(p=>p.id!==pid);delete state.cart[pid];save();render(true);notify("Produto excluído do catálogo.");
+}
 function notices(){
  noticeUnread=false;
  modal("Central de avisos",'<div class="notice-list"><div class="notice-card"><h3>Bem-vindo à '+h(currentName())+'</h3><p>Use a visão de revendedor para fazer pedidos. Na visão da franquia, aprove a solicitação.</p></div>'+
@@ -281,18 +301,21 @@ function switchTenant(next){
 }
 document.addEventListener("click",e=>{
  if(e.target.matches("[data-overlay]")){closeModal();return}
- const btn=e.target.closest("[data-page],[data-action],[data-category],[data-qty],[data-order-action],[data-sell],[data-period],[data-campaign],[data-receipt]");
+ const btn=e.target.closest("[data-page],[data-action],[data-category],[data-qty],[data-order-action],[data-sell],[data-period],[data-campaign],[data-receipt],[data-editproduct],[data-removeproduct]");
  if(!btn)return;
  if(btn.dataset.page){page=btn.dataset.page;category="Todos";search="";render();return}
  if(btn.dataset.category!==undefined){category=btn.dataset.category;render(true);return}
  if(btn.dataset.qty){const pid=btn.dataset.id,n=Number(btn.dataset.qty);if(!product(pid))return;state.cart[pid]=Math.max(0,Math.min(500,(Number(state.cart[pid])||0)+n));if(!state.cart[pid])delete state.cart[pid];save();render(true);return}
  if(btn.dataset.period){financePeriod=btn.dataset.period;render(true);return}
  if(btn.dataset.sell){sellModal(btn.dataset.sell);return}
+ if(btn.dataset.editproduct!==undefined){productModal(btn.dataset.editproduct);return}
+ if(btn.dataset.removeproduct!==undefined){removeProduct(btn.dataset.removeproduct);return}
  if(btn.dataset.campaign){const c=state.campaigns.find(x=>x.id===btn.dataset.campaign);if(c){c.active=c.active===false;save();render(true)}return}
  if(btn.dataset.orderAction){updateOrder(btn.dataset.id,btn.dataset.orderAction==="approve"?"Aprovado":btn.dataset.orderAction==="ready"?"Pronto para retirada":"Recebido");return}
  if(btn.dataset.receipt){const o=state.orders.find(x=>x.id===btn.dataset.receipt);if(o)receipt(o);return}
  switch(btn.dataset.action){
  case "checkout":checkout();break;
+ case "add-product":productModal(null);break;
  case "toggle-mode":mode=mode==="seller"?"admin":"seller";page=mode==="seller"?"home":"admin-home";overlay="";render();break;
  case "notifications":notices();break;
  case "close-modal":closeModal();break;
@@ -307,7 +330,7 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{if(e.target.id==="tenant-select")switchTenant(e.target.value)});
 document.addEventListener("submit",e=>{
- const form=e.target;if(!["checkout-form","sell-form","campaign-form","brand-form"].includes(form.id))return;e.preventDefault();
+ const form=e.target;if(!["checkout-form","sell-form","campaign-form","brand-form","product-form"].includes(form.id))return;e.preventDefault();
  const fd=new FormData(form);
  if(form.id==="checkout-form")createOrder(fd);
  if(form.id==="sell-form")sell(fd);
@@ -315,6 +338,13 @@ document.addEventListener("submit",e=>{
    const title=String(fd.get("title")||"").trim(),body=String(fd.get("body")||"").trim(),coupon=String(fd.get("coupon")||"").trim().toUpperCase(),percent=Number(fd.get("percent")||0);
    if(!title||!body||percent<0||percent>80)return notify("Confira os dados da campanha.");
    state.campaigns.push({id:id(),title,body,coupon,percent,active:true});save();render(true);notify("Campanha publicada na demonstração.");
+ }
+ if(form.id==="product-form"){
+   const pid=String(fd.get("productId")||""),name=String(fd.get("name")||"").trim(),cat=String(fd.get("category")||"").trim(),emoji=String(fd.get("emoji")||"📦").trim()||"📦",cost=Number(fd.get("cost")),suggested=Number(fd.get("suggested"));
+   if(name.length<2||cat.length<2||![cost,suggested].every(n=>Number.isFinite(n)&&n>=0))return notify("Confira nome, categoria e preços.");
+   if(pid&&product(pid)){Object.assign(product(pid),{name,category:cat,emoji,cost,suggested});}
+   else state.catalog.push({id:"p-"+id().toLowerCase(),name,category:cat,emoji,cost,suggested});
+   save();overlay="";page="admin-catalog";render(true);notify("Catálogo atualizado.");
  }
  if(form.id==="brand-form"){
    const displayName=String(fd.get("displayName")||"").trim(),subtitle=String(fd.get("subtitle")||"").trim(),logoUrl=String(fd.get("logoUrl")||"").trim(),resellerName=String(fd.get("resellerName")||"").trim();
