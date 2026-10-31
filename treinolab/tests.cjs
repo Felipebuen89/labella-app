@@ -342,7 +342,7 @@ test('Link transporta a rotina inteira para outro celular e aparece na tela inic
  click(source.d,'[data-action="expand"][data-idx="2"]');
  const series=source.d.querySelector('[data-edit="sets"][data-idx="2"][data-ex="0"]');
  series.value='4';series.dispatchEvent(new source.w.Event('change',{bubbles:true}));
- click(source.d,'[data-action="goHome"]');
+ click(source.d,'[data-tab="home"]');
  click(source.d,'[data-action="copyPlan"]');
  assert.equal(source.links.length,1);
  const link=source.links[0];
@@ -369,6 +369,7 @@ test('Link transporta a rotina inteira para outro celular e aparece na tela inic
 });
 test('Link de treino não inclui nome, dados médicos nem histórico',()=>{
  const a=open();form(a,{personName:'Pessoa Particular',lipedema:'true',pain:2,weight:70,height:165,redFlags:'nao'});
+ click(a.d,'[data-tab="home"]');
  click(a.d,'[data-action="copyPlan"]');
  const text=a.links[0];
  assert.ok(text&&text.includes('#plano='));
@@ -382,6 +383,7 @@ test('Link de treino não inclui nome, dados médicos nem histórico',()=>{
 });
 test('Não permite compartilhar treino sem exercícios',()=>{
  const a=open();manual(a);
+ click(a.d,'[data-tab="home"]');
  click(a.d,'[data-action="copyPlan"]');
  assert.equal(a.links.length,0);
  assert.ok(a.alerts.some(m=>m.includes('Escolha pelo menos um exercício')));
