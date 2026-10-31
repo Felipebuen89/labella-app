@@ -624,8 +624,7 @@ function sendPlanWhatsapp(){
  try{link=createShareLink();}catch(e){alert(e.message);return;}
  var message='Seu treino já está montado no TreinoLab. Toque no link para salvar e começar no seu celular:\n'+link;
  var whatsappUrl='https://api.whatsapp.com/send?text='+encodeURIComponent(message);
- var opened=window.open(whatsappUrl,'_blank','noopener,noreferrer');
- if(!opened){window.location.href=whatsappUrl;}
+ window.open(whatsappUrl,'_blank','noopener,noreferrer');
 }
 function copyPlanLink(){
  var link;
