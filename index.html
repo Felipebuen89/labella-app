@@ -227,6 +227,16 @@ DB.forEach(function(x){
  if(matching){x.photo=matching.photo;x.photo2=matching.photo2;}
 });
 function exerciseName(x){return PT_PHOTO_NAMES[x.n]||x.n;}
+
+/* Associar foto a exercícios antigos somente em correspondências exatas, preservando IDs salvos. */
+var photoNameIndex=new Map();
+photoExtras.forEach(function(x){var k=normalizeLegacy(exerciseName(x));if(!photoNameIndex.has(k))photoNameIndex.set(k,x);});
+DB.forEach(function(x){
+ if(x.photo||x.en||x.id>=5000)return;
+ var match=photoNameIndex.get(normalizeLegacy(x.n));
+ if(match&&match.photo){x.photo=match.photo;x.photo2=match.photo2||null;x.photoMatch='exact-name';}
+});
+
 function exercisePhoto(x,large){
  var cls=large?'exphoto large':'exphoto',ico=safe(x.ico||'💪');
  if(!x.photo)return '<span class="'+cls+' no-photo" aria-label="Foto ainda não disponível"><span>'+ico+'</span><small>Sem foto</small></span>';
