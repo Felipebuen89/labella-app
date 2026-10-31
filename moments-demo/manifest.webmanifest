@@ -9,7 +9,7 @@
   "theme_color": "#050505",
   "icons": [
     {
-      "src": "/assets/moments-logo-original-limpo.svg",
+      "src": "/assets/moments-logo-sem-assinatura.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
