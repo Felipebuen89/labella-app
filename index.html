@@ -371,7 +371,7 @@ if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e res
 var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0),built=state.days.reduce(function(n,day){return n+(day.ex&&day.ex.length?1:0);},0);
 return top('Olá, '+safe((s.name||'atleta').split(' ')[0])+'!','Seu plano de '+s.minutes+' minutos, com progressão e reavaliação programada.')+
 cycleBanner()+
-'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Compartilhar treino','sharePlan','small outline')+' '+btn('Copiar link','copyPlan','small ghost')+'</div></div>'+ 
+'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Enviar pelo WhatsApp','sendWhatsapp','small')+' '+btn('Copiar link do treino','copyPlan','small outline')+'</div></div>'+ 
 '<section class="hero"><span class="eyebrow">'+(s.mode==='manual'?'Montado por você':'Seu próximo treino')+'</span><h2>'+safe(d.name)+'</h2><p>'+d.ex.length+' exercícios · '+(d.minutes||s.minutes)+' minutos previstos.</p><div class="chips"><span class="chip">'+safe(s.mode==='manual'?'Treino manual':s.goal)+'</span><span class="chip">'+built+' dia(s) prontos</span>'+(s.lipedema?'<span class="chip">Atenção às limitações</span>':'')+'</div>'+(d.ex.length?'<p class="muted mini" style="margin-bottom:15px">'+d.ex.slice(0,4).map(function(ex){var x=get(ex.id);return x?safe(exerciseName(x)):'';}).filter(Boolean).join(' · ')+'</p>'+btn('▶ Começar treino','start','','data-idx="'+i+'"'):btn('＋ Escolher exercícios','goLibrary',''))+'</section>'+
 stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-tab="progress">Ver evolução →</button></div><div class="panel"><div class="row spread"><div><strong>'+done+' de '+s.days+' treinos</strong><p class="muted mini" style="margin-bottom:0">Meta semanal indicativa</p></div><strong style="color:var(--lime);font-size:25px">'+Math.min(100,Math.round(done/s.days*100))+'%</strong></div><div style="height:9px;background:#344135;border-radius:30px;margin-top:15px;overflow:hidden"><div style="width:'+Math.min(100,done/s.days*100)+'%;height:100%;background:var(--lime);border-radius:30px"></div></div></div>'+
 (s.lipedema?'<div class="notice"><strong>Modo cuidado com as pernas:</strong> exercícios de baixo impacto e progressão mais conservadora. Se houver dor que aumente ou inchaço novo, não force e procure avaliação.</div>':'')+
@@ -381,7 +381,7 @@ stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-t
 function plan(){
 if(!state.days.length)return home();
 return top('Meus treinos','Rotina com revisão programada. Você pode ajustar a divisão e a execução.')+cycleBanner()+
-'<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>'+safe(state.settings.days)+' dias por semana • '+state.settings.minutes+' min</strong><p class="muted mini" style="margin:6px 0 0">'+safe(state.settings.mode==='manual'?'Montado por você':state.settings.goal)+' · '+safe(state.settings.level)+'</p></div><div class="row" style="flex-wrap:wrap">'+btn('Compartilhar treino','sharePlan','small outline')+' '+btn('Novo treino livre','manualWizard','small ghost')+' '+btn('Gerar plano','builder','small')+'</div></div></div>'+
+'<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>'+safe(state.settings.days)+' dias por semana • '+state.settings.minutes+' min</strong><p class="muted mini" style="margin:6px 0 0">'+safe(state.settings.mode==='manual'?'Montado por você':state.settings.goal)+' · '+safe(state.settings.level)+'</p></div><div class="row" style="flex-wrap:wrap">'+btn('Enviar no WhatsApp','sendWhatsapp','small')+' '+btn('Copiar link','copyPlan','small outline')+' '+btn('Novo treino livre','manualWizard','small ghost')+' '+btn('Gerar plano','builder','small')+'</div></div></div>'+
 state.days.map(function(d,i){return cardDay(d,i,false);}).join('')+
 '<div class="notice">Inclua 4–5 min de aquecimento e 3 min de retorno à calma em cada sessão. Selecione “Ver vídeos” no exercício para abrir demonstrações. Mantenha pelo menos um dia de recuperação entre treinos muito intensos do mesmo grupo muscular.</div>';
 }
@@ -619,6 +619,14 @@ function sharePlan(){
    window.prompt('Copie o link do treino e envie pelo WhatsApp:',link);
  }
 }
+function sendPlanWhatsapp(){
+ var link;
+ try{link=createShareLink();}catch(e){alert(e.message);return;}
+ var message='Seu treino já está montado no TreinoLab. Toque no link para salvar e começar no seu celular:\n'+link;
+ var whatsappUrl='https://api.whatsapp.com/send?text='+encodeURIComponent(message);
+ var opened=window.open(whatsappUrl,'_blank','noopener,noreferrer');
+ if(!opened){window.location.href=whatsappUrl;}
+}
 function copyPlanLink(){
  var link;
  try{link=createShareLink();}catch(e){alert(e.message);return;}
@@ -717,6 +725,7 @@ if(a==='builder'){modal='builder';render();}
 else if(a==='goHome'){modal=null;tab='home';render();window.scrollTo(0,0);}
 else if(a==='goLibrary'){tab='library';render();}
 else if(a==='sharePlan'){sharePlan();}
+else if(a==='sendWhatsapp'){sendPlanWhatsapp();}
 else if(a==='copyPlan'){copyPlanLink();}
 else if(a==='manualWizard'){modal='manualWizard';render();}
 else if(a==='customExercise'){modal='customExercise';render();}
