@@ -1,15 +1,15 @@
 {
-  "name": "Moments Paris — Revendedores",
-  "short_name": "Moments Paris",
-  "description": "Pedidos, estoque, campanhas e fidelidade da Moments Paris",
+  "name": "Sua Franquia — Gestão de Rede",
+  "short_name": "Sua Franquia",
+  "description": "Pedidos, estoque, vendas e benefícios para redes de franquias",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#050505",
+  "background_color": "#0B0D10",
+  "theme_color": "#0B0D10",
   "icons": [
     {
-      "src": "/assets/moments-logo-original-limpo.svg",
+      "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
