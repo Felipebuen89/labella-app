@@ -585,8 +585,8 @@ function updateTimer(){var el=document.getElementById('timerLabel');if(el)el.tex
 /* Compartilhamento sem backend: o link leva somente a divisão e os exercícios.
    Sem nome, peso, dados clínicos, evolução ou cargas executadas. */
 function compactSharePlan(){
- var selected=(state.days||[]).filter(function(d){return d.ex&&d.ex.length;});
- if(!selected.length)throw Error('Escolha pelo menos um exercício antes de compartilhar.');
+ var selected=state.days||[];
+ if(!selected.some(function(d){return d.ex&&d.ex.length;}))throw Error('Escolha pelo menos um exercício antes de compartilhar.');
  var customIds=new Set(selected.flatMap(function(d){return d.ex.map(function(e){return Number(e.id);});}));
  var own=(state.customExercises||[]).filter(function(x){return customIds.has(Number(x.id));})
  .map(function(x){return [Number(x.id),String(x.n).slice(0,75),String(x.g).slice(0,35),String(x.e).slice(0,12),String(x.material||'').slice(0,32),String(x.tip||'').slice(0,160),x.impact==='alto'?1:0];});
@@ -646,9 +646,9 @@ function validateIncomingShare(p){
     var weight=ex[4]==null?'':String(ex[4]).slice(0,12);
     return {id:Number(ex[0]),sets:sets,reps:reps,rest:rest,weight:weight};
   });
-  if(entries.length<1)throw Error('Treino compartilhado sem exercícios.');
   return {name:String(row[0]),minutes:mins,warmup:5,cooldown:3,cardioMinutes:0,ex:entries};
  });
+ if(!days.some(function(day){return day.ex.length;}))throw Error('Plano compartilhado sem exercícios.');
  return {start:start,weeks:weeks,minutes:minutes,days:days,custom:customs};
 }
 function importSharedPlanFromUrl(){
