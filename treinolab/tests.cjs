@@ -325,10 +325,11 @@ test('Treino manual é salvo e oferece início do primeiro dia com exercícios',
  click(a.d,'#libResults [data-action="add"]:not([disabled])');
  click(a.d,'[data-action="goHome"]');
  const home=a.d.getElementById('main').textContent;
- assert.match(home,/Seu treino manual está salvo/);
- assert.match(home,/1 de 4 dias com exercícios/);
+ assert.match(home,/Montado por você/);
+ assert.match(home,/Escolha qual treino deseja fazer hoje/);
  assert.ok(a.d.querySelector('[data-action="start"][data-idx="2"]'));
- assert.ok(a.d.querySelector('[data-action="copyPlan"]'));
+ assert.equal(a.d.querySelectorAll('[data-action="selectWorkout"]').length,4);
+ assert.equal(a.d.querySelector('[data-action="copyPlan"]'),null);
  assert.equal(state(a).days[0].ex.length,0);
  assert.equal(state(a).days[2].ex.length,1);
  assert.deepEqual(a.errors,[]);
@@ -342,7 +343,7 @@ test('Link transporta a rotina inteira para outro celular e aparece na tela inic
  click(source.d,'[data-action="expand"][data-idx="2"]');
  const series=source.d.querySelector('[data-edit="sets"][data-idx="2"][data-ex="0"]');
  series.value='4';series.dispatchEvent(new source.w.Event('change',{bubbles:true}));
- click(source.d,'[data-tab="home"]');
+ click(source.d,'[data-tab="plan"]');
  click(source.d,'[data-action="copyPlan"]');
  assert.equal(source.links.length,1);
  const link=source.links[0];
@@ -373,7 +374,7 @@ test('Link transporta a rotina inteira para outro celular e aparece na tela inic
 });
 test('Link de treino não inclui nome, dados médicos nem histórico',()=>{
  const a=open();form(a,{personName:'Pessoa Particular',lipedema:'true',pain:2,weight:70,height:165,redFlags:'nao'});
- click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-tab="plan"]');
  click(a.d,'[data-action="copyPlan"]');
  const text=a.links[0];
  assert.ok(text&&text.includes('?plano='));
@@ -387,7 +388,7 @@ test('Link de treino não inclui nome, dados médicos nem histórico',()=>{
 });
 test('Não permite compartilhar treino sem exercícios',()=>{
  const a=open();manual(a);
- click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-tab="plan"]');
  click(a.d,'[data-action="copyPlan"]');
  assert.equal(a.links.length,0);
  assert.ok(a.alerts.some(m=>m.includes('Escolha pelo menos um exercício')));
@@ -400,7 +401,7 @@ test('Treino compartilhado com exercício criado pelo usuário é importado corr
  input(a.w,a.d,'customGroup','Costas');
  a.d.getElementById('customExerciseForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
  click(a.d,'#libResults [data-action="add"]:not([disabled])');
- click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-tab="plan"]');
  click(a.d,'[data-action="copyPlan"]');
  const b=open(a.links[0]);
  click(b.d,'[data-action="acceptShared"]');
@@ -419,7 +420,7 @@ test('Link enviado é uma cópia imutável; editar o remetente não muda o plano
  const added=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');added.click();
  click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="expand"][data-idx="0"]');
  const sets=a.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');sets.value='4';sets.dispatchEvent(new a.w.Event('change',{bubbles:true}));
- click(a.d,'[data-tab="home"]');click(a.d,'[data-action="copyPlan"]');
+ click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="copyPlan"]');
  const originalLink=a.links[0];assert.ok(originalLink.includes('?plano='));
  click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="expand"][data-idx="0"]');
  const changed=a.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');changed.value='6';changed.dispatchEvent(new a.w.Event('change',{bubbles:true}));
@@ -438,7 +439,7 @@ test('Link enviado é uma cópia imutável; editar o remetente não muda o plano
 test('Botão WhatsApp inclui link específico do plano, não apenas endereço genérico',()=>{
  const a=open();manual(a,{manDays:2});
  click(a.d,'#libResults [data-action="add"]:not([disabled])');
- click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-tab="plan"]');
  click(a.d,'[data-action="sendWhatsapp"]');
  assert.equal(a.links.length,1);
  const u=new URL(a.links[0]);
@@ -453,7 +454,7 @@ test('Botão WhatsApp inclui link específico do plano, não apenas endereço ge
 test('Link genérico falha com orientação e aceita mensagem colada do WhatsApp',()=>{
  const sender=open();manual(sender,{manDays:2});
  click(sender.d,'#libResults [data-action="add"]:not([disabled])');
- click(sender.d,'[data-tab="home"]');click(sender.d,'[data-action="copyPlan"]');
+ click(sender.d,'[data-tab="plan"]');click(sender.d,'[data-action="copyPlan"]');
  const receiver=open();
  assert.match(receiver.d.getElementById('main').textContent,/Receber treino pelo WhatsApp/);
  click(receiver.d,'[data-action="receivePaste"]');
@@ -476,7 +477,7 @@ test('Link genérico falha com orientação e aceita mensagem colada do WhatsApp
 test('Links antigos com #plano seguem compatíveis com confirmação de recebimento',()=>{
  const sender=open();manual(sender,{manDays:3});
  click(sender.d,'#libResults [data-action="add"]:not([disabled])');
- click(sender.d,'[data-tab="home"]');click(sender.d,'[data-action="copyPlan"]');
+ click(sender.d,'[data-tab="plan"]');click(sender.d,'[data-action="copyPlan"]');
  const old=sender.links[0].replace('?plano=','#plano=');
  const recipient=open(old);
  assert.match(recipient.d.getElementById('modal').textContent,/Treino encontrado/i);
@@ -490,7 +491,7 @@ test('Links antigos com #plano seguem compatíveis com confirmação de recebime
 test('Receber treino com plano existente não substitui nada antes do clique salvar',()=>{
  const a=open();manual(a,{manDays:2});
  click(a.d,'#libResults [data-action="add"]:not([disabled])');
- click(a.d,'[data-tab="home"]');click(a.d,'[data-action="copyPlan"]');
+ click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="copyPlan"]');
  const link=a.links[0];
  const recipient=open();
  manual(recipient,{manDays:3,manName:'Usuária protegida'});
@@ -506,4 +507,78 @@ test('Receber treino com plano existente não substitui nada antes do clique sal
  assert.equal(state(recipient).cycles.length,1);
  assert.deepEqual(recipient.errors,[]);
  a.close();recipient.close();
+});
+
+
+test('Modo Montado por você oferece escolha independente A B C D com início limpo',()=>{
+ const a=open();manual(a,{manName:'Juliana',manDays:4,manMinutes:45});
+ input(a.w,a.d,'selectedDay',0);click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ input(a.w,a.d,'selectedDay',1);click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ input(a.w,a.d,'selectedDay',2);click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ input(a.w,a.d,'selectedDay',3);click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="home"]');
+ const home=a.d.getElementById('main').textContent;
+ assert.match(home,/Montado por você/);
+ assert.match(home,/Escolha qual treino deseja fazer hoje/);
+ assert.equal(a.d.querySelectorAll('[data-action="selectWorkout"]').length,4);
+ assert.equal(a.d.querySelectorAll('.manual-workout-option').length,4);
+ assert.ok(!home.includes('Sua semana'),'Indicadores redundantes devem estar fora do início manual');
+ assert.ok(!home.includes('Ciclo 1'),'Ciclo e revisão devem estar fora do início manual');
+ assert.ok(!home.includes('Gerar treino automático'));
+ assert.ok(!home.includes('Montar treino do zero'));
+ assert.ok(!home.includes('Compartilhar treino'));
+ click(a.d,'[data-action="selectWorkout"][data-idx="1"]');
+ assert.ok(a.d.querySelector('[data-action="selectWorkout"][data-idx="1"].is-selected'));
+ assert.ok(a.d.querySelector('[data-action="start"][data-idx="1"]'));
+ assert.equal(state(a).selectedWorkout,1);
+ click(a.d,'[data-action="start"][data-idx="1"]');
+ assert.equal(state(a).active.day,1,'Treino B deve iniciar o B e não o A');
+ assert.ok(a.d.querySelector('#modal [data-done="0"]'));
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Escolha do treino manual persiste depois de navegar entre abas',()=>{
+ const a=open();manual(a,{manDays:4});
+ click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-action="selectWorkout"][data-idx="3"]');
+ assert.equal(state(a).selectedWorkout,3);
+ assert.ok(a.d.querySelector('[data-action="addSelectedWorkout"][data-idx="3"]'),'Dia vazio deve permitir adicionar exercícios');
+ click(a.d,'[data-action="addSelectedWorkout"][data-idx="3"]');
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ assert.equal(state(a).days[3].ex.length,1);
+ click(a.d,'[data-tab="home"]');
+ assert.ok(a.d.querySelector('[data-action="start"][data-idx="3"]'));
+ assert.ok(a.d.querySelector('[data-action="selectWorkout"][data-idx="3"].is-selected'));
+ click(a.d,'[data-tab="plan"]');
+ assert.ok(a.d.querySelector('[data-action="copyPlan"]'),'Compartilhar permanece em Meus treinos');
+ click(a.d,'[data-tab="home"]');
+ assert.equal(state(a).selectedWorkout,3);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Treino manual importado permite escolher D sem modificar os exercícios',()=>{
+ const a=open();manual(a,{manDays:4});
+ input(a.w,a.d,'selectedDay',3);
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="plan"]');
+ click(a.d,'[data-action="copyPlan"]');
+ const b=open(a.links[0]);
+ click(b.d,'[data-action="acceptShared"]');
+ assert.match(b.d.getElementById('main').textContent,/Montado por você/);
+ assert.equal(b.d.querySelectorAll('[data-action="selectWorkout"]').length,4);
+ click(b.d,'[data-action="selectWorkout"][data-idx="3"]');
+ assert.ok(b.d.querySelector('[data-action="start"][data-idx="3"]'));
+ assert.equal(state(b).days[3].ex.length,1);
+ assert.equal(state(b).days[0].ex.length,0);
+ assert.deepEqual(b.errors,[]);
+ a.close();b.close();
+});
+test('Treino automático mantém painel de evolução sem seletor manual',()=>{
+ const a=open();form(a,{days:4});
+ click(a.d,'[data-tab="home"]');
+ const h=a.d.getElementById('main').textContent;
+ assert.match(h,/Sua semana/);
+ assert.ok(!a.d.querySelector('[data-action="selectWorkout"]'));
+ assert.deepEqual(a.errors,[]);
+ a.close();
 });
