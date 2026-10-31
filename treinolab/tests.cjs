@@ -85,3 +85,20 @@ test('Demonstração visual ACE e pesquisa de vídeos acessíveis',()=>{
  assert.ok(a.d.querySelector('a[href*="acefitness.org/resources"]'));
  assert.deepEqual(a.errors,[]);a.close();
 });
+
+test('Sem JavaScript a tela nunca fica completamente preta',()=>{
+ const {JSDOM}=require('jsdom');
+ const html=fs.readFileSync('index.html','utf8');
+ const dom=new JSDOM(html,{url:'https://felipebuen89.github.io/labella-app/',runScripts:'outside-only'});
+ const body=dom.window.document.querySelector('#main');
+ assert.ok(body,'Área principal presente');
+ assert.match(body.textContent,/Seu plano começa aqui/i);
+ assert.ok(body.querySelector('a[href*="atualizar="]'));
+ dom.window.close();
+});
+test('O renderizador inclui proteção contra falha e não apaga dados armazenados',()=>{
+ const source=fs.readFileSync('index.html','utf8');
+ assert.match(source,/TreinoLab: erro ao montar a tela/);
+ assert.match(source,/Seus treinos permanecem salvos/);
+ assert.match(source,/try \{\s*document\.getElementById\('main'\)\.innerHTML/);
+});
