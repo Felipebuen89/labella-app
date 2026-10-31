@@ -37,3 +37,14 @@ Em Visão da franquia → Configurações, altere o nome, subtítulo, logo HTTPS
 6. Push com consentimento, fila de entrega e diagnóstico de notificações.
 7. LGPD: minimização, transparência, retenção, exportação/remoção, backups e controles de segurança.
 8. Testes em Android/iOS, homologação, assinatura, integração com gateway e monitoramento.
+
+## Prévia temporária no celular
+A prévia abaixo é servida por um proxy público de arquivos GitHub para testes de baixo tráfego, **não é hospedagem de produção**:
+
+- [Aurora Cosméticos (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-white-label-v1/franchise-platform/index.html?rede=aurora)
+- [Viva Pet (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-white-label-v1/franchise-platform/index.html?rede=viva)
+
+A ligação foi montada a partir da branch pública, mas ainda requer homologação manual no Safari/iPhone. Evite cadastrar dados reais: este é um ambiente fictício que grava no navegador.
+
+## Testes automatizados
+No GitHub Actions, o fluxo `RedeOS - Validacao do prototipo` valida sintaxe e executa **22 verificações funcionais**: abertura, pedidos, transições de status, recebimento, estoque, baixa, financeiro, campanhas, marca, catálogo, troca e reset de rede. A execução de PR `41223188826` foi concluída com sucesso em 31/10/2026. Esses testes não substituem inspeção visual, homologação iOS/Android ou teste de servidor multiempresa.
