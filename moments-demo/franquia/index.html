@@ -555,7 +555,7 @@ html,body,.main{background:#050505!important;color:#f5f3eb}
 
 /* Centro de notificações: ícones pequenos e ativação push no topo. */
 .notification-entry{align-items:flex-start;gap:13px}.notification-entry>div{flex:1;min-width:0}.notification-entry .subtext{overflow-wrap:anywhere;line-height:1.55;margin:7px 0}.notification-entry-icon{display:flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;color:var(--gold)}.notification-entry-icon svg{display:block;width:20px;height:20px;max-width:20px;max-height:20px}.notification-permission{position:sticky;top:-30px;z-index:2;background:var(--paper);padding:8px 0 16px;margin:0 0 10px}.notification-permission .btn{width:100%;min-height:46px}.notification-permission .btn svg{width:18px;height:18px;flex:0 0 18px}.notification-permission small{display:block;margin:8px 2px 0;color:var(--muted);font-size:11px;line-height:1.5}
-</style><link rel="stylesheet" href="/white-label.css?v=1"><meta name="moments-pricing-revision" content="min15-50-others-2xcost-20261028"><meta name="white-label-ui-source" content="iphone-bell-visible-20261028"></head>
+</style><link rel="stylesheet" href="/white-label.css?v=1"><meta name="white-label-pricing" content="configurable-by-franchise"><meta name="white-label-ui-source" content="iphone-bell-visible-20261028"></head>
 <body><div id="app"></div><div id="overlay"></div><div id="toasts" aria-live="polite"></div><script src="/brand-config.js"></script><script>window.MP_PRODUCTS = (window.FRANCHISE_BRAND && window.FRANCHISE_BRAND.catalog) || [];
 </script><!-- Demo independente: não carrega backend Sua Franquia --><script>(()=>{'use strict';
 const FRANCHISE_PORTAL=String(location.pathname||'').startsWith('/franquia/');
@@ -616,7 +616,7 @@ function cloudQueueSave(){
  cloudSaveTimer=setTimeout(async()=>{
   try{if(FRANCHISE_PORTAL&&cloudAdminSecret){await CLOUD.settings(cloudAdminSecret,cloudSettings());return}
    const token=CLOUD.deviceToken();if(token)await CLOUD.save(token,cloudProfile())
-  }catch(e){console.warn('Moments cloud save:',e.message)}
+  }catch(e){console.warn('Franquia cloud save:',e.message)}
  },550);
 }
 function cloudRegisterModal(){
@@ -666,7 +666,7 @@ function cloudApplySeller(snap,initial=false){
  if(changed)render();
  if(added&&cloudInitialised&&'Notification' in window&&Notification.permission==='granted'){
   const newest=state.notifications[0];
-  if('serviceWorker' in navigator)navigator.serviceWorker.ready.then(reg=>reg.showNotification('Sua Franquia · '+newest.title,{body:newest.text,icon:'/icon.svg',tag:'moments-'+newest.id})).catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.ready.then(reg=>reg.showNotification('Sua Franquia · '+newest.title,{body:newest.text,icon:'/icon.svg',tag:'franquia-'+newest.id})).catch(()=>{});
  }
  cloudInitialised=true;
 }
@@ -694,7 +694,7 @@ async function cloudPoll(initial=false){
  try{
   if(FRANCHISE_PORTAL){if(cloudAdminSecret)cloudApplyAdmin(await CLOUD.admin(cloudAdminSecret))}
   else {const token=CLOUD.deviceToken();if(token)cloudApplySeller(await CLOUD.seller(token),initial)}
- }catch(e){console.warn('Moments live sync:',e.message)}
+ }catch(e){console.warn('Franquia live sync:',e.message)}
  finally{cloudPollBusy=false}
 }
 async function cloudStart(){
@@ -1060,13 +1060,13 @@ function notificationCenter(){
  showModal('Notificações','Avisos, atualizações e campanhas recebidas.',enablePush+notices);
 }
 
-const MOMENTS_PUSH_PUBLIC_KEY='BEeHnNRzcI-yqaGMaQ17QI5hkc6vSSQKTyoyp-k2bCsgoXLWA5fGaEmapGTCTXAlfnunXLgm3iwVZsZJ_e3q85I';
-function momentsPushKeyBytes(v){
+const PUSH_PUBLIC_KEY=String(BRAND.pushPublicKey||'');
+function pushKeyBytes(v){
  const decoded=atob((v.replace(/-/g,'+').replace(/_/g,'/')+'===').slice(0,Math.ceil(v.length/4)*4));
  return Uint8Array.from(decoded,c=>c.charCodeAt(0));
 }
 async function permission(){if(DEMO_MODE)return toast('Push entre aparelhos será habilitado na versão conectada.');
- if(!CLOUD?.deviceToken())return cloudRegisterModal();
+ if(!CLOUD?.deviceToken())return cloudRegisterModal();if(!PUSH_PUBLIC_KEY)return toast('Notificações push ainda não foram configuradas para esta rede.');
  if(!('Notification' in window)||!('serviceWorker' in navigator)){
   return toast('Para ativar notificações no iPhone, instale o aplicativo na tela inicial.')
  }
@@ -1079,10 +1079,10 @@ async function permission(){if(DEMO_MODE)return toast('Push entre aparelhos ser�
   ]);
   if(!registration.pushManager)return toast('Este navegador não oferece envio push. No iPhone, abra o app pela tela inicial.');
   let sub=await registration.pushManager.getSubscription();
-  if(!sub)sub=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:momentsPushKeyBytes(MOMENTS_PUSH_PUBLIC_KEY)});
+  if(!sub)sub=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKeyBytes(PUSH_PUBLIC_KEY)});
   await CLOUD.subscribe(CLOUD.deviceToken(),sub.toJSON());
   toast('Aparelho cadastrado para receber mensagens e campanhas da franquia');
- }catch(e){console.warn('Moments push opt-in:',e);toast('Não foi possível ativar avisos: '+e.message)}
+ }catch(e){console.warn('Franquia push opt-in:',e);toast('Não foi possível ativar avisos: '+e.message)}
 }
 
 function orderDetail(id){let o=findOrder(id);if(!o)return;showModal('Pedido '+esc(id),'Pedido de '+esc(o.reseller)+' • '+niceDate(o.createdAt),`<div class="notice">Retirada: ${niceDate(o.pickupDate)} às ${esc(o.pickupTime)}<br>Destino: ${esc(o.branch)}<br>Status: ${esc(orderState(o))}</div>${o.items.map(i=>`<div class="order-line"><div><strong>${esc(i.name)}</strong><p class="subtext">${i.qty} unidade(s) × ${money(i.unitCost)}</p></div><strong>${money(i.unitCost*i.qty)}</strong></div>`).join('')}<div class="sum-row"><span>Subtotal</span><strong>${money(o.subtotal)}</strong></div><div class="sum-row"><span>Desconto</span><strong>− ${money(o.discount)}</strong></div><div class="sum-row total"><span>Total</span><strong>${money(o.total)}</strong></div>${o.notes?`<p class="subtext">Obs.: ${esc(o.notes)}</p>`:''}`,`<button class="btn outline" data-pdf="${o.id}">Baixar PDF</button><button class="btn gold" data-share="${o.id}">Compartilhar PDF</button>`,true)}
@@ -1152,7 +1152,7 @@ function pdfFile(o){
 async function downloadOrder(id,action='download'){
  const o=findOrder(id);if(!o){toast('Pedido não encontrado para gerar o PDF.');return false}
  let file;
- try{file=pdfFile(o)}catch(error){console.warn('Moments PDF:',error);toast('Não foi possível gerar o PDF do pedido.');return false}
+ try{file=pdfFile(o)}catch(error){console.warn('Franquia PDF:',error);toast('Não foi possível gerar o PDF do pedido.');return false}
  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
  if((isIOS||action==='share')&&typeof navigator.share==='function'&&typeof File==='function'){
   let allowed=true;
@@ -1163,7 +1163,7 @@ async function downloadOrder(id,action='download'){
     return true;
    }catch(error){
     if(error?.name==='AbortError')return false;
-    console.warn('Moments PDF compartilhamento:',error);
+    console.warn('Franquia PDF compartilhamento:',error);
    }
   }
  }
@@ -1188,7 +1188,7 @@ async function downloadOrder(id,action='download'){
   return true;
  }catch(error){
   if(url)URL.revokeObjectURL(url);
-  console.warn('Moments PDF fallback:',error);
+  console.warn('Franquia PDF fallback:',error);
   toast('Não foi possível abrir o PDF. Tente o botão Compartilhar PDF.');
   return false;
  }
@@ -1251,7 +1251,7 @@ if(formId==='cloud-register-form'){
  const submit=f.querySelector('[type=submit]');if(submit)submit.disabled=true;
  try{
   await CLOUD.enroll(token,name,city,phone);
-  if(!localStorage.getItem('moments_paris_legacy_backup'))localStorage.setItem('moments_paris_legacy_backup',JSON.stringify(state));
+  if(!localStorage.getItem('white_label_demo_backup'))localStorage.setItem('white_label_demo_backup',JSON.stringify(state));
   state.profile={...DEFAULT.profile,name:'Revenda de '+name,revendedor:name,city,whatsapp:phone};
   state.orders=[];state.sales=[];state.inventory={};state.notifications=[];state.loyalty=blankLoyalty();state.reorder=[];state.cart={};state.accessLog=[];
   CLOUD.saveToken(token);cloudReady=true;
@@ -1282,13 +1282,7 @@ if(formId==='edit-product-form'){let id=d.get('id'),url=String(d.get('image')||'
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installer=e});window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});}
 function adminLogin(){showModal('Acesso da franquia','Área separada para os responsáveis pela loja.',`<form id="admin-login-form"><div class="form-group"><label class="form-label">Código de acesso da franquia</label><input class="field" name="pin" type="password" autocomplete="off" minlength="20" maxlength="80" required placeholder="Código exclusivo da franquia"></div><button class="btn block gold" type="submit">Entrar no painel</button></form><div class="notice">Acesso protegido no servidor. Use o código exclusivo da franquia. Revendedores não precisam desse código.</div>`)}
 
-// Read-only shared announcements. No reseller or admin credentials are exposed.
-const MP_FEED_URL='https://jpnuezounmnnnnztocxn.supabase.co/rest/v1/moments_announcements?select=id,title,body,kind,created_at&order=created_at.desc&limit=10';
-const MP_PUBLIC_KEY='sb_publishable_yrujwXvWHWPCFyjqia9kgA_MXcbsH0D';
-let mpFeedItems=[];let mpFeedSeen='';
-function mpFeedOpen(){const item=mpFeedItems[0];if(!item)return;const box=document.getElementById('mp-shared-feed');if(!box)return;box.innerHTML='';const h=document.createElement('strong');h.textContent=item.title;const p=document.createElement('p');p.textContent=item.body;const kind=document.createElement('small');kind.textContent=item.kind==='campanha'?'Campanha da Sua Franquia':'Comunicado da Sua Franquia';const close=document.createElement('button');close.textContent='Entendi';close.onclick=()=>{localStorage.setItem('mp-feed-seen',item.id);mpFeedSeen=item.id;box.remove()};box.append(kind,h,p,close)}
-async function mpFeedCheck(){if(CLOUD)return;try{const response=await fetch(MP_FEED_URL,{headers:{apikey:MP_PUBLIC_KEY}});if(!response.ok)return;const data=await response.json();if(!Array.isArray(data)||!data.length)return;mpFeedItems=data;const item=data[0];if(item.id===mpFeedSeen||item.id===localStorage.getItem('mp-feed-seen'))return;let box=document.getElementById('mp-shared-feed');if(!box){box=document.createElement('aside');box.id='mp-shared-feed';box.setAttribute('role','status');document.body.append(box)}mpFeedOpen()}catch(e){/* network may be unavailable offline */}}
-if(!FRANCHISE_PORTAL){mpFeedSeen=localStorage.getItem('mp-feed-seen')||'';mpFeedCheck();setInterval(()=>{if(!document.hidden)mpFeedCheck()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)mpFeedCheck()})}
+// Feed da marca original removido: demo sem dados externos.
 function init(){setupEventHandlers();render(true);cloudStart().catch(e=>toast('Erro de sincronização: '+e.message));setInterval(()=>{if(!document.hidden)cloudPoll()},20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudPoll()});if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('SW:',e.message));}init();
 })();
 </script></body></html>
