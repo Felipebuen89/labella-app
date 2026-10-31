@@ -57,7 +57,7 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 <script>
 (function(){
 'use strict';
-var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null;
+var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null,libraryLimit=40,equipmentFilter='Todos';
 var D=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 var DB=[
 ['Supino reto com barra','Peito','academia','🏋','Mantenha os pés apoiados e controle a descida.'],
@@ -104,7 +104,7 @@ var DB=[
 function safe(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function today(d){var x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
 function fmtDate(str){var a=String(str).split('-');return a.length===3?a[2]+'/'+a[1]+'/'+a[0]:str;}
-function get(i){return DB.find(function(x){return x.id===+i;});}
+function get(i){var id=Number(i);return DB.find(function(x){return x.id===id;})||((state&&Array.isArray(state.customExercises))?state.customExercises.find(function(x){return x.id===id;}):null);}
 function save(){
 try{
  localStorage.setItem(KEY+'-'+activeId,JSON.stringify(state));
@@ -254,7 +254,7 @@ return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1
 (expanded===i?'<div class="divider"></div><div class="field"><label>Nome do treino</label><input data-day-name="'+i+'" maxlength="55" value="'+safe(d.name)+'"></div><p class="muted mini">Ajuste séries, repetições e descanso abaixo:</p>'+d.ex.map(function(ex,j){var x=get(ex.id);return '<div class="panel" style="padding:11px"><strong class="mini">'+safe(x?x.n:'Exercício')+'</strong><div class="formgrid" style="margin-top:10px"><div class="field"><label>Séries</label><input type="number" min="1" max="12" value="'+safe(ex.sets)+'" data-edit="sets" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Repetições ou tempo</label><input value="'+safe(ex.reps)+'" maxlength="20" data-edit="reps" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Descanso (seg)</label><input type="number" min="0" max="900" value="'+safe(ex.rest)+'" data-edit="rest" data-idx="'+i+'" data-ex="'+j+'"></div></div></div>';}).join(''):'') )+'</div>';
 }
 function home(){
-if(!state.days.length||!Number(state.settings.weight)||!Number(state.settings.height))return top('Seu plano começa aqui.','Crie um perfil e responda à avaliação para receber um treino compatível com seus objetivos e com o tempo disponível.')+
+if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e responda à avaliação para receber um treino compatível com seus objetivos e com o tempo disponível.')+
 '<section class="hero"><span class="eyebrow">Avaliação inicial</span><h2>Treinos personalizados para sua rotina</h2><p>Frequência, duração, experiência, limitações e datas de revisão.</p>'+btn('Montar meu treino','builder')+'</section><div class="panel"><strong>Como funciona</strong><p class="sub">Você responde à avaliação, o sistema sugere séries e repetições e acompanha suas cargas informadas. Ao fim do ciclo, sugere uma reavaliação.</p></div><div class="notice warn">As sugestões são educativas e não substituem avaliação profissional. Para quem tem lipedema, o treino deve ser individualizado com a equipe de saúde.</div>';
 var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0);
 return top('Olá, '+safe((s.name||'atleta').split(' ')[0])+'!','Seu plano de '+s.minutes+' minutos, com progressão e reavaliação programada.')+
@@ -266,7 +266,7 @@ stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-t
 '<p class="notice">As sugestões de treino não equivalem a uma prescrição de um personal trainer. Somente um profissional habilitado pode avaliar e prescrever exercícios individualmente.</p>';
 }
 function plan(){
-if(!state.days.length||!Number(state.settings.weight)||!Number(state.settings.height))return home();
+if(!state.days.length)return home();
 return top('Meus treinos','Rotina com revisão programada. Você pode ajustar a divisão e a execução.')+cycleBanner()+
 '<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>'+safe(state.settings.days)+' dias por semana • '+state.settings.minutes+' min</strong><p class="muted mini" style="margin:6px 0 0">'+safe(state.settings.goal)+' · '+safe(state.settings.level)+'</p></div>'+btn('⚙ Revisar plano','builder','small')+'</div></div>'+
 state.days.map(function(d,i){return cardDay(d,i,false);}).join('')+
@@ -362,12 +362,14 @@ document.body.style.overflow=modal?'hidden':'';
 }
 function openSession(i){
 if(!state.days[i])return;
-if(!Number(state.settings.weight)||!Number(state.settings.height)){modal='builder';render();alert('Preencha a avaliação antes de iniciar.');return;}
+if(state.settings.mode!=='manual'&&(!Number(state.settings.weight)||!Number(state.settings.height))){modal='builder';render();alert('Preencha a avaliação antes de iniciar.');return;}
 if(state.active && state.active.day!==i && !confirm('Já existe outro treino iniciado. Substituir o treino em andamento?'))return;
 if(!state.active||state.active.day!==i){state.active={day:i,started:Date.now(),entries:state.days[i].ex.map(function(x){return Object.assign({},x,{done:false,actualReps:'',actualSets:x.sets,actualRir:''});}),pain:0};save();}
 modal='session';render();
 }
-function addEx(id){var e=get(id);if(!e)return;var target=state.days[selectedDay];if(!target)return;target.ex.push({id:e.id,sets:3,reps:e.g==='Cardio'?'15 min':e.g==='Core'?'30 s':'10-12',rest:e.g==='Cardio'?0:60,weight:''});save();if(modal&&modal.type==='details')modal=null;alert('Adicionado a '+target.name+'.');render();}
+function addEx(id){var e=get(id);if(!e)return;var target=state.days[selectedDay];if(!target){alert('Crie um treino antes de adicionar exercícios.');return;}if(target.ex.some(function(x){return x.id===id;})){alert('Esse exercício já está no dia selecionado. Você pode ajustar séries e repetições em Meus treinos.');return;} if(target.ex.length>=25){alert('Limite de 25 exercícios por dia. Revise o tempo e a recuperação.');return;}
+if(state.settings.lipedema&&e.impact==='alto'&&!confirm('Este exercício pode ser de alto impacto. Para quem tem lipedema, avalie tolerância e orientação profissional antes de incluí-lo. Deseja continuar?'))return;
+target.ex.push({id:e.id,sets:3,reps:e.g==='Cardio'?'15 min':e.g==='Core'?'30 s':'10-12',rest:e.g==='Cardio'?0:60,weight:''});save();if(modal&&modal.type==='details')modal=null;alert('Adicionado a '+target.name+'.');render();}
 function finish(){
 var session=state.active;if(!session)return;
 var entries=session.entries.filter(function(x){return x.done;});
@@ -436,7 +438,7 @@ if(p.level==='Iniciante'&&p.days>3&&!confirm('Para iniciantes, costuma-se começ
 if(state.days.length&&!confirm('Gerar um novo ciclo substitui o plano atual, mas preserva o histórico. Deseja continuar?'))return;
 if(state.days.length){state.cycles=state.cycles||[];state.cycles.push({cycle:state.cycle||1,start:state.settings.start,end:endDate(),days:state.days,settings:state.settings});state.cycles=state.cycles.slice(-12);}
 state.cycle=(state.days.length?Number(state.cycle||1)+1:1);
-state.settings=p;
+state.settings=Object.assign({},p,{mode:'automatico'});
 state.days=planFor(p);
 delete state.active;
 var profile=registry.list.find(function(x){return x.id===activeId;});if(profile)profile.name=p.name;
