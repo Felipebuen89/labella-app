@@ -9,7 +9,7 @@ const publicPhotos=photoContext.window.TREINOLAB_PHOTO_RECORDS;
 function open(url){
  const errors=[],alerts=[],links=[],vc=new VirtualConsole();
  vc.on('jsdomError',e=>errors.push(String(e)));
- const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:url||'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.TREINOLAB_PHOTO_RECORDS=publicPhotos;w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.prompt=(message,link)=>{links.push(link);return link;};w.scrollTo=()=>{};}});
+ const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:url||'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.TREINOLAB_PHOTO_RECORDS=publicPhotos;w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.prompt=(message,link)=>{links.push(link);return link;};w.open=(url)=>{links.push(url);return {};};w.scrollTo=()=>{};}});
  return {w:w.window,d:w.window.document,errors,alerts,links,close:()=>w.window.close()};
 }
 function click(d,s){let e=d.querySelector(s);assert.ok(e,'Elemento não encontrado: '+s);e.click();}
@@ -406,4 +406,40 @@ test('Treino compartilhado com exercício criado pelo usuário é importado corr
  assert.equal(data.days[0].ex[0].id,data.customExercises[0].id);
  assert.deepEqual(b.errors,[]);
  b.close();a.close();
+});
+
+
+test('Link enviado é uma cópia imutável; editar o remetente não muda o plano recebido',()=>{
+ const a=open();manual(a,{manDays:3,manMinutes:60,manStart:'2026-11-05',manWeeks:8});
+ const added=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');added.click();
+ click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="expand"][data-idx="0"]');
+ const sets=a.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');sets.value='4';sets.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+ click(a.d,'[data-tab="home"]');click(a.d,'[data-action="copyPlan"]');
+ const originalLink=a.links[0];assert.ok(originalLink.includes('#plano='));
+ click(a.d,'[data-tab="plan"]');click(a.d,'[data-action="expand"][data-idx="0"]');
+ const changed=a.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');changed.value='6';changed.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+ assert.equal(state(a).days[0].ex[0].sets,6);
+ const b=open(originalLink);
+ assert.equal(state(b).days[0].ex[0].sets,4);
+ assert.equal(state(b).days.length,3);
+ click(b.d,'[data-tab="plan"]');click(b.d,'[data-action="expand"][data-idx="0"]');
+ const edited=b.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');edited.value='2';edited.dispatchEvent(new b.w.Event('change',{bubbles:true}));
+ assert.equal(state(b).days[0].ex[0].sets,2);
+ assert.equal(state(a).days[0].ex[0].sets,6,'editar no celular da esposa não altera a montagem do remetente');
+ assert.deepEqual(a.errors,[]);assert.deepEqual(b.errors,[]);
+ a.close();b.close();
+});
+test('Botão WhatsApp inclui link específico do plano, não apenas endereço genérico',()=>{
+ const a=open();manual(a,{manDays:2});
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-action="sendWhatsapp"]');
+ assert.equal(a.links.length,1);
+ const u=new URL(a.links[0]);
+ assert.equal(u.hostname,'api.whatsapp.com');
+ const message=u.searchParams.get('text');
+ assert.ok(message.includes('felipebuen89.github.io/labella-app/#plano='));
+ assert.ok(!message.endsWith('/labella-app/'));
+ assert.deepEqual(a.errors,[]);
+ a.close();
 });
