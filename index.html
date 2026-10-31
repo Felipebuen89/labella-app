@@ -164,6 +164,15 @@ CATALOG_ROWS.split('\n').forEach(function(row){
   DB.push({id:DB.length,n:name,g:group,e:equip,ico:ico,tip:'Execute com técnica controlada e amplitude confortável. Ajuste a carga e interrompa se houver dor.',region:muscleLower,material:material,impact:highImpact?'alto':'habitual'});
  });
 });
+/* Enriquecimento dos exercícios originais, sem alterar IDs já salvos. */
+DB.forEach(function(x){
+ if(x.material)return;
+ var k=normalizeLegacy(x.n);
+ x.material=/elastico|miniband/.test(k)?'Elástico':/halter/.test(k)?'Halteres':/barra|anilha/.test(k)?'Barra/Anilha':/polia|crossover/.test(k)?'Polia':/smith/.test(k)?'Smith':/maquina|leg press|cadeira extensora|cadeira flexora|mesa flexora|puxada na frente|remada baixa|bicicleta ergometrica|esteira/.test(k)?'Máquina':'Peso corporal/outros';
+ x.region=x.g;
+ x.impact=/pular|salto|corrida|polichinelo/.test(k)?'alto':'habitual';
+});
+function normalizeLegacy(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function allExercises(){return DB.concat((state&&Array.isArray(state.customExercises))?state.customExercises:[]);}
 function groupLabel(x){return x.region||x.g;}
 function normalizeTerm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
@@ -248,8 +257,9 @@ var volume=state.sessions.reduce(function(s,x){return s+(x.volume||0);},0);
 return '<div class="statgrid"><div class="stat"><strong>'+count+'</strong><span>Treinos / 7 dias</span></div><div class="stat"><strong>'+total+'</strong><span>Treinos feitos</span></div><div class="stat"><strong>'+num(Math.round(volume))+'</strong><span>Volume registrado (kg)</span></div></div>';
 }
 function cardDay(d,i,compact){
-return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1).padStart(2,'0')+'</div><div style="flex:1;min-width:0"><strong>'+safe(d.name)+'</strong><p>'+d.ex.length+' exercícios • '+(d.minutes||state.settings.minutes||45)+' min planejados</p></div>'+btn(d.ex.length?'Iniciar':'Sem exercícios','start','small','data-idx="'+i+'" '+(d.ex.length?'':'disabled'))+'</div>'+
+return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1).padStart(2,'0')+'</div><div style="flex:1;min-width:0"><strong>'+safe(d.name)+'</strong><p>'+d.ex.length+' exercícios • '+(d.minutes||state.settings.minutes||45)+' min disponíveis</p></div>'+btn(d.ex.length?'Iniciar':'Sem exercícios','start','small','data-idx="'+i+'" '+(d.ex.length?'':'disabled'))+'</div>'+
 (compact?'':'<div class="divider"></div>'+(d.ex.length?'':'<div class="notice">Este dia está vazio. Use Adicionar exercício para montar seu treino.</div>')+d.ex.map(function(ex,j){var x=get(ex.id);return x?'<div class="exercise"><span class="exicon">'+x.ico+'</span><div class="exmain"><strong>'+safe(x.n)+'</strong><small>'+safe(ex.sets)+' séries × '+safe(ex.reps)+' • '+safe(x.g)+'</small><div class="muted mini" style="margin-top:5px">'+safe(loadAdvice(x.id))+'</div>'+demos(x)+'</div>'+(expanded===i?'<span class="row" style="gap:4px;flex-shrink:0"><button class="btn ghost small" data-action="moveExercise" data-dir="-1" data-idx="'+i+'" data-ex="'+j+'" aria-label="Mover para cima" '+(j===0?'disabled':'')+'>↑</button><button class="btn ghost small" data-action="moveExercise" data-dir="1" data-idx="'+i+'" data-ex="'+j+'" aria-label="Mover para baixo" '+(j===d.ex.length-1?'disabled':'')+'>↓</button><button class="btn ghost small" data-action="remove" data-idx="'+i+'" data-ex="'+j+'" aria-label="Remover exercício">×</button></span>':'')+'</div>':'';}).join('')+
+'<div class="muted mini" style="margin-top:12px">Tempo estimado de execução: '+Math.round(approxDuration(d))+' min, incluindo aquecimento e descansos. '+(state.settings.mode==='manual'&&approxDuration(d)>(Number(d.minutes)||45)+5?'⚠ O número de exercícios pode ultrapassar a duração escolhida.':'')+'</div>'+
 '<div class="row" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap">'+btn(expanded===i?'Concluir edição':'Editar treino','expand','small ghost','data-idx="'+i+'"')+btn('Adicionar exercício','addFromDay','small outline','data-idx="'+i+'"')+'</div>'+
 (expanded===i?'<div class="divider"></div><div class="field"><label>Nome do treino</label><input data-day-name="'+i+'" maxlength="55" value="'+safe(d.name)+'"></div><p class="muted mini">Ajuste séries, repetições e descanso abaixo:</p>'+d.ex.map(function(ex,j){var x=get(ex.id);return '<div class="panel" style="padding:11px"><strong class="mini">'+safe(x?x.n:'Exercício')+'</strong><div class="formgrid" style="margin-top:10px"><div class="field"><label>Séries</label><input type="number" min="1" max="12" value="'+safe(ex.sets)+'" data-edit="sets" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Repetições ou tempo</label><input value="'+safe(ex.reps)+'" maxlength="20" data-edit="reps" data-idx="'+i+'" data-ex="'+j+'"></div><div class="field"><label>Descanso (seg)</label><input type="number" min="0" max="900" value="'+safe(ex.rest)+'" data-edit="rest" data-idx="'+i+'" data-ex="'+j+'"></div></div></div>';}).join(''):'') )+'</div>';
 }
@@ -448,10 +458,23 @@ function download(){
 var blob=new Blob([JSON.stringify({app:'TreinoLab',version:1,data:state},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='treinolab-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
 function importBackup(file){
-if(!file||file.size>2e6){alert('Selecione um backup JSON de até 2 MB.');return;}
-var reader=new FileReader();reader.onload=function(){try{var item=JSON.parse(reader.result),p=item.data;if(item.app!=='TreinoLab'||!p||!Array.isArray(p.days)||!Array.isArray(p.sessions)||!p.settings||p.days.length<1||p.days.length>6||p.days.some(function(x){return !x||typeof x.name!=='string'||!Array.isArray(x.ex)||x.ex.length>100||x.ex.some(function(e){return !get(e.id);});})){throw Error('Formato inválido');}
-if(!confirm('Importar substitui seus treinos e histórico deste aparelho. Deseja continuar?'))return;
-state={settings:p.settings,days:p.days,sessions:p.sessions.slice(0,3000),created:p.created||today()};selectedDay=0;save();tab='home';render();alert('Backup importado com sucesso.');}catch(e){alert('Arquivo de backup inválido. Não alteramos seus dados.');}};reader.readAsText(file);
+if(!file||file.size>4e6){alert('Selecione um backup JSON de até 4 MB.');return;}
+var reader=new FileReader();
+reader.onload=function(){
+ try{
+  var item=JSON.parse(reader.result),p=item.data;
+  if(item.app!=='TreinoLab'||!p||!Array.isArray(p.days)||!Array.isArray(p.sessions)||!p.settings||p.days.length<1||p.days.length>7)throw Error('Backup inválido');
+  var personal=Array.isArray(p.customExercises)?p.customExercises:[];
+  if(personal.length>100||personal.some(function(x){return !x||!Number.isSafeInteger(Number(x.id))||Number(x.id)<100000||typeof x.n!=='string'||x.n.length>75||!x.g||!x.e;}))throw Error('Exercício próprio inválido');
+  var hasId=function(id){return DB.some(function(x){return x.id===Number(id);})||personal.some(function(x){return x.id===Number(id);});};
+  if(p.days.some(function(d){return !d||typeof d.name!=='string'||!Array.isArray(d.ex)||d.ex.length>25||d.ex.some(function(e){return !e||!hasId(e.id)||Number(e.sets)>12||Number(e.sets)<1;});}))throw Error('Plano inválido');
+  if(!confirm('Importar substitui o plano e o histórico deste perfil no aparelho. Deseja continuar?'))return;
+  state=Object.assign({},p,{settings:Object.assign(defaults(),p.settings),sessions:p.sessions.slice(0,3000),customExercises:personal,cycle:Number(p.cycle)||1,created:p.created||today()});
+  delete state.active;
+  selectedDay=0;save();tab='home';render();alert('Backup importado com sucesso.');
+ }catch(e){alert('Arquivo de backup inválido. Seus dados foram mantidos.');}
+};
+reader.readAsText(file);
 }
 document.addEventListener('click',function(ev){
 var nav=ev.target.closest('[data-tab]');if(nav){tab=nav.dataset.tab;filter='Todos';term='';expanded=-1;render();window.scrollTo(0,0);return;}
