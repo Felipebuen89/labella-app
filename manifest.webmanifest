@@ -1,24 +1,26 @@
 {
-  "name": "La’Bella Hair Company",
-  "short_name": "La’Bella",
-  "description": "Acesse sua conta de cliente ou a gestão do salão, com serviços e novidades",
-  "start_url": "./acesso.html",
+  "name": "TreinoLab — Montador de Treinos",
+  "short_name": "TreinoLab",
+  "description": "Monte treinos, registre suas séries e acompanhe sua evolução.",
+  "start_url": "./",
   "scope": "./",
+  "id": "./?treinolab=1",
   "display": "standalone",
-  "background_color": "#100d0d",
-  "theme_color": "#151010",
+  "background_color": "#101311",
+  "theme_color": "#101311",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./icon.svg",
@@ -26,8 +28,5 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ],
-  "id": "./",
-  "lang": "pt-BR",
-  "prefer_related_applications": false
+  ]
 }
