@@ -159,7 +159,7 @@ test('Treino livre cria dias vazios, e permite escolher exercícios por grupo',(
  manual(a,{manName:'Maria',manDays:3,manMinutes:30});
  let p=state(a);
  assert.equal(p.settings.mode,'manual');assert.equal(p.days.length,3);assert.ok(p.days.every(d=>d.ex.length===0));
- assert.match(a.d.getElementById('main').textContent,/Biblioteca completa/);
+ assert.match(a.d.getElementById('main').textContent,/Escolha seu exercício/);
  input(a.w,a.d,'muscleFilter','Quadríceps');
  assert.match(a.d.getElementById('libResults').textContent,/agachamento/i);
  const btn=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');
@@ -258,11 +258,11 @@ test('Filtros de máquinas e pesos livres encontram muitas opções de peito, co
  const a=open();click(a.d,'[data-tab="library"]');
  for(const muscle of ['Peito','Costas','Ombros','Bíceps','Tríceps','Core','Quadríceps']){
    input(a.w,a.d,'muscleFilter',muscle);
-   input(a.w,a.d,'modalityFilter','Maquinas');
+   click(a.d,'[data-action="mode"][data-mode="Maquinas"]');
    const num=parseInt(a.d.querySelector('#libResults .muted strong').textContent,10);
    assert.ok(num>=10,muscle+' tem menos de dez opções de máquinas e polias: '+num);
    assert.ok(a.d.querySelector('#libResults .exphoto img'),'Miniatura ausente em '+muscle);
-   input(a.w,a.d,'modalityFilter','Livres');
+   click(a.d,'[data-action="mode"][data-mode="Livres"]');
    const libre=parseInt(a.d.querySelector('#libResults .muted strong').textContent,10);
    assert.ok(libre>=10,muscle+' tem menos de dez pesos livres: '+libre);
  }
