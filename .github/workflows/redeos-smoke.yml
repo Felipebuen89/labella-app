@@ -1,0 +1,34 @@
+name: RedeOS - Validacao do prototipo
+on:
+  push:
+    branches:
+      - franquias-white-label-v1
+    paths:
+      - 'franchise-platform/**'
+      - '.github/workflows/redeos-smoke.yml'
+  pull_request:
+    branches:
+      - moments-paris-demo
+    paths:
+      - 'franchise-platform/**'
+      - '.github/workflows/redeos-smoke.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    name: Sintaxe e fluxo demonstrativo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxe JavaScript
+        run: |
+          node --check franchise-platform/data.js
+          node --check franchise-platform/app.js
+          node --check franchise-platform/smoke-test.mjs
+      - name: Validar fluxos e separacao demonstrativa
+        run: node franchise-platform/smoke-test.mjs
