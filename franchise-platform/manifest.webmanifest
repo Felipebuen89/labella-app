@@ -1,0 +1,1 @@
+{"name":"RedeOS — Plataforma para Franquias","short_name":"RedeOS","description":"Demonstração de gestão de revendedores, pedidos, estoque e resultados.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#090B0E","theme_color":"#0A0B0D","icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
