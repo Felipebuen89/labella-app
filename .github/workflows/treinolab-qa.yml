@@ -1,0 +1,26 @@
+name: TreinoLab - Testes funcionais
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - manifest.webmanifest
+      - sw.js
+      - treinolab/**
+      - .github/workflows/treinolab-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar ambiente de teste
+        run: npm install --no-save --prefix treinolab jsdom@26
+      - name: Testar montagem, execução, histórico e biblioteca
+        run: node --test treinolab/tests.cjs
