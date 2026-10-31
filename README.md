@@ -1,3 +1,21 @@
+## TreinoLab 2.2 — biblioteca ampliada e montagem manual (31/10/2026)
+
+- Biblioteca com **414 exercícios** e variações usuais, divididos em 20 categorias (peito, costas, ombros, bíceps, tríceps, antebraços, trapézio, lombar, quadríceps, posteriores de coxa, adutores, abdutores, panturrilhas, tibial anterior, glúteos, core, cardio, mobilidade, pernas e corpo inteiro).
+- Busca pelo nome, músculo ou equipamento; filtros de grupos musculares, academia/casa e material; listagem paginada para desempenho em celular.
+- **Montagem livre (separada do gerador automático)**: selecionar nome, de 1 a 7 dias/semana, tempo disponível por sessão, início, ciclo de 4 a 12 semanas; cada dia começa vazio para o usuário montar.
+- Escolher qualquer exercício do catálogo, organizar no dia desejado, renomear os treinos A–G, ajustar séries, repetições, descanso, remover e reordenar.
+- Cadastro de exercício próprio por perfil, com grupo, equipamento, local, observação e classificação de impacto, inclusive preservado no backup JSON.
+- Links de vídeos e pesquisa de imagens; tempo aproximado por treino, aviso de carga e cautela adicional para lipedema.
+- Mantidos os registros e histórico de treino de cada perfil. Ao criar um novo ciclo, o plano anterior é arquivado.
+
+**Escopo da biblioteca:** não é possível listar literalmente todos os movimentos e infinitas variações; o catálogo reúne 414 entradas, com opção de cadastro manual. As demonstrações são links externos e não foram individualmente validadas para cada entrada. Nenhum movimento é automaticamente apropriado para todas as pessoas.
+
+**Segurança:** a versão manual não prescreve carga a partir de peso/altura e não substitui avaliação presencial. É obrigatório responder se existem sintomas agudos de alerta; nesses casos o app bloqueia a montagem. Pessoas com lipedema devem conferir adaptações com profissionais que as acompanham.
+
+Referência de classificação anatômica e equipamentos: https://www.acefitness.org/resources/everyone/exercise-library/
+
+---
+
 # TreinoLab Coach — avaliação e ciclos de treino (31/10/2026)
 
 Aplicativo publicado no GitHub Pages: https://felipebuen89.github.io/labella-app/
