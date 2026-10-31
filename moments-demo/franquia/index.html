@@ -605,7 +605,7 @@ state.accessLog=state.sellerAccounts[state.currentSellerKey].accessLog||[];
 state.sellerAccounts[state.currentSellerKey].loyalty=state.loyalty;
 state.sellerAccounts[state.currentSellerKey].accessLog=state.accessLog;
 const saveActiveSeller=()=>{if(!state.currentSellerKey||!state.sellerAccounts[state.currentSellerKey])return;for(const field of sellerFields)state.sellerAccounts[state.currentSellerKey][field]=state[field]};
-const save=()=>{try{if(!FRANCHISE_PORTAL)saveActiveSeller();localStorage.setItem('franquias_white_label_v1',JSON.stringify(state))if(!cloudPulling)cloudQueueSave()}catch(e){toast('Espaço para armazenamento esgotado')}};
+const save=()=>{try{if(!FRANCHISE_PORTAL)saveActiveSeller();localStorage.setItem('franquias_white_label_v1',JSON.stringify(state));if(!cloudPulling)cloudQueueSave()}catch(e){toast('Espaço para armazenamento esgotado')}};
 
 const CLOUD=DEMO_MODE?null:window.MomentsCloud;
 const cloudProfile=()=>({profile:state.profile,cart:state.cart,inventory:state.inventory,sales:state.sales,reorder:state.reorder,notifications:state.notifications,loyalty:state.loyalty,accessLog:state.accessLog,retailOverride:state.retailOverride});
