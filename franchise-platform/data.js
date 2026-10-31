@@ -37,7 +37,7 @@ export function loadTenantState(id) {
   const sample = TENANTS[id];
   const initial = {
     brand: {...BRAND_DEFAULTS, displayName:sample.name},
-    stock:{}, cart:{}, orders:[], sales:[], notifications:[],
+    catalog:sample.products.map(p=>({...p})), stock:{}, cart:{}, orders:[], sales:[], notifications:[],
     campaigns:[{id:"c-default",...sample.campaign,active:true}],
     training:[{id:"tr-1",title:"Como apresentar valor ao cliente",description:"Comece pelos benefícios do produto, depois explique as condições da oferta."},
       {id:"tr-2",title:"Pós-venda que fideliza",description:"Confirme a satisfação do cliente e acompanhe oportunidades de reposição."}],
@@ -46,7 +46,7 @@ export function loadTenantState(id) {
   try {
     const stored = JSON.parse(localStorage.getItem(STORE_PREFIX+id) || "null");
     if (!stored || !stored.brand) return initial;
-    return {...initial,...stored,brand:{...initial.brand,...stored.brand}};
+    return {...initial,...stored,catalog:Array.isArray(stored.catalog)?stored.catalog:initial.catalog,brand:{...initial.brand,...stored.brand}};
   } catch (_) { return initial; }
 }
 export function saveTenantState(id, state) {
