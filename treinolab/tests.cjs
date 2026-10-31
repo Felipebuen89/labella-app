@@ -6,11 +6,11 @@ const vm=require('node:vm');
 const photoContext={window:{}};
 vm.runInNewContext(fs.readFileSync('treinolab/foto-catalogo.js','utf8'),photoContext);
 const publicPhotos=photoContext.window.TREINOLAB_PHOTO_RECORDS;
-function open(){
- const errors=[],alerts=[],vc=new VirtualConsole();
+function open(url){
+ const errors=[],alerts=[],links=[],vc=new VirtualConsole();
  vc.on('jsdomError',e=>errors.push(String(e)));
- const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.TREINOLAB_PHOTO_RECORDS=publicPhotos;w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.scrollTo=()=>{};}});
- return {w:w.window,d:w.window.document,errors,alerts,close:()=>w.window.close()};
+ const w=new JSDOM(fs.readFileSync('index.html','utf8'),{url:url||'https://felipebuen89.github.io/labella-app/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc,beforeParse(w){w.TREINOLAB_PHOTO_RECORDS=publicPhotos;w.confirm=()=>true;w.alert=(m)=>alerts.push(String(m));w.prompt=(message,link)=>{links.push(link);return link;};w.scrollTo=()=>{};}});
+ return {w:w.window,d:w.window.document,errors,alerts,links,close:()=>w.window.close()};
 }
 function click(d,s){let e=d.querySelector(s);assert.ok(e,'Elemento não encontrado: '+s);e.click();}
 function input(w,d,id,value){const e=d.getElementById(id);assert.ok(e,id);e.value=String(value);e.dispatchEvent(new w.Event('change',{bubbles:true}));}
@@ -316,4 +316,92 @@ test('Service worker inclui catálogo ilustrado para uso offline',()=>{
  assert.match(sw,/treinolab\/foto-catalogo\.js/);
  assert.match(sw,/ignoreSearch:true/);
  assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=4'\)/);
+});
+
+
+test('Treino manual é salvo e oferece início do primeiro dia com exercícios',()=>{
+ const a=open();manual(a,{manDays:4,manMinutes:45});
+ input(a.w,a.d,'selectedDay','2');
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-action="goHome"]');
+ const home=a.d.getElementById('main').textContent;
+ assert.match(home,/Seu treino manual está salvo/);
+ assert.match(home,/1 de 4 dias com exercícios/);
+ assert.ok(a.d.querySelector('[data-action="start"][data-idx="2"]'));
+ assert.ok(a.d.querySelector('[data-action="copyPlan"]'));
+ assert.equal(state(a).days[0].ex.length,0);
+ assert.equal(state(a).days[2].ex.length,1);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Link transporta a rotina inteira para outro celular e aparece na tela inicial',()=>{
+ const source=open();manual(source,{manName:'Pessoa A',manDays:4,manMinutes:45,manStart:'2026-11-07',manWeeks:8});
+ input(source.w,source.d,'selectedDay','2');
+ click(source.d,'#libResults [data-action="add"]:not([disabled])');
+ click(source.d,'[data-tab="plan"]');
+ click(source.d,'[data-action="expand"][data-idx="2"]');
+ const series=source.d.querySelector('[data-edit="sets"][data-idx="2"][data-ex="0"]');
+ series.value='4';series.dispatchEvent(new source.w.Event('change',{bubbles:true}));
+ click(source.d,'[data-action="goHome"]');
+ click(source.d,'[data-action="copyPlan"]');
+ assert.equal(source.links.length,1);
+ const link=source.links[0];
+ assert.ok(link.startsWith('https://felipebuen89.github.io/labella-app/#plano='));
+ assert.ok(!link.includes('Pessoa%20A'));
+ const recipient=open(link);
+ const data=state(recipient);
+ assert.equal(data.days.length,4);
+ assert.equal(data.days[0].ex.length,0);
+ assert.equal(data.days[2].ex.length,1);
+ assert.equal(data.days[2].ex[0].sets,4);
+ assert.equal(data.settings.start,'2026-11-07');
+ assert.equal(data.settings.weeks,8);
+ assert.equal(data.settings.minutes,45);
+ assert.equal(data.settings.mode,'manual');
+ assert.equal(data.settings.name,'');
+ assert.equal(data.settings.weight,'');
+ assert.equal(data.sessions.length,0);
+ assert.ok(recipient.d.querySelector('[data-action="start"][data-idx="2"]'));
+ assert.equal(recipient.w.location.hash,'');
+ assert.ok(recipient.alerts.some(m=>m.includes('Treino recebido e salvo')));
+ assert.deepEqual(recipient.errors,[]);
+ recipient.close();source.close();
+});
+test('Link de treino não inclui nome, dados médicos nem histórico',()=>{
+ const a=open();form(a,{personName:'Pessoa Particular',lipedema:'true',pain:2,weight:70,height:165,redFlags:'nao'});
+ click(a.d,'[data-action="copyPlan"]');
+ const text=a.links[0];
+ assert.ok(text&&text.includes('#plano='));
+ const part=text.split('#plano=')[1];
+ const decoded=JSON.parse(decodeURIComponent(escape(a.w.atob(part.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-part.length%4)%4)))));
+ assert.deepEqual(Object.keys(decoded).sort(),['c','d','m','s','v','w']);
+ assert.ok(!JSON.stringify(decoded).includes('Pessoa Particular'));
+ assert.ok(!JSON.stringify(decoded).includes('lipedema'));
+ assert.ok(!JSON.stringify(decoded).includes('weight'));
+ a.close();
+});
+test('Não permite compartilhar treino sem exercícios',()=>{
+ const a=open();manual(a);
+ click(a.d,'[data-action="copyPlan"]');
+ assert.equal(a.links.length,0);
+ assert.ok(a.alerts.some(m=>m.includes('Escolha pelo menos um exercício')));
+ a.close();
+});
+test('Treino compartilhado com exercício criado pelo usuário é importado corretamente',()=>{
+ const a=open();manual(a,{manDays:2});
+ click(a.d,'[data-action="customExercise"]');
+ input(a.w,a.d,'customName','Remada para teste de compartilhamento');
+ input(a.w,a.d,'customGroup','Costas');
+ a.d.getElementById('customExerciseForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ click(a.d,'[data-tab="home"]');
+ click(a.d,'[data-action="copyPlan"]');
+ const b=open(a.links[0]);
+ const data=state(b);
+ assert.equal(data.days[0].ex.length,1);
+ assert.equal(data.customExercises.length,1);
+ assert.equal(data.customExercises[0].n,'Remada para teste de compartilhamento');
+ assert.equal(data.days[0].ex[0].id,data.customExercises[0].id);
+ assert.deepEqual(b.errors,[]);
+ b.close();a.close();
 });
