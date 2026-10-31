@@ -322,17 +322,20 @@ document.body.style.overflow=modal?'hidden':'';
 function openSession(i){
 if(!state.days[i])return;
 if(state.active && state.active.day!==i && !confirm('Já existe outro treino iniciado. Substituir o treino em andamento?'))return;
-if(!state.active||state.active.day!==i){state.active={day:i,started:Date.now(),entries:state.days[i].ex.map(function(x){return Object.assign({},x,{done:false,actualReps:'',actualSets:x.sets});})};save();}
+if(!state.active||state.active.day!==i){state.active={day:i,started:Date.now(),entries:state.days[i].ex.map(function(x){return Object.assign({},x,{done:false,actualReps:'',actualSets:x.sets,actualRir:''});}),pain:0};save();}
 modal='session';render();
 }
 function addEx(id){var e=get(id);if(!e)return;var target=state.days[selectedDay];if(!target)return;target.ex.push({id:e.id,sets:3,reps:e.g==='Cardio'?'15 min':e.g==='Core'?'30 s':'10-12',rest:e.g==='Cardio'?0:60,weight:''});save();if(modal&&modal.type==='details')modal=null;alert('Adicionado a '+target.name+'.');render();}
 function finish(){
-var s=state.active;if(!s)return;
-var entries=s.entries.filter(function(x){return x.done;});
+var session=state.active;if(!session)return;
+var entries=session.entries.filter(function(x){return x.done;});
 if(!entries.length){alert('Marque pelo menos um exercício como feito.');return;}
+var pain=Number(session.pain||0);
+entries.forEach(function(x){x.pain=pain;});
 var volume=entries.reduce(function(sum,x){var reps=Number(x.actualReps)||parseInt(x.reps,10)||0;return sum+((Number(x.weight)||0)*(Number(x.actualSets)||Number(x.sets)||0)*reps);},0);
-state.sessions.push({date:today(),name:state.days[s.day].name,done:entries.length,minutes:Math.max(1,Math.round((Date.now()-s.started)/60000)),volume:volume,exercises:entries});
-delete state.active;save();modal=null;tab='progress';render();alert('Treino registrado! Boa evolução.');
+state.sessions.push({date:today(),name:state.days[session.day].name,done:entries.length,minutes:Math.max(1,Math.round((Date.now()-session.started)/60000)),volume:volume,pain:pain,cycle:state.cycle,exercises:entries});
+delete state.active;save();modal=null;tab='progress';render();
+if(pain>=4)alert('Treino registrado. Como houve desconforto, evite aumentar a carga e avalie os sintomas com profissional de saúde.');else alert('Treino registrado! A carga será reavaliada com base nas próximas sessões.');
 }
 function timerStart(sec){clearInterval(timerHandle);timerLeft=sec;updateTimer();timerHandle=setInterval(function(){timerLeft=Math.max(0,timerLeft-1);updateTimer();if(!timerLeft){clearInterval(timerHandle);if(navigator.vibrate)navigator.vibrate([140,80,140]);}},1000);}
 function updateTimer(){var el=document.getElementById('timerLabel');if(el)el.textContent=timerLeft?timerLeft+'s':'Pronto';}
@@ -350,6 +353,11 @@ var nav=ev.target.closest('[data-tab]');if(nav){tab=nav.dataset.tab;filter='Todo
 var el=ev.target.closest('[data-action]');if(!el)return;
 var a=el.dataset.action,i=Number(el.dataset.idx),id=Number(el.dataset.id);
 if(a==='builder'){modal='builder';render();}
+else if(a==='profiles'){modal='profiles';render();}
+else if(a==='switchProfile'){
+ if(!registry.list.some(function(p){return p.id===el.dataset.profile;}))return;
+ registry.active=el.dataset.profile;activeId=registry.active;localStorage.setItem(REG,JSON.stringify(registry));load();modal=null;tab='home';selectedDay=0;render();
+}
 else if(a==='close'){modal=null;render();}
 else if(a==='start'){openSession(i);}
 else if(a==='closeSession'){modal=null;render();}
@@ -365,18 +373,38 @@ else if(a==='details'){modal={type:'details',id:id};render();}
 else if(a==='export'){download();}
 else if(a==='import'){document.getElementById('importFile').click();}
 });
-document.addEventListener('submit',function(ev){if(ev.target.id!=='builderForm')return;ev.preventDefault();
-var goal=document.getElementById('goal').value,level=document.getElementById('level').value,days=Number(document.getElementById('days').value),equip=document.getElementById('equip').value;
-if(!confirm('Substituir o plano atual? Seu histórico será mantido.'))return;
-state.settings={goal:goal,level:level,days:days,equip:equip};state.days=planFor(goal,level,days,equip);delete state.active;selectedDay=0;expanded=-1;save();modal=null;tab='plan';render();});
+document.addEventListener('submit',function(ev){
+if(ev.target.id==='newProfileForm'){
+ ev.preventDefault();var name=document.getElementById('newPersonName').value.trim();
+ if(name.length<2||name.length>60||registry.list.length>=8){alert('Informe nome válido. Limite de 8 perfis por aparelho.');return;}
+ var id='p'+Date.now();registry.list.push({id:id,name:name});registry.active=id;activeId=id;
+ state={settings:Object.assign(defaults(),{name:name}),days:[],sessions:[],created:today(),cycle:1};save();modal='builder';tab='home';render();return;
+}
+if(ev.target.id!=='builderForm')return;ev.preventDefault();
+var v=function(id){return document.getElementById(id).value;};
+var p={name:v('personName').trim(),sex:v('sex'),age:Number(v('age')),weight:Number(v('weight')),height:Number(v('height')),goal:v('goal'),level:v('level'),days:Number(v('days')),minutes:Number(v('minutes')),equip:v('equip'),lipedema:v('lipedema')==='true',pain:Number(v('pain')),cleared:v('cleared'),restrictions:v('restrictions').trim(),redFlags:document.getElementById('redFlags').checked,start:v('start'),weeks:Number(v('weeks'))};
+if(p.redFlags){alert('Sinais de alerta: não inicie treino. Inchaço súbito unilateral, dor torácica ou falta de ar podem exigir avaliação urgente.');return;}
+if(p.cleared==='nao'){alert('Você informou orientação para não realizar exercícios. Procure liberação e avaliação profissional antes de gerar um plano.');return;}
+if(p.lipedema&&p.pain>=7){alert('Com desconforto forte, é mais seguro solicitar orientação clínica individual antes de começar.');return;}
+if(!p.name||p.name.length<2||p.age<18||p.age>100||p.weight<30||p.weight>350||p.height<120||p.height>230||p.days<2||p.days>6||p.minutes<20||p.minutes>90||p.weeks<4||p.weeks>12||!/^\d{4}-\d{2}-\d{2}$/.test(p.start)){alert('Revise os dados de avaliação e as datas.');return;}
+if(p.level==='Iniciante'&&p.days>3&&!confirm('Para iniciantes, costuma-se começar com 2 a 3 dias por semana. Quer manter esta frequência maior, com sessões mais leves?'))return;
+if(state.days.length&&!confirm('Gerar um novo ciclo substitui o plano atual, mas preserva o histórico. Deseja continuar?'))return;
+state.cycle=(state.days.length?Number(state.cycle||1)+1:1);
+state.settings=p;
+state.days=planFor(p);
+delete state.active;
+var profile=registry.list.find(function(x){return x.id===activeId;});if(profile)profile.name=p.name;
+selectedDay=0;expanded=-1;save();modal=null;tab='plan';render();
+});
 document.addEventListener('input',function(ev){if(ev.target.id==='search'){term=ev.target.value;var r=document.getElementById('libResults');if(r)r.innerHTML=exList();}});
 document.addEventListener('change',function(ev){
 var el=ev.target;
 if(el.id==='selectedDay'){selectedDay=Number(el.value);return;}
+if(el.id==='sessionPain'){if(state.active){state.active.pain=Number(el.value);save();}return;}
 if(el.dataset.dayName!==undefined){var di=Number(el.dataset.dayName);if(state.days[di]){state.days[di].name=el.value.trim().slice(0,55)||'Meu treino';save();render();}return;}
 if(el.dataset.edit){var d=state.days[Number(el.dataset.idx)],ex=d&&d.ex[Number(el.dataset.ex)];if(!ex)return;var prop=el.dataset.edit;if(prop==='reps')ex.reps=el.value.trim().slice(0,20)||'10-12';else ex[prop]=Math.max(prop==='sets'?1:0,Math.min(prop==='sets'?12:900,Number(el.value)||0));save();return;}
 if(el.dataset.done!==undefined){var e=state.active&&state.active.entries[Number(el.dataset.done)];if(e){e.done=el.checked;save();render();}return;}
-if(el.dataset.log){var entry=state.active&&state.active.entries[Number(el.dataset.entry)];if(entry){entry[el.dataset.log]=Math.max(0,Math.min(1000,Number(el.value)||0));save();}return;}
+if(el.dataset.log){var entry=state.active&&state.active.entries[Number(el.dataset.entry)];if(entry){entry[el.dataset.log]=el.dataset.log==='actualRir'?el.value:Math.max(0,Math.min(1000,Number(el.value)||0));save();}return;}
 if(el.id==='importFile'){importBackup(el.files&&el.files[0]);}
 });
 window.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&modal){modal=null;render();}});
