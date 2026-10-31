@@ -320,29 +320,30 @@ function exerciseMatches(x){
  var muscle=filter==='Todos'||x.g===filter||(filter==='Pernas'&&['Quadríceps','Posterior de coxa','Adutores','Abdutores','Panturrilhas','Tibial anterior'].includes(x.g))||(filter==='Braços'&&['Bíceps','Tríceps','Antebraços'].includes(x.g));
  var local=environmentFilter==='Todos'||x.e===environmentFilter||x.e==='ambos';
  var material=equipmentFilter==='Todos'||(x.material||'Peso corporal/outros')===equipmentFilter;
- return muscle&&local&&material&&normalizeTerm(x.n+' '+x.g+' '+(x.material||'')).includes(normalizeTerm(term));
+ var modo=modalityFilter==='Todos'||categoryMode(x)===modalityFilter;
+ return muscle&&local&&material&&modo&&normalizeTerm(x.n+' '+x.g+' '+(x.material||'')).includes(normalizeTerm(term));
 }
 function exList(){
-var matches=allExercises().filter(exerciseMatches),count=matches.length;
+var matches=allExercises().filter(exerciseMatches).sort(function(a,b){return Number(Boolean(b.photo))-Number(Boolean(a.photo))||a.n.localeCompare(b.n,'pt-BR');}),count=matches.length;
 var target=state.days[selectedDay],chosen=target?target.ex:[];
 var show=matches.slice(0,libraryLimit);
 return '<div class="row spread" style="margin-bottom:10px"><span class="muted mini"><strong>'+count+'</strong> exercício(s) encontrados de '+allExercises().length+'</span><span class="muted mini">'+(target?chosen.length+' no dia atual':'Selecione um treino')+'</span></div>'+
 (show.length?show.map(function(x){
 var already=chosen.some(function(y){return y.id===x.id;});
-return '<div class="exercise"><span class="exicon">'+safe(x.ico||'💪')+'</span><div class="exmain"><strong>'+safe(x.n)+'</strong><small>'+safe(x.g)+' · '+safe(x.material||'Corpo livre / outros')+' · '+safe(x.e==='ambos'?'Casa e academia':x.e==='casa'?'Casa':'Academia')+'</small>'+(x.impact==='alto'?'<small style="color:var(--red)">Maior impacto — adapte à sua condição</small>':'')+'</div><div class="row" style="gap:5px;flex-shrink:0"><button class="btn small ghost" data-action="details" data-id="'+x.id+'" aria-label="Detalhes de '+safe(x.n)+'">Ver</button><button class="btn small '+(already?'ghost':'')+'" data-action="add" data-id="'+x.id+'" '+(!target||already?'disabled':'')+' aria-label="Adicionar '+safe(x.n)+'">'+(already?'✓':'+')+'</button></div></div>';
+return '<div class="exercise">'+exercisePhoto(x,false)+'<div class="exmain"><strong>'+safe(exerciseName(x))+'</strong><small>'+safe(x.g)+' · '+safe(x.material||'Corpo livre / outros')+' · '+safe(x.e==='ambos'?'Casa e academia':x.e==='casa'?'Casa':'Academia')+(x.en?' · Nome original em inglês':'')+'</small>'+(x.impact==='alto'?'<small style="color:var(--red)">Maior impacto — adapte à sua condição</small>':'')+'</div><div class="row" style="gap:5px;flex-shrink:0"><button class="btn small ghost" data-action="details" data-id="'+x.id+'" aria-label="Detalhes de '+safe(x.n)+'">Ver</button><button class="btn small '+(already?'ghost':'')+'" data-action="add" data-id="'+x.id+'" '+(!target||already?'disabled':'')+' aria-label="Adicionar '+safe(x.n)+'">'+(already?'✓':'+')+'</button></div></div>';
 }).join(''):'<div class="empty">Nenhum movimento corresponde aos filtros. Escolha outro grupo ou equipamento.</div>')+
 (count>libraryLimit?'<div style="margin-top:14px">'+btn('Mostrar mais ('+(count-libraryLimit)+' restantes)','showMore','full ghost')+'</div>':'');
 }
 function library(){
-var cats=['Todos','Peito','Costas','Ombros','Braços','Bíceps','Tríceps','Antebraços','Trapézio','Lombar','Pernas','Quadríceps','Posterior de coxa','Glúteos','Adutores','Abdutores','Panturrilhas','Tibial anterior','Core','Cardio','Mobilidade','Corpo inteiro'];
-var eq=['Todos','Peso corporal/outros','Halteres','Barra/Anilha','Máquina','Polia','Smith','Elástico','Kettlebell','Objeto doméstico'];
+var cats=['Todos','Peito','Costas','Ombros','Braços','Bíceps','Tríceps','Antebraços','Trapézio','Lombar','Pernas','Quadríceps','Posterior de coxa','Glúteos','Adutores','Abdutores','Panturrilhas','Tibial anterior','Pescoço','Core','Cardio','Mobilidade','Corpo inteiro'];
+var eq=['Todos','Máquina','Polia','Smith','Halteres','Barra/Anilha','Barra W','Kettlebell','Elástico','Peso corporal/outros','Bola','Bola medicinal','Rolo de espuma','Outros','Objeto doméstico'];
 return top('Biblioteca completa','Pesquise por membro, músculo, exercício ou equipamento; veja demonstrações e monte sua própria série.')+
 '<div class="panel"><div class="row spread" style="flex-wrap:wrap"><div><strong>Seu treino, suas escolhas</strong><p class="muted mini" style="margin:5px 0">Crie do zero e organize os exercícios por dia.</p></div>'+btn('＋ Criar treino','manualWizard','small')+'</div></div>'+
 '<div class="panel">'+(state.days.length?'<div class="field"><label for="selectedDay">Adicionar exercício ao dia</label><select id="selectedDay">'+state.days.map(function(d,i){return '<option value="'+i+'" '+(selectedDay===i?'selected':'')+'>'+safe(d.name)+' ('+d.ex.length+')</option>';}).join('')+'</select></div>':'<div class="notice">Antes de adicionar exercícios, use “Criar treino” para definir dias e duração.</div>')+'</div>'+
 '<input class="search" id="search" placeholder="⌕ Busque, por exemplo: panturrilha, remada, glúteos..." value="'+safe(term)+'" aria-label="Buscar exercícios por nome">'+
-'<div class="formgrid" style="margin-top:12px"><div class="field"><label for="muscleFilter">Grupo muscular / membro</label><select id="muscleFilter">'+cats.map(function(g){return '<option value="'+safe(g)+'" '+(g===filter?'selected':'')+'>'+safe(g)+'</option>';}).join('')+'</select></div><div class="field"><label for="environmentFilter">Onde treinar</label><select id="environmentFilter">'+[['Todos','Casa e academia'],['academia','Academia'],['casa','Em casa']].map(function(a){return '<option value="'+a[0]+'" '+(environmentFilter===a[0]?'selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div><div class="field formwide"><label for="equipmentFilter">Equipamento</label><select id="equipmentFilter">'+eq.map(function(g){return '<option value="'+safe(g)+'" '+(g===equipmentFilter?'selected':'')+'>'+safe(g)+'</option>';}).join('')+'</select></div></div>'+
+'<div class="field" style="margin-top:12px"><label for="modalityFilter">Máquina ou peso livre?</label><select id="modalityFilter">'+[['Todos','Todos os tipos'],['Maquinas','Máquinas, polias e Smith'],['Livres','Pesos livres: barras, halteres, kettlebells'],['Corporal','Peso corporal e outros'],['Elasticos','Elásticos']].map(function(a){return '<option value="'+a[0]+'" '+(modalityFilter===a[0]?'selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div><div class="formgrid" style="margin-top:12px"><div class="field"><label for="muscleFilter">Grupo muscular / membro</label><select id="muscleFilter">'+cats.map(function(g){return '<option value="'+safe(g)+'" '+(g===filter?'selected':'')+'>'+safe(g)+'</option>';}).join('')+'</select></div><div class="field"><label for="environmentFilter">Onde treinar</label><select id="environmentFilter">'+[['Todos','Casa e academia'],['academia','Academia'],['casa','Em casa']].map(function(a){return '<option value="'+a[0]+'" '+(environmentFilter===a[0]?'selected':'')+'>'+a[1]+'</option>';}).join('')+'</select></div><div class="field formwide"><label for="equipmentFilter">Equipamento</label><select id="equipmentFilter">'+eq.map(function(g){return '<option value="'+safe(g)+'" '+(g===equipmentFilter?'selected':'')+'>'+safe(g)+'</option>';}).join('')+'</select></div></div>'+
 '<div class="row spread" style="margin-top:14px;flex-wrap:wrap"><span class="muted mini">Não encontrou um movimento? Cadastre uma variação.</span>'+btn('＋ Meu exercício','customExercise','small ghost')+'</div>'+
-'<div id="libResults" class="panel">'+exList()+'</div>'+
+'<div id="libResults" class="panel">'+exList()+'</div>'+photoAttribution()+
 '<p class="muted mini">O catálogo reúne centenas de movimentos e variações, não todas as possibilidades existentes. Os links de vídeo e imagens abrem fontes externas e devem ser conferidos. Exercícios não são recomendações individuais de segurança.</p>';
 }
 function progress(){
@@ -605,6 +606,7 @@ document.addEventListener('change',function(ev){
 var el=ev.target;
 if(el.id==='selectedDay'){selectedDay=Number(el.value);render();return;}
 if(el.id==='muscleFilter'){filter=el.value;libraryLimit=40;render();return;}
+if(el.id==='modalityFilter'){modalityFilter=el.value;equipmentFilter='Todos';libraryLimit=40;render();return;}
 if(el.id==='equipmentFilter'){equipmentFilter=el.value;libraryLimit=40;render();return;}
 if(el.id==='environmentFilter'){environmentFilter=el.value;libraryLimit=40;render();return;}
 if(el.id==='sessionPain'){if(state.active){state.active.pain=Number(el.value);save();}return;}
