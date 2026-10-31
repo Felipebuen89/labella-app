@@ -227,6 +227,19 @@ DB.forEach(function(x){
  if(matching){x.photo=matching.photo;x.photo2=matching.photo2;}
 });
 function exerciseName(x){return PT_PHOTO_NAMES[x.n]||x.n;}
+/* Associa fotos apenas quando nome traduzido e grupo muscular coincidirem exatamente. */
+var verifiedPictureIndex=new Map();
+photoExtras.forEach(function(x){
+ var key=normalizeLegacy(exerciseName(x))+'|'+x.g;
+ if(!verifiedPictureIndex.has(key))verifiedPictureIndex.set(key,x);
+});
+DB.forEach(function(x){
+ if(x.photo||x.id>=5000)return;
+ var key=normalizeLegacy(x.n)+'|'+x.g;
+ var pic=verifiedPictureIndex.get(key);
+ if(pic){x.photo=pic.photo;x.photo2=pic.photo2;x.photoMapped=true;}
+});
+
 
 /* Associar foto a exercícios antigos somente em correspondências exatas, preservando IDs salvos. */
 var photoNameIndex=new Map();
