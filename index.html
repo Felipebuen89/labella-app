@@ -782,7 +782,7 @@ function acceptSharedPlan(){
  plan.days.forEach(function(d){d.ex.forEach(function(e){if(replacements.has(e.id))e.id=replacements.get(e.id);});});
  state.customExercises=previousCustom;
  state.settings=Object.assign({},state.settings,{mode:'manual',goal:'Treino compartilhado',days:plan.days.length,minutes:plan.minutes,start:plan.start,weeks:plan.weeks});
- state.days=plan.days;state.selectedWorkout=0;delete state.active;
+ state.days=plan.days;state.selectedWorkout=Math.max(0,plan.days.findIndex(function(day){return day.ex&&day.ex.length;}));delete state.active;
  selectedDay=0;tab='home';modal=null;incomingPlan=null;incomingCode='';incomingError='';
  save();clearShareLink();render();
  alert('Treino recebido e salvo no seu celular! Confira os exercícios e depois use “Começar treino”.');
