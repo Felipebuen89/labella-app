@@ -1,0 +1,19 @@
+name: White-label | Validar interface e isolamento
+on:
+  push:
+    branches:
+      - franquias-white-label-v1
+    paths:
+      - 'moments-demo/**'
+      - 'scripts/check-white-label.cjs'
+      - '.github/workflows/white-label-check.yml'
+  workflow_dispatch:
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar Node
+        run: node --version
+      - name: Validar HTML, scripts, PWA e branding
+        run: node scripts/check-white-label.cjs
