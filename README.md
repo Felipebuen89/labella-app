@@ -1,3 +1,21 @@
+# TreinoLab 2.3 — catálogo com fotografias e filtros de aparelho
+
+Atualização de 31/10/2026, no endereço https://felipebuen89.github.io/labella-app/
+
+- **1.287 entradas no catálogo**: 414 exercícios e variações anteriores, mais 873 demonstrações adicionais da base `yuhonas/free-exercise-db`. Algumas são variações equivalentes, portanto esse número não representa 1.287 movimentos inteiramente distintos.
+- **Miniaturas ao lado dos exercícios** quando há fotografia correspondente, sem inventar imagem ou usar imagem genérica que mostre outro movimento. Quando a correspondência não foi identificada aparece **Sem foto**.
+- **Duas posições fotografadas**, quando disponíveis, na tela de detalhes; links externos de vídeos, fotos e pesquisa.
+- **Filtros rápidos:** Máquinas e polias; Pesos livres; Peso corporal; Elásticos. Filtro adicional por grupo muscular, equipamento e casa/academia.
+- **Nomes em português** para movimentos comuns; demais registros preservam o nome original da biblioteca para evitar tradução errada.
+- Treinos antigos preservados: os IDs originais não foram renumerados, e fotos mapeadas a exercícios antigos exigem equivalência de nome e grupo muscular.
+- O catálogo JS é pré-armazenado pelo service worker v4 para o PWA. Fotografias externas podem requerer conexão e dados locais continuam guardados no navegador.
+
+**Limite realista:** existem muitos exercícios por grupo muscular, mas não há dez máquinas distintas para todos os músculos específicos (por exemplo, alguns músculos pequenos). O filtro sempre informa o número realmente disponível em cada categoria. Não criamos variações fictícias para completar uma meta.
+
+Fotografias: [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) — licença Unlicense, imagens por exercício. As imagens não substituem supervisão de profissional habilitado.
+
+---
+
 ## TreinoLab 2.2 — biblioteca ampliada e montagem manual (31/10/2026)
 
 - Biblioteca com **414 exercícios** e variações usuais, divididos em 20 categorias (peito, costas, ombros, bíceps, tríceps, antebraços, trapézio, lombar, quadríceps, posteriores de coxa, adutores, abdutores, panturrilhas, tibial anterior, glúteos, core, cardio, mobilidade, pernas e corpo inteiro).
