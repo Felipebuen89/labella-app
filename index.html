@@ -211,6 +211,21 @@ function categoryMode(x){
  return 'Corporal';
 }
 var PT_PHOTO_NAMES={"Ab Crunch Machine":"Abdominal na máquina","Barbell Bench Press - Medium Grip":"Supino reto com barra","Barbell Incline Bench Press - Medium Grip":"Supino inclinado com barra","Dumbbell Bench Press":"Supino reto com halteres","Machine Bench Press":"Supino reto na máquina","Smith Machine Bench Press":"Supino reto no Smith","Leverage Chest Press":"Supino na máquina articulada","Leverage Incline Chest Press":"Supino inclinado na máquina articulada","Leverage Decline Chest Press":"Supino declinado na máquina articulada","Decline Dumbbell Bench Press":"Supino declinado com halteres","Butterfly":"Crucifixo na máquina peck deck","Barbell Squat":"Agachamento com barra","Bodyweight Squat":"Agachamento livre","Hack Squat":"Agachamento hack na máquina","Smith Machine Squat":"Agachamento no Smith","Leg Extensions":"Cadeira extensora","Single-Leg Leg Extension":"Cadeira extensora unilateral","Leg Press":"Leg press","Narrow Stance Leg Press":"Leg press com pés próximos","Lying Leg Curls":"Mesa flexora","Seated Leg Curl":"Cadeira flexora","Standing Leg Curl":"Flexora em pé","Seated Calf Raise":"Panturrilha sentada na máquina","Standing Calf Raises":"Panturrilha em pé","Smith Machine Calf Raise":"Panturrilha no Smith","Machine Bicep Curl":"Rosca bíceps na máquina","Machine Preacher Curls":"Rosca Scott na máquina","Machine Triceps Extension":"Tríceps na máquina","Dip Machine":"Tríceps mergulho na máquina","Face Pull":"Face pull na polia","Seated Cable Rows":"Remada baixa na polia","One Arm Lat Pulldown":"Puxada unilateral","Wide-Grip Lat Pulldown":"Puxada alta pegada aberta","Close-Grip Front Lat Pulldown":"Puxada alta pegada fechada","V-Bar Pulldown":"Puxada com triângulo","Underhand Cable Pulldowns":"Puxada supinada","Leverage Iso Row":"Remada articulada","Leverage High Row":"Remada alta articulada","Machine Shoulder (Military) Press":"Desenvolvimento de ombros na máquina","Leverage Shoulder Press":"Desenvolvimento articulado","Reverse Machine Flyes":"Crucifixo inverso na máquina","Smith Machine Overhead Shoulder Press":"Desenvolvimento no Smith","Calf Press On The Leg Press Machine":"Panturrilha no leg press","Thigh Adductor":"Cadeira adutora","Thigh Abductor":"Cadeira abdutora","Barbell Hip Thrust":"Elevação pélvica com barra","Barbell Glute Bridge":"Ponte de glúteos com barra","Single Leg Glute Bridge":"Ponte unilateral de glúteos","Chair Squat":"Agachamento na cadeira","Dumbbell Squat":"Agachamento com halteres","Cable Preacher Curl":"Rosca Scott na polia","Smith Machine Bent Over Row":"Remada curvada no Smith","Smith Machine Close-Grip Bench Press":"Supino fechado no Smith"};
+/* Compartilhar fotos somente quando o nome português é uma correspondência exata. */
+var photoPortugueseMap={};
+photoExtras.forEach(function(x){
+ var translated=PT_PHOTO_NAMES[x.n];
+ if(translated && x.photo){
+  var key=translated.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+  if(!photoPortugueseMap[key])photoPortugueseMap[key]=x;
+ }
+});
+DB.forEach(function(x){
+ if(x.en||x.photo)return;
+ var key=x.n.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+ var matching=photoPortugueseMap[key];
+ if(matching){x.photo=matching.photo;x.photo2=matching.photo2;}
+});
 function exerciseName(x){return PT_PHOTO_NAMES[x.n]||x.n;}
 function exercisePhoto(x,large){
  var cls=large?'exphoto large':'exphoto',ico=safe(x.ico||'💪');
