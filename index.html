@@ -611,7 +611,7 @@ modal='session';render();
 }
 function addEx(id){var e=get(id);if(!e)return;var target=state.days[selectedDay];if(!target){alert('Crie um treino antes de adicionar exercícios.');return;}if(target.ex.some(function(x){return x.id===id;})){alert('Esse exercício já está no dia selecionado. Você pode ajustar séries e repetições em Meus treinos.');return;} if(target.ex.length>=25){alert('Limite de 25 exercícios por dia. Revise o tempo e a recuperação.');return;}
 if(state.settings.lipedema&&e.impact==='alto'&&!confirm('Este exercício pode ser de alto impacto. Para quem tem lipedema, avalie tolerância e orientação profissional antes de incluí-lo. Deseja continuar?'))return;
-target.ex.push({id:e.id,sets:3,reps:e.g==='Cardio'?'15 min':e.g==='Core'?'30 s':'10-12',rest:e.g==='Cardio'?0:60,weight:''});save();if(modal&&modal.type==='details')modal=null;alert('Adicionado a '+target.name+'.');render();}
+target.ex.push({id:e.id,sets:3,reps:e.g==='Cardio'?'15 min':e.g==='Core'?'30 s':'10-12',rest:e.g==='Cardio'?0:60,weight:''});if(state.settings.mode==='manual')state.selectedWorkout=selectedDay;save();if(modal&&modal.type==='details')modal=null;alert('Adicionado a '+target.name+'.');render();}
 function finish(){
 var session=state.active;if(!session)return;
 var entries=session.entries.filter(function(x){return x.done;});
