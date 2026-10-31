@@ -96,36 +96,30 @@ function safe(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){retu
 function today(d){var x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
 function fmtDate(str){var a=String(str).split('-');return a.length===3?a[2]+'/'+a[1]+'/'+a[0]:str;}
 function get(i){return DB.find(function(x){return x.id===+i;});}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){alert('Não foi possível salvar neste navegador. Verifique o armazenamento disponível.');}}
-function planFor(goal,level,days,equip){
-var sets=level==='Iniciante'?2:level==='Avançado'?4:3;
-var variants={
-2:[['Superior','Peito','Costas','Ombros','Bíceps','Tríceps','Core'],['Inferior','Pernas','Glúteos','Pernas','Core','Cardio']],
-3:[['A · Empurrar','Peito','Ombros','Tríceps','Core'],['B · Puxar','Costas','Bíceps','Core','Cardio'],['C · Pernas','Pernas','Glúteos','Pernas','Core']],
-4:[['A · Superior','Peito','Costas','Ombros','Bíceps'],['B · Inferior','Pernas','Glúteos','Pernas','Core'],['C · Superior','Costas','Peito','Tríceps','Ombros'],['D · Inferior','Pernas','Glúteos','Pernas','Cardio']],
-5:[['A · Peito e tríceps','Peito','Peito','Tríceps','Core'],['B · Costas e bíceps','Costas','Costas','Bíceps','Core'],['C · Pernas','Pernas','Glúteos','Pernas','Core'],['D · Ombros e peito','Ombros','Peito','Tríceps','Cardio'],['E · Posterior e costas','Pernas','Glúteos','Costas','Core']],
-6:[['A · Empurrar','Peito','Ombros','Tríceps'],['B · Puxar','Costas','Bíceps','Core'],['C · Pernas','Pernas','Glúteos','Core'],['D · Empurrar','Peito','Ombros','Tríceps'],['E · Puxar','Costas','Bíceps','Core'],['F · Pernas','Pernas','Glúteos','Core']]
-};
-return variants[days].map(function(v,idx){
-var used=[], groups=v.slice(1);
-if(goal==='Condicionamento' && groups.indexOf('Cardio')<0)groups.push('Cardio');
-if(goal==='Emagrecimento' && groups.indexOf('Cardio')<0)groups.push('Cardio');
-var ex=groups.map(function(group,j){
-var pool=DB.filter(function(x){return x.g===group&&(x.e===equip||x.e==='ambos');});
-if(!pool.length)pool=DB.filter(function(x){return x.g===group;});
-var pos=(idx+j)%pool.length,x=pool[pos],tries=0;
-while(used.indexOf(x.id)>=0 && tries<pool.length){pos=(pos+1)%pool.length;x=pool[pos];tries++;}
-used.push(x.id);
-return {id:x.id,sets:group==='Cardio'?1:sets,reps:group==='Cardio'?'15 min':group==='Core'?'30 s':goal==='Força'?'6-8':'10-12',rest:group==='Cardio'?0:group==='Core'?45:90,weight:''};
-});
-return {name:'Treino '+v[0],ex:ex};
-});
+function save(){
+try{
+ localStorage.setItem(KEY+'-'+activeId,JSON.stringify(state));
+ if(activeId==='p1')localStorage.setItem(KEY,JSON.stringify(state));
+ if(registry)localStorage.setItem(REG,JSON.stringify(registry));
+}catch(e){alert('Não foi possível salvar neste navegador. Exporte um backup.');}
 }
 function load(){
-try{var raw=JSON.parse(localStorage.getItem(KEY));if(raw&&Array.isArray(raw.days)&&Array.isArray(raw.sessions)&&raw.settings){state=raw;return;}}catch(e){}
-state={settings:{goal:'Hipertrofia',level:'Iniciante',days:3,equip:'academia'},days:planFor('Hipertrofia','Iniciante',3,'academia'),sessions:[],created:today()};
+try{registry=JSON.parse(localStorage.getItem(REG));if(!registry||!Array.isArray(registry.list)||!registry.active)registry=null;}catch(e){registry=null;}
+if(!registry){registry={active:'p1',list:[{id:'p1',name:'Meu perfil'}]};}
+activeId=registry.active;
+try{
+ var raw=JSON.parse(localStorage.getItem(KEY+'-'+activeId)||(activeId==='p1'?localStorage.getItem(KEY):'null'));
+ if(raw&&Array.isArray(raw.days)&&Array.isArray(raw.sessions)&&raw.settings){
+  state=raw;state.settings=Object.assign(defaults(),raw.settings);if(!state.settings.name&&state.days.length){state.settings.name='Meu perfil';}
+  state.cycle=Number(state.cycle)||1;
+  if(!state.settings.start)state.settings.start=today();
+  save();return;
+ }
+}catch(e){}
+state={settings:defaults(),days:[],sessions:[],created:today(),cycle:1};
 save();
 }
+
 function num(n){return new Intl.NumberFormat('pt-BR').format(n);}
 function weekStats(){
 var now=new Date(),w=[];
