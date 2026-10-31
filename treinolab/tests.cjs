@@ -86,7 +86,8 @@ test('Demonstração visual ACE e pesquisa de vídeos acessíveis',()=>{
  const a=open();form(a);
  click(a.d,'[data-action="start"]');
  assert.ok(a.d.querySelector('a[href*="youtube.com/results"]'));
- assert.ok(a.d.querySelector('a[href*="acefitness.org/resources"]'));
+ assert.ok(a.d.querySelector('a[href*="acefitness.org/resources"], .exphoto img[src*="free-exercise-db"]'));
+ // O plano pode incluir demonstrações de fotos públicas ou links ACE, conforme o movimento.
  assert.deepEqual(a.errors,[]);a.close();
 });
 
