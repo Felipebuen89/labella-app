@@ -458,6 +458,15 @@ var nav=ev.target.closest('[data-tab]');if(nav){tab=nav.dataset.tab;filter='Todo
 var el=ev.target.closest('[data-action]');if(!el)return;
 var a=el.dataset.action,i=Number(el.dataset.idx),id=Number(el.dataset.id);
 if(a==='builder'){modal='builder';render();}
+else if(a==='manualWizard'){modal='manualWizard';render();}
+else if(a==='customExercise'){modal='customExercise';render();}
+else if(a==='showMore'){libraryLimit=Math.min(allExercises().length,libraryLimit+40);render();}
+else if(a==='moveExercise'){
+ var day=state.days[i],pos=Number(el.dataset.ex),dest=pos+Number(el.dataset.dir);
+ if(day&&pos>=0&&pos<day.ex.length&&dest>=0&&dest<day.ex.length){
+ var item=day.ex.splice(pos,1)[0];day.ex.splice(dest,0,item);save();render();
+ }
+}
 else if(a==='profiles'){modal='profiles';render();}
 else if(a==='switchProfile'){
  if(!registry.list.some(function(p){return p.id===el.dataset.profile;}))return;
@@ -471,14 +480,44 @@ else if(a==='timer'){timerStart(Number(el.dataset.sec)||60);}
 else if(a==='stopTimer'){clearInterval(timerHandle);timerLeft=0;updateTimer();}
 else if(a==='expand'){expanded=expanded===i?-1:i;render();}
 else if(a==='remove'){if(state.days[i]&&confirm('Remover este exercício do plano?')){state.days[i].ex.splice(Number(el.dataset.ex),1);save();render();}}
-else if(a==='addFromDay'){selectedDay=i;filter='Todos';term='';tab='library';render();}
-else if(a==='filter'){filter=el.dataset.filter;render();}
+else if(a==='addFromDay'){selectedDay=i;filter='Todos';term='';libraryLimit=40;tab='library';render();}
+else if(a==='filter'){filter=el.dataset.filter;libraryLimit=40;render();}
 else if(a==='add'){addEx(id);}
 else if(a==='details'){modal={type:'details',id:id};render();}
 else if(a==='export'){download();}
 else if(a==='import'){document.getElementById('importFile').click();}
 });
 document.addEventListener('submit',function(ev){
+if(ev.target.id==='manualForm'){
+ ev.preventDefault();
+ var v=function(id){return document.getElementById(id).value;};
+ if(!v('manAlert')){alert('Responda se há sinais de alerta antes de continuar.');return;}
+ if(v('manAlert')==='sim'){alert('Você informou sinal de alerta. Não inicie exercícios e procure atendimento médico, especialmente com falta de ar, dor no peito ou inchaço súbito de uma perna.');return;}
+ if(v('manCleared')==='nao'){alert('Você informou orientação para não se exercitar. Consulte o profissional que acompanha sua saúde antes de começar.');return;}
+ if(!document.getElementById('manAcknowledge').checked){alert('Confirme que compreendeu o aviso sobre orientação profissional.');return;}
+ var name=v('manName').trim(),days=Number(v('manDays')),minutes=Number(v('manMinutes')),weeks=Number(v('manWeeks')),start=v('manStart');
+ if(name.length<2||days<1||days>7||minutes<20||minutes>120||weeks<4||weeks>12||!/^\d{4}-\d{2}-\d{2}$/.test(start)){alert('Revise os dias, duração, nome e data do treino.');return;}
+ if(days===7&&!confirm('Treinar sete dias por semana pode deixar pouco tempo para recuperação. Distribua esforço e descanso. Deseja manter os sete dias?'))return;
+ if(v('manLipedema')==='true'&&Number(state.settings.pain||0)>=7){alert('Dor elevada: solicite orientação individual antes de montar exercícios.');return;}
+ if(state.settings.restrictions&&!confirm('As restrições descritas no seu perfil não são interpretadas automaticamente. Valide cada exercício com um profissional. Continuar?'))return;
+ makeManual({name:name,days:days,minutes:minutes,start:start,weeks:weeks,lipedema:v('manLipedema')==='true',cleared:v('manCleared')});
+ return;
+}
+if(ev.target.id==='customExerciseForm'){
+ ev.preventDefault();
+ var name=document.getElementById('customName').value.trim(),group=document.getElementById('customGroup').value,
+ env=document.getElementById('customEnvironment').value,mat=document.getElementById('customMaterial').value;
+ var tip=document.getElementById('customTip').value.trim(),impact=document.getElementById('customImpact').value;
+ if(name.length<3||name.length>75){alert('Informe um nome de 3 a 75 caracteres.');return;}
+ state.customExercises=state.customExercises||[];
+ if(state.customExercises.length>=100){alert('Limite de 100 exercícios próprios neste perfil.');return;}
+ if(allExercises().some(function(x){return normalizeTerm(x.n)===normalizeTerm(name);})){alert('Já existe um exercício com esse nome. Use a busca.');return;}
+ var id=Date.now();while(get(id))id++;
+ state.customExercises.push({id:id,n:name,g:group,e:env,material:mat,ico:'✳',tip:tip||'Exercício cadastrado por você. Confirme a técnica com profissional.',impact:impact,region:group,custom:true});
+ save();modal=null;term=name;filter='Todos';equipmentFilter='Todos';environmentFilter='Todos';libraryLimit=40;tab='library';render();alert('Exercício próprio salvo. Toque em + para adicioná-lo ao dia selecionado.');
+ return;
+}
+
 if(ev.target.id==='newProfileForm'){
  ev.preventDefault();var name=document.getElementById('newPersonName').value.trim();
  if(name.length<2||name.length>60||registry.list.length>=8){alert('Informe nome válido. Limite de 8 perfis por aparelho.');return;}
@@ -505,10 +544,13 @@ delete state.active;
 var profile=registry.list.find(function(x){return x.id===activeId;});if(profile)profile.name=p.name;
 selectedDay=0;expanded=-1;save();modal=null;tab='plan';render();
 });
-document.addEventListener('input',function(ev){if(ev.target.id==='search'){term=ev.target.value;var r=document.getElementById('libResults');if(r)r.innerHTML=exList();}});
+document.addEventListener('input',function(ev){if(ev.target.id==='search'){term=ev.target.value;libraryLimit=40;var r=document.getElementById('libResults');if(r)r.innerHTML=exList();}});
 document.addEventListener('change',function(ev){
 var el=ev.target;
-if(el.id==='selectedDay'){selectedDay=Number(el.value);return;}
+if(el.id==='selectedDay'){selectedDay=Number(el.value);render();return;}
+if(el.id==='muscleFilter'){filter=el.value;libraryLimit=40;render();return;}
+if(el.id==='equipmentFilter'){equipmentFilter=el.value;libraryLimit=40;render();return;}
+if(el.id==='environmentFilter'){environmentFilter=el.value;libraryLimit=40;render();return;}
 if(el.id==='sessionPain'){if(state.active){state.active.pain=Number(el.value);save();}return;}
 if(el.dataset.dayName!==undefined){var di=Number(el.dataset.dayName);if(state.days[di]){state.days[di].name=el.value.trim().slice(0,55)||'Meu treino';save();render();}return;}
 if(el.dataset.edit){var d=state.days[Number(el.dataset.idx)],ex=d&&d.ex[Number(el.dataset.ex)];if(!ex)return;var prop=el.dataset.edit;if(prop==='reps')ex.reps=el.value.trim().slice(0,20)||'10-12';else ex[prop]=Math.max(prop==='sets'?1:0,Math.min(prop==='sets'?12:900,Number(el.value)||0));save();return;}
