@@ -41,10 +41,10 @@ Em Visão da franquia → Configurações, altere o nome, subtítulo, logo HTTPS
 ## Prévia temporária no celular
 A prévia abaixo é servida por um proxy público de arquivos GitHub para testes de baixo tráfego, **não é hospedagem de produção**:
 
-- [Aurora Cosméticos (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-white-label-v1/franchise-platform/index.html?rede=aurora)
-- [Viva Pet (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-white-label-v1/franchise-platform/index.html?rede=viva)
+- [Aurora Cosméticos (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-redeos-v1-isolada/franchise-platform/index.html?rede=aurora)
+- [Viva Pet (revendedor)](https://raw.githack.com/Felipebuen89/labella-app/franquias-redeos-v1-isolada/franchise-platform/index.html?rede=viva)
 
 A ligação foi montada a partir da branch pública, mas ainda requer homologação manual no Safari/iPhone. Evite cadastrar dados reais: este é um ambiente fictício que grava no navegador.
 
 ## Testes automatizados
-No GitHub Actions, o fluxo `RedeOS - Validacao do prototipo` valida sintaxe e executa **22 verificações funcionais**: abertura, pedidos, transições de status, recebimento, estoque, baixa, financeiro, campanhas, marca, catálogo, troca e reset de rede. A execução de PR `41223188826` foi concluída com sucesso em 31/10/2026. Esses testes não substituem inspeção visual, homologação iOS/Android ou teste de servidor multiempresa.
+No GitHub Actions, o fluxo `RedeOS - Validacao do prototipo` valida sintaxe e executa **22 verificações funcionais**: abertura, pedidos, transições de status, recebimento, estoque, baixa, financeiro, campanhas, marca, catálogo, troca e reset de rede. A suíte foi validada com sucesso na branch de desenvolvimento em 31/10/2026. O PR isolado deve ter seu próprio resultado de CI conferido antes da publicação. Esses testes não substituem inspeção visual, homologação iOS/Android ou teste de servidor multiempresa.
