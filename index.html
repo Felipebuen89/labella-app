@@ -81,7 +81,7 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 <script>
 (function(){
 'use strict';
-var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null,libraryLimit=40,equipmentFilter='Todos',environmentFilter='Todos',modalityFilter='Todos';
+var KEY='treinolab-v1', state,tab='home',modal=null,expanded=-1,filter='Todos',term='',selectedDay=0,timerLeft=0,timerHandle=null,libraryLimit=40,equipmentFilter='Todos',environmentFilter='Todos',modalityFilter='Todos',incomingPlan=null,incomingCode='',incomingError='';
 var D=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 var DB=[
 ['Supino reto com barra','Peito','academia','🏋','Mantenha os pés apoiados e controle a descida.'],
@@ -367,11 +367,11 @@ return '<div class="panel"><div class="workday"><div class="daynum">'+String(i+1
 }
 function home(){
 if(!state.days.length)return top('Seu plano começa aqui.','Crie um perfil e responda à avaliação para receber um treino compatível com seus objetivos e com o tempo disponível.')+
-'<section class="hero"><span class="eyebrow">Avaliação inicial</span><h2>Treinos personalizados para sua rotina</h2><p>Frequência, duração, experiência, limitações e datas de revisão.</p>'+btn('Gerar treino automático','builder')+' <span style="display:inline-block;margin-top:9px">'+btn('Montar o meu do zero','manualWizard','outline')+'</span></section><div class="panel"><strong>Como funciona</strong><p class="sub">Você responde à avaliação, o sistema sugere séries e repetições e acompanha suas cargas informadas. Ao fim do ciclo, sugere uma reavaliação.</p></div><div class="notice warn">As sugestões são educativas e não substituem avaliação profissional. Para quem tem lipedema, o treino deve ser individualizado com a equipe de saúde.</div>';
+'<section class="hero"><span class="eyebrow">Avaliação inicial</span><h2>Treinos personalizados para sua rotina</h2><p>Frequência, duração, experiência, limitações e datas de revisão.</p>'+btn('Gerar treino automático','builder')+' <span style="display:inline-block;margin-top:9px">'+btn('Montar o meu do zero','manualWizard','outline')+'</span><div style="margin-top:14px">'+btn('Receber treino pelo WhatsApp','receivePaste','small ghost')+'</div></section><div class="panel"><strong>Como funciona</strong><p class="sub">Você responde à avaliação, o sistema sugere séries e repetições e acompanha suas cargas informadas. Ao fim do ciclo, sugere uma reavaliação.</p></div><div class="notice warn">As sugestões são educativas e não substituem avaliação profissional. Para quem tem lipedema, o treino deve ser individualizado com a equipe de saúde.</div>';
 var s=state.settings,i=currentIdx(),d=state.days[i],w=weekStats(),done=w.reduce(function(a,x){return a+x.count;},0),built=state.days.reduce(function(n,day){return n+(day.ex&&day.ex.length?1:0);},0);
 return top('Olá, '+safe((s.name||'atleta').split(' ')[0])+'!','Seu plano de '+s.minutes+' minutos, com progressão e reavaliação programada.')+
 cycleBanner()+
-'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Enviar pelo WhatsApp','sendWhatsapp','small')+' '+btn('Copiar link do treino','copyPlan','small outline')+'</div></div>'+ 
+'<div class="panel"><div class="row spread" style="gap:8px;flex-wrap:wrap"><div><strong>'+(s.mode==='manual'?'Seu treino manual está salvo':'Seu plano está salvo')+'</strong><p class="muted mini" style="margin:5px 0 0">'+built+' de '+state.days.length+' dias com exercícios · salvo neste aparelho</p></div>'+btn('Enviar pelo WhatsApp','sendWhatsapp','small')+' '+btn('Copiar link do treino','copyPlan','small outline')+' '+btn('Receber treino','receivePaste','small ghost')+'</div></div>'+ 
 '<section class="hero"><span class="eyebrow">'+(s.mode==='manual'?'Montado por você':'Seu próximo treino')+'</span><h2>'+safe(d.name)+'</h2><p>'+d.ex.length+' exercícios · '+(d.minutes||s.minutes)+' minutos previstos.</p><div class="chips"><span class="chip">'+safe(s.mode==='manual'?'Treino manual':s.goal)+'</span><span class="chip">'+built+' dia(s) prontos</span>'+(s.lipedema?'<span class="chip">Atenção às limitações</span>':'')+'</div>'+(d.ex.length?'<p class="muted mini" style="margin-bottom:15px">'+d.ex.slice(0,4).map(function(ex){var x=get(ex.id);return x?safe(exerciseName(x)):'';}).filter(Boolean).join(' · ')+'</p>'+btn('▶ Começar treino','start','','data-idx="'+i+'"'):btn('＋ Escolher exercícios','goLibrary',''))+'</section>'+
 stats()+'<div class="sectionhead"><h3>Sua semana</h3><button class="link" data-tab="progress">Ver evolução →</button></div><div class="panel"><div class="row spread"><div><strong>'+done+' de '+s.days+' treinos</strong><p class="muted mini" style="margin-bottom:0">Meta semanal indicativa</p></div><strong style="color:var(--lime);font-size:25px">'+Math.min(100,Math.round(done/s.days*100))+'%</strong></div><div style="height:9px;background:#344135;border-radius:30px;margin-top:15px;overflow:hidden"><div style="width:'+Math.min(100,done/s.days*100)+'%;height:100%;background:var(--lime);border-radius:30px"></div></div></div>'+
 (s.lipedema?'<div class="notice"><strong>Modo cuidado com as pernas:</strong> exercícios de baixo impacto e progressão mais conservadora. Se houver dor que aumente ou inchaço novo, não force e procure avaliação.</div>':'')+
@@ -555,7 +555,7 @@ try {
  document.getElementById('main').innerHTML='<div class="panel" role="alert"><h2>Não foi possível carregar esta tela</h2><p class="sub">Seus treinos permanecem salvos neste navegador. A atualização pode estar incompleta.</p><a class="btn" href="./?atualizar=treinolab-2-1" style="text-decoration:none;display:inline-block">Atualizar TreinoLab</a></div>';
 }
 document.querySelectorAll('[data-tab]').forEach(function(el){el.classList.toggle('active',el.dataset.tab===tab);});
-document.getElementById('modal').innerHTML=modal==='builder'?builder():modal==='manualWizard'?manualWizard():modal==='customExercise'?customExercise():modal==='session'?session():modal==='profiles'?profiles():modal&&modal.type==='details'?details():'';
+document.getElementById('modal').innerHTML=modal==='builder'?builder():modal==='manualWizard'?manualWizard():modal==='customExercise'?customExercise():modal==='receivePreview'?receivePreviewDialog():modal==='receivePaste'?receivePasteDialog():modal==='session'?session():modal==='profiles'?profiles():modal&&modal.type==='details'?details():'';
 document.body.style.overflow=modal?'hidden':'';
 }
 function openSession(i){
@@ -603,8 +603,8 @@ function decodeSharePayload(code){
 function createShareLink(){
  var p=compactSharePlan();
  var host=window.location.origin+window.location.pathname;
- var url=host+'#plano='+encodeSharePayload(p);
- if(url.length>18000)throw Error('Plano muito grande para compartilhar por link. Use Exportar backup.');
+ var url=host+'?plano='+encodeSharePayload(p);
+ if(url.length>12000)throw Error('Este treino é grande demais para um link. Use Exportar backup e envie o arquivo JSON para importar no outro celular.');
  return url;
 }
 function sharePlan(){
@@ -658,41 +658,92 @@ function validateIncomingShare(p){
  if(!days.some(function(day){return day.ex.length;}))throw Error('Plano compartilhado sem exercícios.');
  return {start:start,weeks:weeks,minutes:minutes,days:days,custom:customs};
 }
+function readPlanCode(input){
+ var text=String(input||'').trim();
+ if(!text)throw Error('Cole o link completo recebido pelo WhatsApp.');
+ var match=text.match(/[?#&]plano=([A-Za-z0-9_-]{20,18000})/);
+ if(!match){try{match=decodeURIComponent(text).match(/[?#&]plano=([A-Za-z0-9_-]{20,18000})/);}catch(e){}}
+ if(!match)throw Error('O endereço não contém um treino. Peça ao remetente para usar “Enviar pelo WhatsApp”, não o link normal do aplicativo.');
+ return match[1];
+}
+function previewSharedPlan(code){
+ var plan=validateIncomingShare(decodeSharePayload(code));
+ incomingPlan=plan;incomingCode=code;incomingError='';
+ modal='receivePreview';tab='home';
+ return true;
+}
 function importSharedPlanFromUrl(){
- var hash=String(window.location.hash||'');
- if(!hash.startsWith('#plano='))return false;
- var plan;
- try{plan=validateIncomingShare(decodeSharePayload(hash.slice(7)));}
- catch(e){alert('Não foi possível abrir o treino compartilhado: '+e.message);return false;}
- if(state.days.length&&!confirm('Você recebeu um treino pronto. Deseja substituir o plano deste perfil? O plano atual ficará no histórico de ciclos e os treinos realizados serão preservados.'))return false;
+ var code='';
+ try{
+  if(window.location.search)code=new URLSearchParams(window.location.search).get('plano')||'';
+  if(!code&&String(window.location.hash||'').startsWith('#plano='))code=window.location.hash.slice(7);
+  if(!code)return false;
+  return previewSharedPlan(code);
+ }catch(e){
+  incomingError=e.message;modal='receivePaste';tab='home';
+  return false;
+ }
+}
+function receivePreviewDialog(){
+ var p=incomingPlan;
+ if(!p)return '';
+ var count=p.days.reduce(function(total,day){return total+day.ex.length;},0);
+ return '<div class="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="Receber treino">'+
+ '<span class="eyebrow">Treino recebido pelo link</span><h2>Treino encontrado!</h2>'+
+ '<div class="panel"><strong>'+p.days.length+' dias · '+count+' exercícios</strong>'+
+ '<p class="muted mini">Sessões de '+p.minutes+' minutos, ciclo de '+p.weeks+' semanas.</p>'+
+ p.days.map(function(day,i){return '<p class="mini"><strong>'+safe(day.name)+'</strong> — '+day.ex.length+' exercícios</p>';}).join('')+'</div>'+
+ (state.days.length?'<div class="notice warn">Existe um plano neste perfil. Salvar o recebido substituirá os dias atuais, mas guardará uma cópia no histórico de ciclos. Seus treinos já concluídos serão mantidos.</div>':'')+
+ '<div class="notice warn">Antes de começar, confirme se os exercícios e cargas são adequados à sua condição de saúde. O link não inclui suas restrições clínicas.</div>'+
+ '<button class="btn full" data-action="acceptShared">Salvar no meu celular e ir para início</button>'+
+ '<button class="btn ghost full" data-action="close" style="margin-top:10px">Agora não</button></div></div>';
+}
+function receivePasteDialog(){
+ return '<div class="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="Colar link de treino">'+
+ '<div class="row spread"><span class="eyebrow">Receber treino</span><button class="btn ghost small" data-action="close">Fechar ×</button></div>'+
+ '<h2>Importar treino pelo WhatsApp</h2>'+
+ '<p class="sub">Cole aqui a mensagem ou o link personalizado enviado para você. O endereço simples do aplicativo não contém os exercícios.</p>'+
+ (incomingError?'<div class="notice warn">'+safe(incomingError)+'</div>':'')+
+ '<form id="receiveLinkForm"><div class="field"><label for="receivedPlanLink">Link personalizado</label>'+
+ '<textarea id="receivedPlanLink" rows="4" style="width:100%;resize:vertical;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px" placeholder="https://felipebuen89.github.io/labella-app/?plano=..."></textarea></div>'+
+ '<button type="submit" class="btn full" style="margin-top:12px">Ver os exercícios recebidos</button></form></div></div>';
+}
+function clearShareLink(){
+ if(window.history&&window.history.replaceState){
+  var url=new URL(window.location.href);url.searchParams.delete('plano');
+  if(url.hash.startsWith('#plano='))url.hash='';
+  window.history.replaceState(null,'',url.pathname+(url.searchParams.toString()?'?'+url.searchParams.toString():'')+url.hash);
+ }
+}
+function acceptSharedPlan(){
+ var plan=incomingPlan;if(!plan)return;
  if(state.days.length){
   state.cycles=state.cycles||[];
   state.cycles.push({cycle:state.cycle||1,start:state.settings.start,end:endDate(),days:JSON.parse(JSON.stringify(state.days)),settings:Object.assign({},state.settings)});
   state.cycles=state.cycles.slice(-12);
   state.cycle=(Number(state.cycle)||1)+1;
  }
- state.customExercises=state.customExercises||[];
- /* Evita colisão de IDs locais de exercícios próprios. */
+ var previousCustom=state.customExercises||[];
  var replacements=new Map();
  plan.custom.forEach(function(x){
-   var prev=state.customExercises.find(function(y){return y.id===x.id;});
-   if(prev&&prev.n===x.n)return;
-   if(prev){
-     var old=x.id,id=Date.now();while(DB.some(function(q){return q.id===id;})||state.customExercises.some(function(q){return q.id===id;})||plan.custom.some(function(q){return q!==x&&q.id===id;}))id++;
-     x.id=id;replacements.set(old,id);
-   }
-   state.customExercises.push(x);
+  var exists=previousCustom.find(function(y){return y.id===x.id;});
+  if(exists&&exists.n===x.n)return;
+  if(exists){
+   var oldId=x.id,newId=Date.now();
+   while(DB.some(function(q){return q.id===newId;})||previousCustom.some(function(q){return q.id===newId;})||plan.custom.some(function(q){return q!==x&&q.id===newId;}))newId++;
+   x.id=newId;replacements.set(oldId,newId);
+  }
+  previousCustom.push(x);
  });
- plan.days.forEach(function(day){day.ex.forEach(function(ex){if(replacements.has(ex.id))ex.id=replacements.get(ex.id);});});
+ plan.days.forEach(function(d){d.ex.forEach(function(e){if(replacements.has(e.id))e.id=replacements.get(e.id);});});
+ state.customExercises=previousCustom;
  state.settings=Object.assign({},state.settings,{mode:'manual',goal:'Treino compartilhado',days:plan.days.length,minutes:plan.minutes,start:plan.start,weeks:plan.weeks});
- state.days=plan.days;
- delete state.active;
- selectedDay=0;tab='home';modal=null;
- save();
- if(window.history&&window.history.replaceState)window.history.replaceState(null,'',window.location.pathname+window.location.search);
- alert('Treino recebido e salvo! Ele já está na tela inicial, pronto para começar. Confira os exercícios e suas limitações antes de treinar.');
- return true;
+ state.days=plan.days;delete state.active;
+ selectedDay=0;tab='home';modal=null;incomingPlan=null;incomingCode='';incomingError='';
+ save();clearShareLink();render();
+ alert('Treino recebido e salvo no seu celular! Confira os exercícios e depois use “Começar treino”.');
 }
+
 
 function download(){
 var blob=new Blob([JSON.stringify({app:'TreinoLab',version:1,data:state},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='treinolab-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
@@ -725,6 +776,8 @@ else if(a==='goHome'){modal=null;tab='home';render();window.scrollTo(0,0);}
 else if(a==='goLibrary'){tab='library';render();}
 else if(a==='sharePlan'){sharePlan();}
 else if(a==='sendWhatsapp'){sendPlanWhatsapp();}
+else if(a==='receivePaste'){incomingError='';modal='receivePaste';render();}
+else if(a==='acceptShared'){acceptSharedPlan();}
 else if(a==='copyPlan'){copyPlanLink();}
 else if(a==='manualWizard'){modal='manualWizard';render();}
 else if(a==='customExercise'){modal='customExercise';render();}
@@ -757,6 +810,9 @@ else if(a==='export'){download();}
 else if(a==='import'){document.getElementById('importFile').click();}
 });
 document.addEventListener('submit',function(ev){
+if(ev.target.id==='receiveLinkForm'){
+ ev.preventDefault();try{previewSharedPlan(readPlanCode(document.getElementById('receivedPlanLink').value));}catch(e){incomingError=e.message;modal='receivePaste';}render();return;
+}
 if(ev.target.id==='manualForm'){
  ev.preventDefault();
  var v=function(id){return document.getElementById(id).value;};
@@ -830,6 +886,8 @@ if(el.id==='importFile'){importBackup(el.files&&el.files[0]);}
 });
 window.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&modal){modal=null;render();}});
 load();importSharedPlanFromUrl();render();
+window.addEventListener('hashchange',function(){if(importSharedPlanFromUrl())render();});
+window.addEventListener('popstate',function(){if(importSharedPlanFromUrl())render();});
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js?v=4').catch(function(){});});}
 })();
 </script>
