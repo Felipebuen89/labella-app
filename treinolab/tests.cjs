@@ -13,7 +13,7 @@ function input(w,d,id,value){const e=d.getElementById(id);assert.ok(e,id);e.valu
 function state(a,id='p1'){return JSON.parse(a.w.localStorage.getItem('treinolab-v1-'+id));}
 function form(a,settings={}){
  click(a.d,'[data-action="builder"]');
- let defaults={personName:'Pessoa de teste',age:33,weight:76,height:170,sex:'Feminino',goal:'Condicionamento',level:'Iniciante',days:3,minutes:30,equip:'academia',start:'2026-11-02',weeks:6,lipedema:'false',pain:0,cleared:'sim'};
+ let defaults={personName:'Pessoa de teste',age:33,weight:76,height:170,sex:'Feminino',goal:'Condicionamento',level:'Iniciante',days:3,minutes:30,equip:'academia',start:'2026-11-02',weeks:6,lipedema:'false',pain:0,cleared:'sim',redFlags:'nao'};
  for(const [id,value] of Object.entries({...defaults,...settings}))input(a.w,a.d,id,value);
  a.d.getElementById('builderForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
 }
@@ -44,7 +44,7 @@ test('Lipedema: plano de baixo impacto e limite de duração',()=>{
 test('Dor elevada e sinais de alerta bloqueiam geração',()=>{
  const a=open();
  click(a.d,'[data-action="builder"]');
- a.d.getElementById('redFlags').checked=true;
+ input(a.w,a.d,'redFlags','sim');
  a.d.getElementById('builderForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
  assert.equal(state(a).days.length,0);assert.ok(a.alerts.some(m=>m.includes('alerta')));
  a.close();
@@ -101,4 +101,31 @@ test('O renderizador inclui proteção contra falha e não apaga dados armazenad
  assert.match(source,/TreinoLab: erro ao montar a tela/);
  assert.match(source,/Seus treinos permanecem salvos/);
  assert.match(source,/try \{\s*document\.getElementById\('main'\)\.innerHTML/);
+});
+
+test('Sinais de alerta têm resposta explícita, sem checkbox confuso',()=>{
+ const a=open();
+ click(a.d,'[data-action="builder"]');
+ const flag=a.d.getElementById('redFlags');
+ assert.equal(flag.tagName,'SELECT');
+ assert.equal(flag.value,'');
+ assert.equal(flag.required,true);
+ assert.match(flag.textContent,/NÃO — nenhum desses sinais de alerta/);
+ assert.match(flag.textContent,/SIM — tenho pelo menos um desses sintomas/);
+ a.d.getElementById('builderForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
+ assert.equal(state(a).days.length,0);
+ assert.ok(a.alerts.some(m=>m.includes('Responda')));
+ a.close();
+});
+test('Juliana com lipedema, dor leve e SEM sinais de alerta pode gerar um plano',()=>{
+ const a=open();
+ form(a,{personName:'Juliana',sex:'Feminino',age:36,weight:52,height:153,goal:'Hipertrofia',lipedema:'true',pain:2,cleared:'sim',days:4,minutes:45,redFlags:'nao'});
+ const s=state(a);
+ assert.equal(s.settings.name,'Juliana');
+ assert.equal(s.settings.redFlags,false);
+ assert.equal(s.settings.lipedema,true);
+ assert.equal(s.days.length,4);
+ assert.equal(a.alerts.filter(m=>m.includes('alerta')).length,0);
+ assert.deepEqual(a.errors,[]);
+ a.close();
 });
