@@ -8,6 +8,8 @@ window.FRANCHISE_BRAND = Object.freeze({
   supportEmail: "",
   logoUrl: "",
   primaryColor: "#CBA66A",
+  pricing: {minMultiplier: 1},
+  pushPublicKey: "",
   catalog: [
     {id:"demo-001",name:"Produto Essencial",category:"Linha Premium",cost:32,retail:79.9},
     {id:"demo-002",name:"Kit Presente",category:"Kits e Combos",cost:48,retail:119.9},
