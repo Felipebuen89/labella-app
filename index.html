@@ -120,6 +120,84 @@ state={settings:defaults(),days:[],sessions:[],created:today(),cycle:1};
 save();
 }
 
+
+var REG='treinolab-profiles-v2',activeId='p1',registry=null;
+const SOURCES=[['ACSM 2026','https://acsm.org/resistance-training-guidelines-update-2026/'],['OMS','https://www.who.int/initiatives/behealthy/physical-activity/'],['Lipedema S2k 2024','https://doi.org/10.1111/ddg.15513'],['Lipedema consenso','https://pmc.ncbi.nlm.nih.gov/articles/PMC8652358/']];
+[
+['Caminhada leve','Cardio','ambos','🚶','Caminhe suavemente e reduza ritmo se houver dor.'],
+['Bicicleta ergométrica leve','Cardio','ambos','🚴','Ajuste o banco e pedale em ritmo confortável.'],
+['Hidroginástica','Cardio','ambos','🌊','Se tiver acesso a piscina, procure aula supervisionada.'],
+['Elíptico suave','Cardio','academia','🚶','Escolha uma resistência leve e sem desconforto.'],
+['Mobilidade de tornozelos','Core','ambos','🦶','Mova tornozelos devagar em amplitude confortável.'],
+['Elevação de panturrilha sentada','Pernas','ambos','🦵','Eleve calcanhares de forma suave, sem dor.'],
+['Sentar e levantar da cadeira','Pernas','ambos','🪑','Use cadeira estável e amplitude confortável.'],
+['Remada com elástico','Costas','casa','💪','Fixe o elástico em apoio seguro.'],
+['Supino na parede','Peito','casa','💪','Flexione os braços apoiando as mãos na parede.'],
+['Rosca com elástico','Bíceps','casa','💪','Cotovelos próximos do corpo.']
+].forEach(function(a){DB.push({id:DB.length,n:a[0],g:a[1],e:a[2],ico:a[3],tip:a[4]});});
+var acePages={'Agachamento livre':'https://www.acefitness.org/resources/everyone/exercise-library/135/bodyweight-squat/','Ponte de glúteos':'https://www.acefitness.org/resources/everyone/exercise-library/49/glute-bridge/','Prancha':'https://www.acefitness.org/resources/everyone/exercise-library/32/front-plank/'};
+function defaults(){return {name:'',sex:'Prefiro não informar',age:30,weight:'',height:'',goal:'Hipertrofia',level:'Iniciante',days:3,minutes:45,equip:'academia',lipedema:false,pain:0,restrictions:'',cleared:'nao_sei',redFlags:false,start:today(),weeks:6};}
+function addDays(start,days){var p=String(start).split('-').map(Number);if(p.length!==3||p.some(function(n){return !Number.isFinite(n);}))return today();return today(new Date(p[0],p[1]-1,p[2]+days));}
+function endDate(){var s=state.settings||{};return addDays(s.start||today(),(Number(s.weeks)||6)*7-1);}
+function daysUntilEnd(){var a=endDate().split('-').map(Number),b=today().split('-').map(Number);return Math.ceil((new Date(a[0],a[1]-1,a[2])-new Date(b[0],b[1]-1,b[2]))/86400000);}
+function videoUrl(x){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(x.n+' execução correta fisioterapeuta professor educação física');}
+function imageUrl(x){return acePages[x.n]||'https://www.acefitness.org/resources/everyone/exercise-library/';}
+function demos(x){return '<div class="row" style="margin-top:9px;flex-wrap:wrap"><a class="btn small outline" target="_blank" rel="noopener noreferrer" href="'+safe(videoUrl(x))+'">▶ Ver vídeos</a><a class="btn small ghost" target="_blank" rel="noopener noreferrer" href="'+safe(imageUrl(x))+'">▧ Fotos e técnica</a></div>';}
+function patterns(n){
+if(n===2)return [['A · Corpo todo','Pernas','Peito','Costas','Glúteos','Core'],['B · Corpo todo','Glúteos','Costas','Peito','Pernas','Ombros']];
+if(n===3)return [['A · Corpo todo','Pernas','Peito','Costas','Core','Glúteos'],['B · Corpo todo','Glúteos','Costas','Ombros','Pernas','Peito'],['C · Corpo todo','Pernas','Peito','Costas','Glúteos','Core']];
+if(n===4)return [['A · Superior','Peito','Costas','Ombros','Bíceps','Tríceps'],['B · Inferior','Pernas','Glúteos','Pernas','Core'],['C · Superior','Costas','Peito','Bíceps','Ombros','Tríceps'],['D · Inferior','Glúteos','Pernas','Glúteos','Core']];
+if(n===5)return [['A · Corpo todo','Pernas','Peito','Costas','Glúteos'],['B · Superior','Peito','Costas','Ombros','Bíceps'],['C · Inferior','Pernas','Glúteos','Pernas','Core'],['D · Superior','Costas','Peito','Tríceps','Ombros'],['E · Inferior','Glúteos','Pernas','Core','Pernas']];
+return [['A · Empurrar','Peito','Ombros','Tríceps','Peito'],['B · Puxar','Costas','Bíceps','Costas','Core'],['C · Inferior','Pernas','Glúteos','Pernas','Core'],['D · Empurrar','Ombros','Peito','Tríceps','Peito'],['E · Puxar','Costas','Bíceps','Costas','Core'],['F · Inferior','Glúteos','Pernas','Pernas','Core']];
+}
+function planFor(arg,level,days,equip){
+ var p=typeof arg==='object'?arg:Object.assign(defaults(),{goal:arg,level:level,days:days,equip:equip});
+ var lip=Boolean(p.lipedema),severe=lip&&Number(p.pain)>4,n=Number(p.days)||3,min=Number(p.minutes)||45;
+ var sets=(lip||p.level==='Iniciante')?2:3;
+ var reps=lip?'10-15':p.goal==='Força'?'6-10':p.goal==='Condicionamento'?'12-15':'8-12';
+ var cardio=lip||p.goal==='Emagrecimento'||p.goal==='Condicionamento';
+ var cmin=cardio?(min<=25?5:min<=40?8:min<=60?12:15):0;
+ var warm=min<30?4:5,cool=3,maxSlots=Math.max(2,Math.min(7,Math.floor((min-warm-cool-cmin)/(sets===2?5.5:7))));
+ return patterns(n).map(function(pat,i){
+  var chosen=[],used=[],cycle=Number(state&&state.cycle)||1;
+  pat.slice(1).concat(pat.slice(1)).forEach(function(g,j){
+   if(chosen.length>=maxSlots)return;
+   if(severe&&g==='Pernas'&&chosen.some(function(o){return get(o.id).g==='Pernas';}))return;
+   var pool=DB.filter(function(x){return x.g===g&&(x.e===p.equip||x.e==='ambos')&&(!lip||!/Afundo|Polichinelo|Subida em degrau|Agachamento sumô/.test(x.n));});
+   if(lip&&g==='Pernas')pool.sort(function(x,y){return Number(/Sentar e levantar|panturrilha sentada|Leg press/.test(y.n))-Number(/Sentar e levantar|panturrilha sentada|Leg press/.test(x.n));});
+   if(!pool.length)return;
+   var k=(i+j+cycle-1)%pool.length,x=pool[k],tries=0;
+   while(used.includes(x.id)&&tries<pool.length){x=pool[(k+ ++tries)%pool.length];}
+   if(used.includes(x.id))return;
+   used.push(x.id);
+   chosen.push({id:x.id,sets:sets,reps:g==='Core'?'20-30 s':reps,rest:lip?75:p.goal==='Força'?120:75,weight:'',rir:lip?4:p.level==='Iniciante'?3:2});
+  });
+  if(cardio){
+    var priority=lip?['Bicicleta ergométrica leve','Caminhada leve','Hidroginástica','Elíptico suave']:['Bicicleta ergométrica','Caminhada rápida','Esteira','Caminhada leve'];
+    var x=priority.map(function(name){return DB.find(function(q){return q.n===name&&(q.e===p.equip||q.e==='ambos');});}).find(Boolean);
+    if(x)chosen.push({id:x.id,sets:1,reps:cmin+' min',rest:0,weight:'',rir:4});
+  }
+  return {name:'Treino '+pat[0],ex:chosen,minutes:min,warmup:warm,cooldown:cool,cardioMinutes:cmin};
+ });
+}
+function loadAdvice(id){
+ var x=get(id);if(!x)return '';
+ if(x.g==='Cardio')return 'Ritmo confortável. Durante o exercício deve conseguir conversar.';
+ var recent=(state.sessions||[]).slice().reverse().flatMap(function(s){return s.exercises||[];}).filter(function(e){return e.id===id&&e.done&&Number(e.weight)>0;});
+ if(!recent.length)return 'Primeira vez: comece com carga leve ou peso corporal, suficiente para fazer as repetições com técnica e 3–4 repetições de reserva. Peso, altura e sexo não permitem calcular carga segura.';
+ var last=recent[0],w=Number(last.weight),rir=Number(last.actualRir),pain=Number(last.pain||0);
+ if(pain>3)return 'Dor relatada: não aumente carga. Reduza ou interrompa e busque orientação se persistir.';
+ if(last.actualRir!==''&&last.actualRir!=null&&rir<=1)return 'O esforço foi alto. Mantenha ou reduza a carga para priorizar boa técnica.';
+ var upper=Number(String(last.reps||'12').split('-').pop())||12,prev=recent[1];
+ if(prev&&Number(prev.weight)===w&&Number(prev.actualReps)>=upper&&Number(last.actualReps)>=upper&&Number(last.actualRir)>=3&&Number(prev.actualRir)>=3)return 'Se estiver sem dor, experimente 2–5% a mais (aproximadamente '+(w*1.02).toFixed(1)+' a '+(w*1.05).toFixed(1)+' kg); ajuste apenas se a técnica permitir.';
+ return 'Última carga: '+w+' kg. Mantenha até completar as repetições com controle, deixando 2–4 de reserva.';
+}
+function cycleBanner(){
+ if(!(state.days||[]).length)return '';
+ var s=state.settings,left=daysUntilEnd();
+ return '<div class="panel"><div class="row spread"><div><span class="eyebrow">Ciclo '+(state.cycle||1)+'</span><h3 style="margin:6px 0">'+fmtDate(s.start)+' → '+fmtDate(endDate())+'</h3><span class="muted mini">'+s.days+' dias/semana · '+s.minutes+' min/sessão · '+(left>=0?left+' dias até revisão':'Revisão vencida há '+(-left)+' dias')+'</span></div>'+btn(left<0?'Reavaliar':'Editar','builder','small outline')+'</div>'+(left<=7?'<div class="notice '+(left<0?'warn':'')+'" style="margin-top:12px">Revisão recomendada: avalie frequência, execução, recuperação e dor antes de iniciar outro ciclo.</div>':'')+'</div>';
+}
+
 function num(n){return new Intl.NumberFormat('pt-BR').format(n);}
 function weekStats(){
 var now=new Date(),w=[];
