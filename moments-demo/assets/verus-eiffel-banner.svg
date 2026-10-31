@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 930" role="img" aria-label="Perfume Verus diante da Torre Eiffel dourada">
+<defs>
+<radialGradient id="bg"><stop stop-color="#6c3f14"/><stop offset=".45" stop-color="#22180f"/><stop offset="1" stop-color="#09090a"/></radialGradient>
+<linearGradient id="gold" x2="1" y2=".4"><stop stop-color="#5d340d"/><stop offset=".22" stop-color="#ebc57b"/><stop offset=".45" stop-color="#9d651e"/><stop offset=".7" stop-color="#ffe6aa"/><stop offset="1" stop-color="#663810"/></linearGradient>
+<linearGradient id="glass"><stop stop-color="#100e0d"/><stop offset=".19" stop-color="#45270a"/><stop offset=".37" stop-color="#140d09"/><stop offset=".75" stop-color="#2b1d0c"/><stop offset="1" stop-color="#0a0908"/></linearGradient>
+<linearGradient id="glass2" x2=".8" y2="1"><stop stop-color="#fff4cf" stop-opacity=".9"/><stop offset=".3" stop-color="#ad7741" stop-opacity=".3"/><stop offset=".8" stop-color="#a15b12" stop-opacity=".4"/><stop offset="1" stop-color="#ffe2ac" stop-opacity=".9"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="15"/></filter>
+<filter id="shadow"><feGaussianBlur stdDeviation="12"/></filter>
+<pattern id="lights" width="18" height="25" patternUnits="userSpaceOnUse"><circle cx="9" cy="12" r="1.4" fill="#ffd486" opacity=".85"/></pattern>
+</defs>
+<rect width="760" height="930" fill="url(#bg)"/>
+<ellipse cx="535" cy="670" rx="210" ry="400" fill="#ef981d" opacity=".11" filter="url(#glow)"/>
+<g opacity=".8" transform="translate(475,85)">
+<path d="M142 6 113 170 86 330 45 510 0 690h294l-45-180-41-180-27-160L152 6Z" fill="#9a651e" opacity=".15"/>
+<path d="M142 6 113 170 86 330 45 510 0 690 M142 6 181 170 208 330 249 510 294 690" fill="none" stroke="url(#gold)" stroke-width="10"/>
+<path d="M100 280h100 M82 361h145 M57 492h185 M20 620h254 M0 690h294" stroke="url(#gold)" stroke-width="14"/>
+<path d="M113 170h68 M86 330h122 M45 510h204" stroke="#eed399" stroke-width="5"/>
+<path d="M107 230 208 330M181 170 86 330M86 330l163 180M208 330 45 510M45 510l249 180M249 510 0 690" stroke="#cf9b48" stroke-width="4"/>
+<path d="M142 6v-46 M142-40h17" stroke="#e7bf72" stroke-width="8"/>
+<rect x="45" y="340" width="210" height="340" fill="url(#lights)" opacity=".4"/>
+</g>
+<path d="M0 783c220-35 505-39 760-4v151H0Z" fill="#0e0d0c"/>
+<ellipse cx="375" cy="791" rx="274" ry="38" fill="#b36c1a" opacity=".26" filter="url(#shadow)"/>
+<g transform="translate(85,183)">
+<path d="M132 35 169 13h190l37 22-18 45H150Z" fill="url(#glass2)" stroke="#f1d39b" stroke-width="7"/>
+<path d="M188 70v61h150V70" fill="#986a26" stroke="url(#gold)" stroke-width="9"/>
+<rect x="201" y="73" width="124" height="57" rx="6" fill="#342211" stroke="#ecc98c" stroke-width="5"/>
+<path d="M118 133q-37 19-46 68L46 455q-4 75 35 114h377q39-39 35-114l-26-254q-9-49-46-68Z" fill="url(#glass)" stroke="url(#gold)" stroke-width="9"/>
+<path d="M116 141 83 221l-26 242 31 103 34-30 9-327Z M422 141l33 80 26 242-31 103-34-30-9-327Z" fill="url(#glass2)" opacity=".72"/>
+<path d="M125 150q155-37 288 0l18 377q-151 40-326 0Z" fill="#0c0b0a" opacity=".72" stroke="#98661f" stroke-width="4"/>
+<path d="M124 537q158 30 296 0" fill="none" stroke="#ffd79a" stroke-width="5"/>
+<path d="M118 580h306" stroke="url(#gold)" stroke-width="17"/>
+<text x="270" y="318" text-anchor="middle" font-family="Georgia,serif" font-size="27" fill="#f0c880" letter-spacing="4">MOMENTS</text>
+<text x="270" y="344" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#e8b965" letter-spacing="7">PARIS</text>
+<path d="M269 247v48m-11-33h22l-17 20h14" fill="none" stroke="#e8c17b" stroke-width="4"/>
+<text x="270" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="76" fill="url(#gold)" letter-spacing="4">VERUS</text>
+<path d="M205 450h130" stroke="url(#gold)" stroke-width="3"/>
+<text x="270" y="485" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#d5af65">75 ml</text>
+</g>
+<path d="M5 795c245-25 470-22 750 0" stroke="#c28b45" stroke-opacity=".35" stroke-width="4" filter="url(#glow)"/>
+</svg>
