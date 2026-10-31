@@ -1,0 +1,28 @@
+name: RedeOS - teste da demonstracao white-label
+on:
+  push:
+    branches: [redeos-franquias-v1]
+    paths:
+      - "franchise-platform/**"
+      - ".github/workflows/redeos-white-label-ci.yml"
+  pull_request:
+    paths:
+      - "franchise-platform/**"
+      - ".github/workflows/redeos-white-label-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Testar sintaxe e fluxos comerciais em DOM simulado
+        working-directory: franchise-platform
+        run: |
+          node --check app.js
+          node --check data.js
+          npm test
