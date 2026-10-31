@@ -129,3 +129,87 @@ test('Juliana com lipedema, dor leve e SEM sinais de alerta pode gerar um plano'
  assert.deepEqual(a.errors,[]);
  a.close();
 });
+
+
+function manual(a,opts={}){
+ click(a.d,'[data-action="manualWizard"]');
+ let v={manName:'Paula',manDays:4,manMinutes:45,manStart:'2026-11-01',manWeeks:6,manLipedema:'false',manCleared:'sim',manAlert:'nao',...opts};
+ for(const [k,value] of Object.entries(v))input(a.w,a.d,k,value);
+ a.d.getElementById('manAcknowledge').checked=true;
+ a.d.getElementById('manualForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
+}
+test('Catálogo supera 400 variações e cobre todos os membros',()=>{
+ const a=open();
+ click(a.d,'[data-tab="library"]');
+ const txt=a.d.getElementById('libResults').textContent;
+ assert.match(txt,/414/);
+ const groups=['Quadríceps','Posterior de coxa','Adutores','Abdutores','Panturrilhas','Tibial anterior','Antebraços','Peito','Costas','Ombros','Core','Mobilidade'];
+ const opts=Array.from(a.d.getElementById('muscleFilter').options).map(e=>e.value);
+ for(const g of groups)assert.ok(opts.includes(g),'faltou '+g);
+ assert.ok(a.d.querySelector('[data-action="showMore"]'));
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Treino livre cria dias vazios, e permite escolher exercícios por grupo',()=>{
+ const a=open();
+ manual(a,{manName:'Maria',manDays:3,manMinutes:30});
+ let p=state(a);
+ assert.equal(p.settings.mode,'manual');assert.equal(p.days.length,3);assert.ok(p.days.every(d=>d.ex.length===0));
+ assert.match(a.d.getElementById('main').textContent,/Biblioteca completa/);
+ input(a.w,a.d,'muscleFilter','Quadríceps');
+ assert.match(a.d.getElementById('libResults').textContent,/agachamento/i);
+ const btn=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');
+ assert.ok(btn);btn.click();
+ p=state(a);assert.equal(p.days[0].ex.length,1);
+ assert.equal(p.days[0].minutes,30);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Montagem própria permite reorganizar, renomear, editar e salvar treino',()=>{
+ const a=open();manual(a);
+ const first=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');first.click();
+ const next=a.d.querySelector('#libResults [data-action="add"]:not([disabled])');next.click();
+ const start=state(a).days[0].ex.map(x=>x.id);assert.equal(start.length,2);
+ click(a.d,'[data-tab="plan"]');
+ click(a.d,'[data-action="expand"][data-idx="0"]');
+ click(a.d,'[data-action="moveExercise"][data-dir="1"][data-idx="0"][data-ex="0"]');
+ assert.deepEqual(state(a).days[0].ex.map(x=>x.id),start.slice().reverse());
+ const inputName=a.d.querySelector('[data-day-name="0"]');inputName.value='Treino costas e braços';inputName.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+ const inputSets=a.d.querySelector('[data-edit="sets"][data-idx="0"][data-ex="0"]');inputSets.value='4';inputSets.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+ assert.equal(state(a).days[0].name,'Treino costas e braços');
+ assert.equal(state(a).days[0].ex[0].sets,4);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('É possível registrar exercício pessoal e escolher no treino',()=>{
+ const a=open();manual(a);
+ click(a.d,'[data-action="customExercise"]');
+ input(a.w,a.d,'customName','Remada especial personalizada');
+ input(a.w,a.d,'customGroup','Costas');
+ input(a.w,a.d,'customEnvironment','casa');
+ input(a.w,a.d,'customMaterial','Elástico');
+ a.d.getElementById('customExerciseForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
+ assert.equal(state(a).customExercises.length,1);
+ assert.match(a.d.getElementById('libResults').textContent,/Remada especial personalizada/);
+ click(a.d,'#libResults [data-action="add"]:not([disabled])');
+ assert.equal(state(a).days[0].ex[0].id,state(a).customExercises[0].id);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Sinais de alerta bloqueiam também montagem manual',()=>{
+ const a=open();click(a.d,'[data-action="manualWizard"]');
+ input(a.w,a.d,'manName','Maria');
+ input(a.w,a.d,'manAlert','sim');
+ a.d.getElementById('manAcknowledge').checked=true;
+ a.d.getElementById('manualForm').dispatchEvent(new a.w.Event('submit',{bubbles:true,cancelable:true}));
+ assert.equal(state(a).days.length,0);
+ assert.ok(a.alerts.some(m=>/alerta/i.test(m)));
+ a.close();
+});
+test('Sem exercício, iniciar treino não inicia sessão',()=>{
+ const a=open();manual(a);
+ click(a.d,'[data-tab="plan"]');
+ assert.ok(a.d.querySelector('[data-action="start"][disabled]'));
+ assert.equal(state(a).active,undefined);
+ a.close();
+});
