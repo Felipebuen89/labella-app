@@ -136,7 +136,7 @@ const SOURCES=[['ACSM 2026','https://acsm.org/resistance-training-guidelines-upd
 ['Rosca com elástico','Bíceps','casa','💪','Cotovelos próximos do corpo.']
 ].forEach(function(a){DB.push({id:DB.length,n:a[0],g:a[1],e:a[2],ico:a[3],tip:a[4]});});
 var acePages={'Agachamento livre':'https://www.acefitness.org/resources/everyone/exercise-library/135/bodyweight-squat/','Ponte de glúteos':'https://www.acefitness.org/resources/everyone/exercise-library/49/glute-bridge/','Prancha':'https://www.acefitness.org/resources/everyone/exercise-library/32/front-plank/'};
-function defaults(){return {name:'',sex:'Prefiro não informar',age:30,weight:'',height:'',goal:'Hipertrofia',level:'Iniciante',days:3,minutes:45,equip:'academia',lipedema:false,pain:0,restrictions:'',cleared:'nao_sei',redFlags:false,start:today(),weeks:6};}
+function defaults(){return {name:'',sex:'Prefiro não informar',age:'',weight:'',height:'',goal:'Hipertrofia',level:'Iniciante',days:3,minutes:45,equip:'academia',lipedema:false,pain:0,restrictions:'',cleared:'nao_sei',redFlags:false,start:today(),weeks:6};}
 function addDays(start,days){var p=String(start).split('-').map(Number);if(p.length!==3||p.some(function(n){return !Number.isFinite(n);}))return today();return today(new Date(p[0],p[1]-1,p[2]+days));}
 function endDate(){var s=state.settings||{};return addDays(s.start||today(),(Number(s.weeks)||6)*7-1);}
 function daysUntilEnd(){var a=endDate().split('-').map(Number),b=today().split('-').map(Number);return Math.ceil((new Date(a[0],a[1]-1,a[2])-new Date(b[0],b[1]-1,b[2]))/86400000);}
@@ -257,6 +257,7 @@ var sessions=state.sessions.slice().reverse().slice(0,20);
 return top('Sua evolução','Constância primeiro. Acompanhe o que você realmente concluiu.')+
 stats()+'<div class="sectionhead"><h3>Últimos 7 dias</h3></div><div class="panel"><div class="barrow">'+w.map(function(x){return '<div class="barcol"><div title="'+x.count+' treino(s)" class="bar '+(x.count?'on':'')+'" style="height:'+Math.max(5,x.count/max*80)+'px"></div><span>'+x.name+'</span></div>';}).join('')+'</div></div>'+
 '<div class="sectionhead"><h3>Histórico</h3></div><div class="panel">'+(sessions.length?sessions.map(function(x){return '<div class="history"><div><strong class="mini">'+safe(x.name)+'</strong><div class="muted mini">'+fmtDate(x.date)+' · '+x.done+' exercícios · '+(x.minutes||0)+' min · Dor '+(Number(x.pain)||0)+'/10</div></div><strong class="tag">'+num(Math.round(x.volume||0))+' kg</strong></div>';}).join(''):'<div class="empty">Conclua seu primeiro treino para começar seu histórico.</div>')+'</div>'+
+'<div class="sectionhead"><h3>Ciclos anteriores</h3></div><div class="panel">'+(state.cycles&&state.cycles.length?state.cycles.slice().reverse().map(function(c){return '<div class="history"><div><strong class="mini">Ciclo '+safe(c.cycle)+'</strong><div class="muted mini">'+fmtDate(c.start)+' a '+fmtDate(c.end)+' · '+(c.days||[]).length+' treinos planejados</div></div></div>';}).join(''):'<p class="muted mini">Seu histórico de ciclos aparecerá após a primeira revisão.</p>')+'</div>'+
 '<div class="sectionhead"><h3>Fontes e orientações</h3></div><div class="panel"><p class="muted mini">Planejamento educativo baseado em recomendações públicas. A prescrição individual e avaliação clínica cabem a profissionais habilitados.</p>'+SOURCES.map(function(src){return '<p class="mini"><a target="_blank" rel="noopener noreferrer" style="color:var(--lime)" href="'+safe(src[1])+'">'+safe(src[0])+' ↗</a></p>';}).join('')+'</div>'+cycleBanner()+
 '<div class="sectionhead"><h3>Seus dados</h3></div><div class="panel"><div class="grid2">'+btn('↓ Exportar backup','export','ghost')+btn('↑ Importar backup','import','ghost')+'</div><p class="muted mini">Tudo fica salvo apenas neste navegador. Exporte para não perder seus treinos ao trocar de celular ou limpar os dados do site.</p><input type="file" id="importFile" accept=".json,application/json" style="display:none"></div>';
 }
@@ -393,6 +394,7 @@ if(p.restrictions&&p.cleared!=='sim'){alert('Você informou restrições sem con
 if(p.restrictions&&!confirm('Restrições escritas não são interpretadas automaticamente. Valide o treino com um profissional habilitado. Deseja continuar?'))return;
 if(p.level==='Iniciante'&&p.days>3&&!confirm('Para iniciantes, costuma-se começar com 2 a 3 dias por semana. Quer manter esta frequência maior, com sessões mais leves?'))return;
 if(state.days.length&&!confirm('Gerar um novo ciclo substitui o plano atual, mas preserva o histórico. Deseja continuar?'))return;
+if(state.days.length){state.cycles=state.cycles||[];state.cycles.push({cycle:state.cycle||1,start:state.settings.start,end:endDate(),days:state.days,settings:state.settings});state.cycles=state.cycles.slice(-12);}
 state.cycle=(state.days.length?Number(state.cycle||1)+1:1);
 state.settings=p;
 state.days=planFor(p);
