@@ -6,6 +6,12 @@ on:
     paths:
       - 'franchise-platform/**'
       - '.github/workflows/redeos-smoke.yml'
+  pull_request:
+    branches:
+      - moments-paris-demo
+    paths:
+      - 'franchise-platform/**'
+      - '.github/workflows/redeos-smoke.yml'
   workflow_dispatch:
 jobs:
   smoke:
