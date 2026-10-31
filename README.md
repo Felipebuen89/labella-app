@@ -1,3 +1,15 @@
+# TreinoLab 2.4 — Salvar treino manual e compartilhar com a esposa
+
+- O plano é salvo automaticamente por perfil em `localStorage`, incluindo todos os dias montados, nomes, ordem, séries, repetições, descansos e equipamentos referenciados por ID.
+- **Início:** quando o plano manual existe, a tela inicial mostra a informação "Seu treino manual está salvo", o próximo dia com exercícios, as primeiras atividades e o botão **Começar treino**; dias vazios não são apresentados como treino pronto.
+- **Compartilhar treino:** no próprio aparelho onde a montagem foi feita, toque em **Compartilhar treino** para abrir o compartilhamento nativo (incluindo WhatsApp) ou em **Copiar link**. O link contém um fragmento `#plano=` com uma versão compacta do programa e exercícios próprios necessários.
+- **Recebimento:** ao abrir o link em outro navegador, o novo plano é validado e salvo no perfil local. Se já existir um plano, o aplicativo solicita confirmação antes de substituí-lo, preservando o plano anterior no histórico de ciclos e mantendo as sessões realizadas.
+- **Privacidade:** o link carrega nomes de treinos, exercícios, séries, repetições, descansos, datas e carga *planejada* caso exista, mas **não inclui** nome da pessoa, sexo, peso/altura corporal, lipedema, dores, restrições clínicas ou histórico de treinos realizados.
+- **Limites:** ainda não há conta/sincronização na nuvem. O endereço genérico do aplicativo não transmite o plano pessoal: é necessário usar o botão de compartilhamento **no navegador em que o treino foi montado**. Quem possuir o link pode acessar o plano nele embutido; não compartilhe informações que não queira divulgar.
+- Após importação, verifique exercícios, limitações, cargas e adequação antes de executar.
+
+---
+
 # TreinoLab 2.3 — catálogo com fotografias e filtros de aparelho
 
 Atualização de 31/10/2026, no endereço https://felipebuen89.github.io/labella-app/
