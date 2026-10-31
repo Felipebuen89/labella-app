@@ -283,3 +283,37 @@ test('Fotografia também aparece ao abrir detalhes e iniciar treino',()=>{
  assert.deepEqual(a.errors,[]);
  a.close();
 });
+
+
+test('Fotos são mapeadas aos exercícios antigos somente em equivalência verificada',()=>{
+ const a=open();
+ click(a.d,'[data-tab="library"]');
+ const h=a.d.getElementById('libResults').innerHTML;
+ assert.ok(h.includes('exphoto'));
+ assert.ok(h.includes('Miniatura')===false);
+ assert.ok(a.d.querySelectorAll('#libResults img').length>=20);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Navegação máquinas e pesos livres altera filtros e miniaturas',()=>{
+ const a=open();click(a.d,'[data-tab="library"]');
+ input(a.w,a.d,'muscleFilter','Peito');
+ click(a.d,'[data-action="mode"][data-mode="Maquinas"]');
+ assert.ok(a.d.querySelector('[data-action="mode"][data-mode="Maquinas"].active'));
+ const first=a.d.querySelector('#libResults .exercise-option');
+ assert.ok(first&&first.querySelector('.exphoto img'));
+ assert.match(first.textContent,/Máquina|Polia|Smith/i);
+ click(a.d,'[data-action="mode"][data-mode="Livres"]');
+ assert.ok(a.d.querySelector('[data-action="mode"][data-mode="Livres"].active'));
+ assert.match(a.d.getElementById('libResults').textContent,/Halteres|Barra|Kettlebell/);
+ assert.deepEqual(a.errors,[]);
+ a.close();
+});
+test('Service worker inclui catálogo ilustrado para uso offline',()=>{
+ const sw=fs.readFileSync('sw.js','utf8');
+ const html=fs.readFileSync('index.html','utf8');
+ assert.match(sw,/treinolab-static-v4/);
+ assert.match(sw,/treinolab\/foto-catalogo\.js/);
+ assert.match(sw,/ignoreSearch:true/);
+ assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=4'\)/);
+});
