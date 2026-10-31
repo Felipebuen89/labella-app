@@ -11,6 +11,7 @@ function harness() {
   setItem:(k,v)=>storage.set(k,v),
   removeItem:k=>storage.delete(k)
  };
+ globalThis.localStorage=localStorage;
  let appHTML="";
  const appNode={set innerHTML(v){appHTML=v},get innerHTML(){return appHTML}};
  const toastNode={textContent:"",classList:{add(){},remove(){}}};
