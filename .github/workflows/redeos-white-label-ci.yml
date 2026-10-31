@@ -5,6 +5,10 @@ on:
     paths:
       - "franchise-platform/**"
       - ".github/workflows/redeos-white-label-ci.yml"
+  pull_request:
+    paths:
+      - "franchise-platform/**"
+      - ".github/workflows/redeos-white-label-ci.yml"
   workflow_dispatch:
 permissions:
   contents: read
