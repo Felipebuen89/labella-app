@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101311">
 <meta name="description" content="Monte seu treino, registre suas séries e acompanhe sua evolução sem mensalidade.">
-<meta name="application-version" content="2.1.0">
+<meta name="application-version" content="2.3.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TreinoLab">
@@ -42,6 +42,19 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 .exercise{align-items:center}.exmain{overflow-wrap:anywhere}.exmain strong{font-size:13px;line-height:1.3}.exmain small{display:block;margin-top:4px;line-height:1.35}
 @media(max-width:400px){.exphoto{height:60px;width:60px;min-width:60px}.exercise .btn.small{padding:7px 9px;font-size:11px}.exercise{gap:7px}}
 
+
+/* Biblioteca visual */
+.exphoto{flex-shrink:0}
+.exercise .exmain{min-width:0;overflow-wrap:anywhere}
+.exercise .exmain strong{line-height:1.28}
+.photo-strip{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.photo-strip .exphoto{flex:1;max-width:calc(50% - 5px);width:100%;min-width:135px;height:165px}
+.photo-strip .exphoto img{object-fit:contain;background:#e7e8e4}
+.muscle-choice{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}
+.muscle-choice button{border:1px solid #4c5949;background:#263027;color:var(--text);border-radius:24px;padding:9px 12px;font-size:12px}
+.muscle-choice button.active{background:var(--lime);color:var(--black);border-color:var(--lime);font-weight:800}
+.exercise-meta{font-size:11px;color:var(--muted);line-height:1.45;display:block;margin-top:4px}
+@media(max-width:420px){.exercise-option{gap:8px}.exercise-option .exphoto{width:64px;min-width:64px;height:68px}.exercise-option .btn.small{padding:7px 9px;font-size:11px}}
 </style>
 </head>
 <body>
@@ -64,7 +77,7 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 <button data-tab="progress"><span class="ico">↗</span>Evolução</button>
 </nav>
 <div id="modal"></div>
-<script src="./treinolab/foto-catalogo.js?v=2"></script>
+<script src="./treinolab/foto-catalogo.js?v=3"></script>
 <script>
 (function(){
 'use strict';
@@ -197,7 +210,8 @@ function categoryMode(x){
  if(mat==='Elástico')return 'Elasticos';
  return 'Corporal';
 }
-function exerciseName(x){return x.n;}
+var PT_PHOTO_NAMES={"Ab Crunch Machine":"Abdominal na máquina","Barbell Bench Press - Medium Grip":"Supino reto com barra","Barbell Incline Bench Press - Medium Grip":"Supino inclinado com barra","Dumbbell Bench Press":"Supino reto com halteres","Machine Bench Press":"Supino reto na máquina","Smith Machine Bench Press":"Supino reto no Smith","Leverage Chest Press":"Supino na máquina articulada","Leverage Incline Chest Press":"Supino inclinado na máquina articulada","Leverage Decline Chest Press":"Supino declinado na máquina articulada","Decline Dumbbell Bench Press":"Supino declinado com halteres","Butterfly":"Crucifixo na máquina peck deck","Barbell Squat":"Agachamento com barra","Bodyweight Squat":"Agachamento livre","Hack Squat":"Agachamento hack na máquina","Smith Machine Squat":"Agachamento no Smith","Leg Extensions":"Cadeira extensora","Single-Leg Leg Extension":"Cadeira extensora unilateral","Leg Press":"Leg press","Narrow Stance Leg Press":"Leg press com pés próximos","Lying Leg Curls":"Mesa flexora","Seated Leg Curl":"Cadeira flexora","Standing Leg Curl":"Flexora em pé","Seated Calf Raise":"Panturrilha sentada na máquina","Standing Calf Raises":"Panturrilha em pé","Smith Machine Calf Raise":"Panturrilha no Smith","Machine Bicep Curl":"Rosca bíceps na máquina","Machine Preacher Curls":"Rosca Scott na máquina","Machine Triceps Extension":"Tríceps na máquina","Dip Machine":"Tríceps mergulho na máquina","Face Pull":"Face pull na polia","Seated Cable Rows":"Remada baixa na polia","One Arm Lat Pulldown":"Puxada unilateral","Wide-Grip Lat Pulldown":"Puxada alta pegada aberta","Close-Grip Front Lat Pulldown":"Puxada alta pegada fechada","V-Bar Pulldown":"Puxada com triângulo","Underhand Cable Pulldowns":"Puxada supinada","Leverage Iso Row":"Remada articulada","Leverage High Row":"Remada alta articulada","Machine Shoulder (Military) Press":"Desenvolvimento de ombros na máquina","Leverage Shoulder Press":"Desenvolvimento articulado","Reverse Machine Flyes":"Crucifixo inverso na máquina","Smith Machine Overhead Shoulder Press":"Desenvolvimento no Smith","Calf Press On The Leg Press Machine":"Panturrilha no leg press","Thigh Adductor":"Cadeira adutora","Thigh Abductor":"Cadeira abdutora","Barbell Hip Thrust":"Elevação pélvica com barra","Barbell Glute Bridge":"Ponte de glúteos com barra","Single Leg Glute Bridge":"Ponte unilateral de glúteos","Chair Squat":"Agachamento na cadeira","Dumbbell Squat":"Agachamento com halteres","Cable Preacher Curl":"Rosca Scott na polia","Smith Machine Bent Over Row":"Remada curvada no Smith","Smith Machine Close-Grip Bench Press":"Supino fechado no Smith"};
+function exerciseName(x){return PT_PHOTO_NAMES[x.n]||x.n;}
 function exercisePhoto(x,large){
  var cls=large?'exphoto large':'exphoto',ico=safe(x.ico||'💪');
  if(!x.photo)return '<span class="'+cls+' no-photo" aria-label="Foto ainda não disponível"><span>'+ico+'</span><small>Sem foto</small></span>';
