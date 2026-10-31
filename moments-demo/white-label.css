@@ -108,3 +108,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .franchise-standalone{padding:10px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Componentes de produto independentes de setor */
+.wl-product-illustration{width:100%;height:100%;min-height:112px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:radial-gradient(circle at 50% 36%,#665239 0%,#36302B 40%,#1F2126 85%);overflow:hidden;border-radius:12px}
+.wl-product-illustration:after{content:"";position:absolute;inset:12px;border:1px solid #E0BE8640;border-radius:10px;pointer-events:none}
+.wl-product-icon{font-size:57px;line-height:1;color:#EAD2AA;font-weight:300;text-shadow:0 10px 20px #0008}
+.wl-product-small{font:750 8px 'DM Sans',sans-serif;letter-spacing:.19em;color:#B5A891;text-align:center}
+.mini-art .wl-product-illustration{width:50px;height:50px;min-height:50px;border-radius:10px}
+.mini-art .wl-product-icon{font-size:27px}
+.mini-art .wl-product-small{display:none}
+.product .art{padding:10px!important}
+.product .wl-product-illustration{aspect-ratio:1.08;min-height:165px}
