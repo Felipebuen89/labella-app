@@ -87,5 +87,5 @@ listeners.change({target:{id:"tenant-select",value:"viva"}});
 verify("Troca de franquia",app.innerHTML.includes("Viva Pet"));
 verify("Separação por tenant no armazenamento",!loadTenantState("viva").orders.length&&loadTenantState("aurora").orders.length===1);
 click({action:"reset-tenant"});
-verify("Reset da demo isolado",!saved("viva")&&loadTenantState("aurora").orders.length===1);
+verify("Reset da demo isolado",!storage.has("redeos-demo-v1:viva")&&loadTenantState("aurora").orders.length===1);
 console.log("RESULTADO: smoke test de fluxos e isolamento da demo concluído.");
