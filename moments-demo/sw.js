@@ -1,6 +1,6 @@
 /* Moments Paris original: app shell and optional Web Push receiver */
-const CACHE='moments-paris-original-shell-v5-notifications-modal-20261028';
-const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-original-limpo.svg'];
+const CACHE='moments-paris-original-shell-v6-beneficios-20261031';
+const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-sem-assinatura.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   for(const url of STATIC){try{await cache.add(url)}catch(e){}}
@@ -15,7 +15,7 @@ self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;
  if(event.request.mode==='navigate'){
   const target=new URL(event.request.url).pathname.startsWith('/franquia/')?'/franquia/':'/';
-  event.respondWith(fetch(event.request).then(response=>{
+  event.respondWith(fetch(new Request(event.request,{cache:'no-store'})).then(response=>{
    if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(target,copy)).catch(()=>{})}
    return response;
   }).catch(()=>caches.match(target)));
@@ -25,7 +25,7 @@ self.addEventListener('push',event=>{
  let data={};try{data=event.data?event.data.json():{}}catch{data={body:event.data?.text()||''}}
  event.waitUntil(self.registration.showNotification(String(data.title||'Moments Paris'),{
   body:String(data.body||'Novo aviso da franquia'),
-  icon:'/assets/moments-logo-original-limpo.svg',
+  icon:'/assets/moments-logo-sem-assinatura.svg',
   tag:String(data.tag||'moments-paris'),data:{url:'/'}
  }));
 });
