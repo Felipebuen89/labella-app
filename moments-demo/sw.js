@@ -1,5 +1,5 @@
 /* Moments Paris original: app shell and optional Web Push receiver */
-const CACHE='moments-paris-original-shell-v6-beneficios-20261031';
+const CACHE='moments-paris-original-shell-v7-cadastro-opcional-20261031';
 const STATIC=['/','/franquia/','/cloud-sync.js','/manifest.webmanifest','/assets/moments-logo-sem-assinatura.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
