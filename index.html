@@ -333,6 +333,50 @@ fld('restrictions','Limitações, lesões ou orientações médicas (opcional)',
 '<div class="notice warn formwide">Se houver sintomas de alerta, não inicie este programa: procure avaliação médica urgente. Para lipedema, confirme com seus profissionais de saúde as adaptações de baixo impacto. Peso, altura e sexo NÃO definem carga inicial em kg.</div>'+
 '<button class="btn full formwide" type="submit">Gerar plano e datas de revisão →</button></form></div></div>';
 }
+function manualWizard(){
+ var p=Object.assign(defaults(),state.settings||{});
+ var choice=function(id,items,v){return '<select id="'+id+'" required>'+items.map(function(x){var a=Array.isArray(x)?x:[x,x];return '<option value="'+safe(a[0])+'" '+(String(a[0])===String(v)?'selected':'')+'>'+safe(a[1])+'</option>';}).join('')+'</select>';};
+ return '<div class="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="Montar meu próprio treino"><div class="row spread"><span class="eyebrow">Montagem 100% manual</span><button class="btn small ghost" data-action="close">Fechar ×</button></div><h2>Crie o seu treino</h2><p class="sub">Defina a divisão e depois escolha individualmente todos os exercícios na biblioteca. Não substitui avaliação ou supervisão profissional.</p><form id="manualForm" class="formgrid">'+
+ '<div class="field formwide"><label for="manName">Nome do praticante</label><input id="manName" minlength="2" maxlength="60" required value="'+safe(p.name||'')+'" placeholder="Seu nome"></div>'+
+ '<div class="field"><label for="manDays">Quantos dias na semana?</label>'+choice('manDays',[[1,'1 dia'],[2,'2 dias'],[3,'3 dias'],[4,'4 dias'],[5,'5 dias'],[6,'6 dias'],[7,'7 dias']],p.days)+'</div>'+
+ '<div class="field"><label for="manMinutes">Minutos por sessão</label>'+choice('manMinutes',[20,30,40,45,60,75,90,120].map(function(x){return [x,x+' min'];}),p.minutes)+'</div>'+
+ '<div class="field"><label for="manStart">Data de início</label><input id="manStart" type="date" required value="'+safe(p.start||today())+'"></div>'+
+ '<div class="field"><label for="manWeeks">Período do treino</label>'+choice('manWeeks',[4,6,8,10,12].map(function(x){return [x,x+' semanas'];}),p.weeks)+'</div>'+
+ '<div class="field"><label for="manLipedema">Tem diagnóstico de lipedema?</label>'+choice('manLipedema',[['false','Não'],['true','Sim']],String(Boolean(p.lipedema)))+'</div>'+
+ '<div class="field"><label for="manCleared">Orientação para se exercitar?</label>'+choice('manCleared',[['sim','Sim'],['nao_sei','Ainda não / não sei'],['nao','Fui orientado(a) a não me exercitar']],p.cleared)+'</div>'+
+ '<div class="field formwide"><label for="manAlert">Apresenta sintoma novo de alerta (inchaço súbito unilateral, falta de ar, dor no peito ou dor intensa)?</label><select id="manAlert" required><option value="" selected disabled>Escolha SIM ou NÃO</option><option value="nao">NÃO — nenhum desses sintomas</option><option value="sim">SIM — tenho um ou mais desses sintomas</option></select></div>'+
+ '<div class="notice warn formwide">Não inicie exercícios se estiver com sinais de alerta. Se possui lipedema, dores ou restrições, valide o treino com o profissional que acompanha seu caso. Escolher manualmente não torna um exercício seguro para você.</div>'+
+ '<div class="field formwide"><label class="row" style="gap:8px;align-items:flex-start"><input id="manAcknowledge" required type="checkbox" style="width:auto;margin-top:2px"><span>Entendo que eu escolherei meus exercícios e que a montagem não substitui orientação profissional.</span></label></div>'+
+ '<button class="btn full formwide" type="submit">Criar os dias e escolher exercícios →</button>'+
+ '</form></div></div>';
+}
+function customExercise(){
+var groups=['Peito','Costas','Ombros','Bíceps','Tríceps','Antebraços','Trapézio','Lombar','Quadríceps','Posterior de coxa','Pernas','Glúteos','Adutores','Abdutores','Panturrilhas','Tibial anterior','Core','Cardio','Mobilidade','Corpo inteiro'];
+return '<div class="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="Cadastrar meu exercício"><div class="row spread"><span class="eyebrow">Novo exercício</span><button class="btn small ghost" data-action="close">Fechar ×</button></div><h2>Cadastre sua variação</h2><p class="sub">Adicione exercícios não encontrados no catálogo. Verifique a técnica com um profissional.</p><form id="customExerciseForm" class="formgrid">'+
+'<div class="field formwide"><label for="customName">Nome do movimento</label><input id="customName" required minlength="3" maxlength="75" placeholder="Ex.: Remada com um braço sentado"></div>'+
+'<div class="field"><label for="customGroup">Grupo muscular</label><select id="customGroup">'+groups.map(function(x){return '<option>'+safe(x)+'</option>';}).join('')+'</select></div>'+
+'<div class="field"><label for="customEnvironment">Onde executar</label><select id="customEnvironment"><option value="ambos">Casa e academia</option><option value="academia">Academia</option><option value="casa">Em casa</option></select></div>'+
+'<div class="field formwide"><label for="customMaterial">Equipamento</label><select id="customMaterial">'+['Peso corporal/outros','Halteres','Barra/Anilha','Máquina','Polia','Smith','Elástico','Kettlebell','Objeto doméstico'].map(function(x){return '<option>'+safe(x)+'</option>';}).join('')+'</select></div>'+
+'<div class="field formwide"><label for="customTip">Observações de execução</label><input id="customTip" maxlength="200" placeholder="Descreva apenas orientações que conhece"></div>'+
+'<div class="field formwide"><label for="customImpact">Impacto do movimento</label><select id="customImpact"><option value="habitual">Habitual ou baixo impacto</option><option value="alto">Pode ter saltos ou impacto alto</option></select></div>'+
+'<button class="btn full formwide" type="submit">Salvar exercício no meu catálogo →</button></form></div></div>';
+}
+function makeManual(p){
+ if(state.days.length&&!confirm('Criar outro plano substituirá seus dias atuais, mas preservará o histórico. Continuar?'))return false;
+ if(state.days.length){
+  state.cycles=state.cycles||[];
+  state.cycles.push({cycle:state.cycle||1,start:state.settings.start,end:endDate(),days:JSON.parse(JSON.stringify(state.days)),settings:Object.assign({},state.settings)});
+  state.cycles=state.cycles.slice(-12);
+ }
+ state.cycle=state.days.length?(Number(state.cycle)||1)+1:1;
+ state.settings=Object.assign({},state.settings,p,{mode:'manual',goal:'Treino livre',redFlags:false});
+ state.days=Array.from({length:p.days},function(_,i){return {name:'Treino '+String.fromCharCode(65+i),ex:[],minutes:p.minutes,warmup:5,cooldown:3,cardioMinutes:0};});
+ delete state.active;
+ var prof=registry.list.find(function(x){return x.id===activeId;});if(prof)prof.name=p.name;
+ selectedDay=0;term='';filter='Todos';equipmentFilter='Todos';environmentFilter='Todos';libraryLimit=40;
+ save();modal=null;tab='library';render();return true;
+}
+
 function session(){
 var s=state.active;if(!s)return '';
 var d=state.days[s.day];if(!d){delete state.active;save();return '';}
@@ -373,7 +417,7 @@ try {
  document.getElementById('main').innerHTML='<div class="panel" role="alert"><h2>Não foi possível carregar esta tela</h2><p class="sub">Seus treinos permanecem salvos neste navegador. A atualização pode estar incompleta.</p><a class="btn" href="./?atualizar=treinolab-2-1" style="text-decoration:none;display:inline-block">Atualizar TreinoLab</a></div>';
 }
 document.querySelectorAll('[data-tab]').forEach(function(el){el.classList.toggle('active',el.dataset.tab===tab);});
-document.getElementById('modal').innerHTML=modal==='builder'?builder():modal==='session'?session():modal==='profiles'?profiles():modal&&modal.type==='details'?details():'';
+document.getElementById('modal').innerHTML=modal==='builder'?builder():modal==='manualWizard'?manualWizard():modal==='customExercise'?customExercise():modal==='session'?session():modal==='profiles'?profiles():modal&&modal.type==='details'?details():'';
 document.body.style.overflow=modal?'hidden':'';
 }
 function openSession(i){
