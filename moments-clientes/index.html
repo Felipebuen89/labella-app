@@ -303,6 +303,100 @@ header{
 .menu button,.bottom-nav button,.btn,.card-actions button,.kit-options button,
 .cart-head{font-family:'Manrope',Arial,sans-serif}
 
+
+/* REVISAO: preto puro e nomes de perfumes modernos, sem mexer no layout. */
+:root{
+  --bg:#000000;
+  --panel:#050505;
+  --line:#4d3e28;
+}
+html,body,main,.wrap,.page{background-color:#000000}
+body{background:#000000;color:#f5eee2}
+header{background:rgba(0,0,0,.98);border-bottom-color:#463822}
+.bottom-nav{background:#000000;border-top-color:#4a3823}
+.foot{background:#000000;border-top-color:#3d3226}
+.hero,.hero-copy{background:#000000}
+.hero-art{background:#000000}
+.product,.product-duo,.product-exclusive{
+  background:#050505;
+  background-image:none;
+  border-color:#5e4b31;
+}
+.product-duo:hover{background:#080808}
+.cardbody{background:#050505}
+.intro-row div,.tile,.campaign,.offer-card,.offer-card--prime,
+.campaign-intro,.kit-builder,.kit-summary,.exclusive-strip,.home-promo{
+  background:#050505;
+  background-image:none;
+  border-color:#544128;
+}
+.catalog-group{background:#000000}
+.catalog-group+.catalog-group{border-top-color:#392d21}
+.search,.field,.catalog-tools select,.kit-options button,
+.kit-product-list,.contact-summary,.cart-head,.btn.secondary,.btn.ghost,
+.card-actions button.more{
+  background:#080808;
+  background-image:none;
+}
+.sheet{background:#030303}
+.kit-product{background:#050505;border-bottom-color:#30271d}
+.kit-qty button,.qty button,.x{background:#080808}
+.reference-tag{background:rgba(0,0,0,.93)}
+/* Nome de perfume: sem serifas ornamentais, legível como catálogo premium. */
+.product h3,
+.product-duo h3,
+.product-exclusive h3,
+#featured .product h3,
+#productsGrid .product h3{
+  font-family:'Manrope',Arial,sans-serif;
+  font-weight:700;
+  font-size:15px;
+  line-height:1.4;
+  letter-spacing:0;
+  color:#f6f2e9;
+  font-style:normal;
+  text-transform:none;
+}
+.product-duo h3,.product-exclusive h3,
+#featured .product-duo h3,#featured .product-exclusive h3,
+#productsGrid .product-duo h3,#productsGrid .product-exclusive h3{
+  font-size:18px;
+  line-height:1.35;
+  font-weight:700;
+  margin:5px 0 12px;
+}
+.art--duo .ref-name,.reference-stage .ref-name{
+  font-family:'Manrope',Arial,sans-serif;
+  font-weight:700;
+  font-size:12px;
+  letter-spacing:0;
+  font-style:normal;
+}
+.kit-product-info strong{
+  font-family:'Manrope',Arial,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0;
+}
+.sheet h2{
+  font-family:'Manrope',Arial,sans-serif;
+  font-size:23px;
+  font-weight:700;
+  letter-spacing:-.025em;
+}
+@media(max-width:650px){
+  .product h3,#featured .product h3,#productsGrid .product h3{
+    font-size:14px;
+    line-height:1.4;
+  }
+  .product-duo h3,.product-exclusive h3,
+  #featured .product-duo h3,#featured .product-exclusive h3,
+  #productsGrid .product-duo h3,#productsGrid .product-exclusive h3{
+    font-size:18px;
+    line-height:1.35;
+  }
+}
+
 </style>
 <script defer src="./catalog.js"></script>
 <script defer src="./app.js"></script>
