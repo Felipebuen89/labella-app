@@ -25,6 +25,7 @@ function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));retu
 var cart=read(storageCart,{});
 var customer=read(storageCustomer,null);
 var activeTab='home',category='Todos',search='',lastMessage='';
+var kitSize=15,kitCount=3,kitSelection={},kitSearch='';
 var overlay=document.getElementById('overlay'),sheet=document.getElementById('sheet'),toasts=document.getElementById('toast-area');
 var fmt=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 function money(v){return fmt.format(Number(v)||0)}
@@ -32,13 +33,75 @@ function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){retur
 function saveCart(){try{localStorage.setItem(storageCart,JSON.stringify(cart))}catch(e){};updateBadge()}
 function qty(id){return Math.max(0,Math.floor(Number(cart[id])||0))}
 function count(){return Object.keys(cart).reduce(function(sum,id){return sum+qty(id)},0)}
-function total(){return Object.keys(cart).reduce(function(sum,id){return sum+(byId[id]?byId[id].price*qty(id):0)},0)}
+/* Promoções únicas de perfumes 15ml e 100ml, sem desconto em outros produtos. */
+function eligible(p){return !!p&&(is15(p)||p.category==='Perfumes 100 ml')}
+function cents(v){return Math.round((Number(v)||0)*100)}
+function cartTotals(){
+ var subtotalCents=0,eligibleCents=0,eligibleQty=0;
+ Object.keys(cart).forEach(function(id){
+   var p=byId[id],n=qty(id);
+   if(!p||!n)return;
+   var line=cents(p.price)*n;subtotalCents+=line;
+   if(eligible(p)){eligibleQty+=n;eligibleCents+=line}
+ });
+ var percent=eligibleQty>=5?20:eligibleQty>=3?15:0;
+ var discountCents=Math.round(eligibleCents*percent/100);
+ return {subtotal:subtotalCents/100,eligibleQty:eligibleQty,percent:percent,discount:discountCents/100,total:(subtotalCents-discountCents)/100};
+}
+function total(){return cartTotals().total}
 function updateBadge(){var e=document.getElementById('cartCount');if(e)e.textContent=count()}
 function toast(message){var d=document.createElement('div');d.className='toast';d.textContent=message;toasts.innerHTML='';toasts.appendChild(d);setTimeout(function(){if(d.isConnected)d.remove()},5000)}
-function setTab(name){if(['home','products','campaigns'].indexOf(name)<0)return;activeTab=name;document.querySelectorAll('.page').forEach(function(e){e.classList.toggle('active',e.id==='page-'+name)});document.querySelectorAll('[data-tab]').forEach(function(e){e.classList.toggle('active',e.dataset.tab===name)});window.scrollTo({top:0,behavior:'auto'});if(name==='products')renderProducts()}
+function setTab(name){if(['home','products','campaigns'].indexOf(name)<0)return;activeTab=name;document.querySelectorAll('.page').forEach(function(e){e.classList.toggle('active',e.id==='page-'+name)});document.querySelectorAll('[data-tab]').forEach(function(e){e.classList.toggle('active',e.dataset.tab===name)});window.scrollTo({top:0,behavior:'auto'});if(name==='products')renderProducts();if(name==='campaigns')renderKit()}
 function changeCategory(name){category=categories.includes(name)?name:'Todos';document.getElementById('categorySelect').value=category;setTab('products')}
 function add(id){if(!byId[id])return;cart[id]=Math.min(99,qty(id)+1);saveCart();toast('Adicionado ao pedido: '+byId[id].name);if(overlay.classList.contains('open')&&sheet.dataset.mode==='cart')showCart()}
 function changeQty(id,delta){if(!byId[id])return;var n=Math.max(0,Math.min(99,qty(id)+delta));if(n)cart[id]=n;else delete cart[id];saveCart();showCart()}
+
+/* Seleção por kit: aceita diferentes fragrâncias, incluindo repetir uma preferida. */
+function kitProducts(){return products.filter(function(p){return kitSize===15?is15(p):p.category==='Perfumes 100 ml'}).sort(function(a,b){return a.name.localeCompare(b.name,'pt-BR')})}
+function selectedCount(){return Object.keys(kitSelection).reduce(function(n,id){return n+(Math.floor(Number(kitSelection[id]))||0)},0)}
+function kitPrice(){
+ var sum=Object.keys(kitSelection).reduce(function(n,id){var p=byId[id];return n+(p?cents(p.price)*(Number(kitSelection[id])||0):0)},0);
+ var pct=kitCount===5?20:15;
+ var cut=Math.round(sum*pct/100);
+ return {subtotal:sum/100,discount:cut/100,total:(sum-cut)/100,percent:pct};
+}
+function renderKit(){
+ var list=document.getElementById('kitProductList'),summary=document.getElementById('kitSummary');
+ if(!list||!summary)return;
+ document.querySelectorAll('[data-kit-count]').forEach(function(btn){btn.classList.toggle('selected',Number(btn.dataset.kitCount)===kitCount);btn.setAttribute('aria-pressed',Number(btn.dataset.kitCount)===kitCount?'true':'false')});
+ document.querySelectorAll('[data-kit-size]').forEach(function(btn){btn.classList.toggle('selected',Number(btn.dataset.kitSize)===kitSize);btn.setAttribute('aria-pressed',Number(btn.dataset.kitSize)===kitSize?'true':'false')});
+ var selected=selectedCount(),price=kitPrice();
+ var display=kitProducts().filter(function(p){return (p.name+' '+(p.reference||'')).toLocaleLowerCase('pt-BR').includes(kitSearch.toLocaleLowerCase('pt-BR'))});
+ var scroll=list.scrollTop;
+ list.innerHTML=display.length?display.map(function(p){
+  var n=Math.max(0,Number(kitSelection[p.id])||0);
+  return '<div class="kit-product"><div class="kit-product-photo">'+(p.image?'<img loading="lazy" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.hidden=true">':'<span>✦</span>')+'</div><div class="kit-product-info"><strong>'+esc(p.name)+'</strong><span>'+money(p.price)+'</span></div><div class="kit-qty"><button type="button" data-kit-product="'+esc(p.id)+'" data-kit-delta="-1" aria-label="Diminuir '+esc(p.name)+'" '+(!n?'disabled':'')+'>−</button><output>'+n+'</output><button type="button" data-kit-product="'+esc(p.id)+'" data-kit-delta="1" aria-label="Acrescentar '+esc(p.name)+'" '+(selected>=kitCount?'disabled':'')+'>+</button></div></div>';
+ }).join(''):'<p class="kit-empty">Nenhum perfume encontrado. Experimente outro nome.</p>';
+ list.scrollTop=scroll;
+ var names=Object.keys(kitSelection).filter(function(id){return kitSelection[id]>0}).map(function(id){return '<span>'+kitSelection[id]+'× '+esc(byId[id].name)+'</span>'}).join('');
+ summary.innerHTML='<div class="kit-progress"><span>'+selected+' de '+kitCount+' perfumes selecionados</span><div class="kit-progress-track"><span style="width:'+(selected/kitCount*100)+'%"></span></div></div>'
+ +'<div class="kit-selected">'+(names||'<span>Escolha os perfumes da lista acima.</span>')+'</div>'
+ +'<div class="kit-price-summary"><div><span>Subtotal</span><strong>'+money(price.subtotal)+'</strong></div><div class="promo-saving"><span>Desconto de '+price.percent+'%</span><strong>− '+money(price.discount)+'</strong></div><div class="kit-final"><span>Valor do kit</span><strong>'+money(price.total)+'</strong></div></div>'
+ +'<button type="button" id="kitAddToCart" class="btn full" '+(selected!==kitCount?'disabled':'')+'>Adicionar '+kitCount+' perfumes ao pedido</button>'
+ +'<p class="small">Válido para perfumes de 15 ml e 100 ml. O carrinho aplica automaticamente o melhor desconto conforme a quantidade de perfumes elegíveis. Outros produtos não entram na promoção.</p>';
+}
+function changeKitProduct(id,delta){
+ var p=byId[id];if(!p||(kitSize===15?!is15(p):p.category!=='Perfumes 100 ml'))return;
+ var current=Number(kitSelection[id])||0,next=Math.max(0,current+delta);
+ if(delta>0&&selectedCount()>=kitCount){toast('Você já escolheu '+kitCount+' perfumes.');return}
+ if(next)kitSelection[id]=next;else delete kitSelection[id];
+ renderKit();
+}
+function addKitToCart(){
+ if(selectedCount()!==kitCount){toast('Selecione '+kitCount+' perfumes para completar o kit.');return}
+ var ids=Object.keys(kitSelection);
+ if(ids.some(function(id){return !byId[id]||qty(id)+kitSelection[id]>99})){toast('Limite de unidades atingido no carrinho.');return}
+ ids.forEach(function(id){cart[id]=qty(id)+kitSelection[id]});
+ saveCart();kitSelection={};kitSearch='';
+ var searchField=document.getElementById('kitSearch');if(searchField)searchField.value='';
+ renderKit();toast('Kit adicionado! Desconto aplicado no pedido.');showCart();
+}
+
 /* Se um fornecedor bloquear a foto, testar imagem reserva antes de exibir o aviso. */
 window.momentsReferenceFallback=function(img){
  var backup=img.getAttribute('data-backup');
@@ -111,17 +174,17 @@ function detail(id){
  var main=p.image?'<img class="detail-img" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div hidden class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>':'<div class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>';
  openSheet('detail',header(p.name)+main+'<p class="category" style="margin-top:16px">'+esc(p.category)+'</p><div class="price">'+money(p.price)+'</div>'+ref+exclusive+'<button class="btn full" data-add="'+esc(id)+'">Adicionar ao pedido</button><p class="small">Preço final ao consumidor. Disponibilidade e entrega são confirmadas pelo vendedor.</p>');
 }
-function showCart(){var keys=Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0});var items=keys.map(function(id){var p=byId[id];return '<div class="cart-line"><div class="grow"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' por unidade • '+money(qty(id)*p.price)+'</small></div><div class="qty"><button data-qty="'+esc(id)+'" data-delta="-1" aria-label="Remover uma unidade">−</button><strong>'+qty(id)+'</strong><button data-qty="'+esc(id)+'" data-delta="1" aria-label="Adicionar uma unidade">+</button></div></div>'}).join('');
+function showCart(){var pricing=cartTotals();var keys=Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0});var items=keys.map(function(id){var p=byId[id];return '<div class="cart-line"><div class="grow"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' por unidade • '+money(qty(id)*p.price)+'</small></div><div class="qty"><button data-qty="'+esc(id)+'" data-delta="-1" aria-label="Remover uma unidade">−</button><strong>'+qty(id)+'</strong><button data-qty="'+esc(id)+'" data-delta="1" aria-label="Adicionar uma unidade">+</button></div></div>'}).join('');
 var c=customer&&customer.name&&customer.phone&&customer.city;
 var saved=c?'<div class="contact-summary"><strong>Seus dados neste aparelho</strong><div>'+esc(customer.name)+' • '+esc(customer.phone)+' • '+esc(customer.city)+'</div><button type="button" data-edit-customer>Alterar dados</button></div>':'';
 var form='<form id="checkoutForm"><h3 style="font-size:15px;margin:22px 0 8px">Seus dados para o pedido</h3>'+saved+'<div id="customerFields" '+(c?'style="display:none"':'')+'><div class="form-group"><label for="customerName">Nome completo</label><input class="field" id="customerName" name="name" autocomplete="name" required minlength="2" maxlength="90" placeholder="Seu nome" value="'+esc(c?customer.name:'')+'"></div><div class="form-group"><label for="customerPhone">Número com DDD</label><input class="field" id="customerPhone" name="phone" autocomplete="tel" type="tel" required inputmode="tel" maxlength="24" placeholder="(19) 99999-9999" value="'+esc(c?customer.phone:'')+'"></div><div class="form-group"><label for="customerCity">Cidade</label><input class="field" id="customerCity" name="city" autocomplete="address-level2" required maxlength="70" placeholder="Sua cidade" value="'+esc(c?customer.city:'')+'"></div></div><p class="small">Sem senha ou login. Seus dados ficam salvos apenas neste aparelho para facilitar o próximo pedido e serão incluídos na mensagem compartilhada.</p><button class="btn full" type="submit">Preparar pedido no WhatsApp</button></form>';
-openSheet('cart',header('Meu pedido')+(keys.length?items+'<div class="total"><span>Total do pedido</span><strong>'+money(total())+'</strong></div>'+form:'<div class="empty"><h3>Seu pedido está vazio</h3><p>Escolha seus perfumes e produtos favoritos para continuar.</p><button class="btn" data-tab="products">Ver produtos</button></div>')+(lastMessage?'<button class="btn ghost full" style="margin-top:14px" data-copy>Copiar último pedido</button><button class="textlink" style="margin-top:15px" data-clear-cart>Novo pedido (limpar carrinho)</button>':'')+'<p class="small" style="margin-top:16px">O pedido só chega ao vendedor quando você escolher um contato e enviar a mensagem. Este catálogo não realiza pagamento nem registra pedidos em um servidor.</p>')}
+openSheet('cart',header('Meu pedido')+(keys.length?items+'<div class="cart-pricing"><div><span>Subtotal</span><strong>'+money(pricing.subtotal)+'</strong></div>'+(pricing.percent?'<div class="promo-saving"><span>Campanha '+pricing.percent+'% • '+pricing.eligibleQty+' perfumes</span><strong>− '+money(pricing.discount)+'</strong></div>':'<div class="cart-promo-hint">Monte 3 perfumes de 15 ou 100 ml e ganhe 15% de desconto; com 5 ou mais, 20%.</div>')+'</div><div class="total"><span>Total do pedido</span><strong>'+money(pricing.total)+'</strong></div>'+form:'<div class="empty"><h3>Seu pedido está vazio</h3><p>Escolha seus perfumes e produtos favoritos para continuar.</p><button class="btn" data-tab="products">Ver produtos</button></div>')+(lastMessage?'<button class="btn ghost full" style="margin-top:14px" data-copy>Copiar último pedido</button><button class="textlink" style="margin-top:15px" data-clear-cart>Novo pedido (limpar carrinho)</button>':'')+'<p class="small" style="margin-top:16px">O pedido só chega ao vendedor quando você escolher um contato e enviar a mensagem. Este catálogo não realiza pagamento nem registra pedidos em um servidor.</p>')}
 function cleanPhone(v){return String(v||'').replace(/\D/g,'')}
 function prepareOrder(form){if(!count())return toast('Adicione produtos antes de finalizar.');var fd=new FormData(form);var name=String(fd.get('name')||'').trim().replace(/\s+/g,' ');var phone=cleanPhone(fd.get('phone'));var city=String(fd.get('city')||'').trim().replace(/\s+/g,' ');if(name.length<2||city.length<2||!/^\d{10,13}$/.test(phone)){toast('Confira nome, DDD e número de celular e cidade.');return}
 customer={name:name,phone:phone,city:city};try{localStorage.setItem(storageCustomer,JSON.stringify(customer))}catch(e){}
 var lines=Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0}).map(function(id){var p=byId[id];return qty(id)+'x '+p.name+' — '+money(p.price*qty(id))});
-lastMessage='Olá! Quero solicitar estes produtos da Moments Paris:\n\n'+lines.join('\n')+'\n\nTOTAL: '+money(total())+'\n\nNome: '+name+'\nTelefone: '+phone+'\nCidade: '+city+'\n\nPor favor, confirme disponibilidade, entrega e pagamento.';
-var drafts=read(storageOrders,[]);if(!Array.isArray(drafts))drafts=[];drafts.unshift({date:new Date().toISOString(),items:Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0}).map(function(id){return {id:id,qty:qty(id),unitPrice:byId[id].price}}),total:total(),status:'aguardando_envio_manual'});try{localStorage.setItem(storageOrders,JSON.stringify(drafts.slice(0,15)))}catch(e){}
+lastMessage='Olá! Quero solicitar estes produtos da Moments Paris:\n\n'+lines.join('\n')+'\n\nSUBTOTAL: '+money(cartTotals().subtotal)+'\nCAMPANHA: '+(cartTotals().percent?cartTotals().percent+'% de desconto (− '+money(cartTotals().discount)+')':'Sem desconto')+'\nTOTAL COM DESCONTO: '+money(total())+'\n\nNome: '+name+'\nTelefone: '+phone+'\nCidade: '+city+'\n\nPor favor, confirme disponibilidade, entrega e pagamento.';
+var drafts=read(storageOrders,[]);if(!Array.isArray(drafts))drafts=[];drafts.unshift({date:new Date().toISOString(),items:Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0}).map(function(id){return {id:id,qty:qty(id),unitPrice:byId[id].price}}),subtotal:cartTotals().subtotal,discountPercent:cartTotals().percent,discount:cartTotals().discount,total:total(),status:'aguardando_envio_manual'});try{localStorage.setItem(storageOrders,JSON.stringify(drafts.slice(0,15)))}catch(e){}
 var url='https://api.whatsapp.com/send?text='+encodeURIComponent(lastMessage);
 var w=window.open(url,'_blank','noopener,noreferrer');if(!w){window.location.href=url}toast('Pedido preparado! Selecione o vendedor no WhatsApp e toque em Enviar.');showCart()}
 function copyLast(){if(!lastMessage)return;var done=function(){toast('Resumo copiado. Envie ao seu vendedor pelo WhatsApp.')};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(lastMessage).then(done,function(){toast('Não foi possível copiar neste navegador.')})}else{toast('Não foi possível copiar automaticamente neste navegador.')}}
@@ -131,6 +194,10 @@ if(el.hasAttribute('data-open-cart')){showCart();return}
 if(el.dataset.tab){closeSheet();setTab(el.dataset.tab);return}
 if(el.dataset.collection){changeCategory(el.dataset.collection);return}
 if(el.dataset.filter){changeCategory(el.dataset.filter);return}
+if(el.dataset.kitCount){kitCount=Number(el.dataset.kitCount)===5?5:3;kitSelection={};renderKit();document.getElementById('kitBuilder').scrollIntoView({block:'start',behavior:'smooth'});return}
+if(el.dataset.kitSize){kitSize=Number(el.dataset.kitSize)===100?100:15;kitSelection={};kitSearch='';var k=document.getElementById('kitSearch');if(k)k.value='';renderKit();return}
+if(el.dataset.kitProduct){changeKitProduct(el.dataset.kitProduct,Number(el.dataset.kitDelta)||0);return}
+if(el.id==='kitAddToCart'){addKitToCart();return}
 if(el.hasAttribute('data-campaign-perfumes')){changeCategory('15 ml');return}
 if(el.dataset.add){add(el.dataset.add);return}
 if(el.dataset.detail){detail(el.dataset.detail);return}
@@ -141,9 +208,10 @@ if(el.hasAttribute('data-clear-cart')){if(window.confirm('Deseja limpar o carrin
 });
 document.addEventListener('submit',function(e){if(e.target.id!=='checkoutForm')return;e.preventDefault();prepareOrder(e.target)});
 document.getElementById('search').addEventListener('input',function(e){search=e.target.value||'';renderProducts()});
+document.getElementById('kitSearch').addEventListener('input',function(e){kitSearch=e.target.value||'';renderKit()});
 document.getElementById('categorySelect').addEventListener('change',function(e){changeCategory(e.target.value)});
 overlay.addEventListener('click',function(e){if(e.target===overlay)closeSheet()});
 window.addEventListener('keydown',function(e){if(e.key==='Escape'&&overlay.classList.contains('open'))closeSheet()});
-if(!products.length){document.getElementById('featured').innerHTML='<div class="empty">Catálogo indisponível. Recarregue a página.</div>';document.getElementById('productsGrid').innerHTML='<div class="empty">Catálogo indisponível.</div>'}else{fillFilters();renderFeatured()}
+if(!products.length){document.getElementById('featured').innerHTML='<div class="empty">Catálogo indisponível. Recarregue a página.</div>';document.getElementById('productsGrid').innerHTML='<div class="empty">Catálogo indisponível.</div>'}else{fillFilters();renderFeatured();renderKit()}
 updateBadge();
 })();
