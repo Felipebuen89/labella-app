@@ -56,6 +56,55 @@
 .product-duo .card-actions button{font-size:13px}
 }
 
+
+/* Catálogo comercial — agrupamento dos 57 itens e referências sem quebras */
+[hidden]{display:none!important}
+.grouped-catalog{display:block!important}
+.catalog-group{margin:16px 0 38px;padding-top:4px}
+.catalog-group+.catalog-group{border-top:1px solid #3d3325;padding-top:26px}
+.catalog-group-head{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;margin:5px 0 17px}
+.catalog-group-head h3{font:600 clamp(22px,2.3vw,31px)/1.22 'Playfair Display',Georgia,serif;margin:7px 0 4px;color:#f4e8d1}
+.catalog-group-head p{font-size:12px;color:#bbb3a6;margin:0}
+.group-count{flex:none;font-size:11px;color:#d4ba86;border:1px solid #615037;background:#211b12;border-radius:99px;padding:7px 12px}
+.group-products{align-items:stretch}
+.product-flag{display:inline-block;border-radius:5px;font-size:9px;letter-spacing:.65px;line-height:1.3;font-weight:800;color:#e9d5aa;background:#3a2d1c;border:1px solid #846942;padding:5px 8px;margin-bottom:9px}
+.product-flag-exclusive{color:#1e160c;background:linear-gradient(115deg,#f1d9a8,#c89e58);border-color:#f3daa7;letter-spacing:.3px}
+.product-exclusive{border-color:#b38d4e!important;background:linear-gradient(145deg,#211b14,#0c0b0a);box-shadow:0 8px 25px #0008}
+.product-exclusive .art--exclusive{height:230px;background:radial-gradient(circle at 50% 35%,#fffaf3,#e9d9be 75%,#9e7545 140%)}
+.product-exclusive .art--exclusive img{mix-blend-mode:multiply}
+.product-exclusive .cardbody{padding:15px 17px 18px}
+.product-exclusive h3{font:600 20px/1.25 'Playfair Display',Georgia,serif}
+.product-exclusive .price{color:#f4d9a4;font-size:27px}
+.product-exclusive .category{color:#edcf98}
+.product-exclusive .card-actions button{min-height:43px}
+.image-fallback,.main-fallback,.detail-image-fallback{width:100%;height:100%}
+.image-fallback{display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:center;text-align:center;color:#816741;background:linear-gradient(140deg,#fbf5e9,#e9d7b9);padding:10px;font-size:12px;line-height:1.3}
+.image-fallback span{font-size:21px;color:#a68455}
+.image-fallback strong{font-family:'Playfair Display',Georgia,serif;font-size:15px}
+.image-fallback small{font-size:10px;color:#8e806f}
+.reference-fallback{height:125px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#77552e;line-height:1.3}
+.reference-fallback span{font-size:22px;color:#b48d50}
+.reference-fallback strong{font:600 15px 'Playfair Display',Georgia,serif}
+.reference-fallback small{font-size:9px;color:#8a795f}
+.detail-image-fallback{height:280px;border-radius:13px;overflow:hidden}
+.reference-detail-img{width:155px;max-height:140px;object-fit:contain;background:#fff8eb;border-radius:7px}
+.exclusive-strip{border:1px solid #7d6133;border-radius:16px;background:linear-gradient(115deg,#2b241a,#151310);padding:18px 20px;margin:17px 0 10px;display:flex;align-items:center;gap:17px;justify-content:space-between}
+.exclusive-strip strong{display:block;font:600 20px 'Playfair Display',Georgia,serif;color:#ebd6ad}
+.exclusive-strip p{color:#bfb3a2;margin:3px 0 0;font-size:12px}
+.exclusive-strip button{white-space:nowrap}
+@media(max-width:650px){
+ .catalog-group{margin-bottom:28px}
+ .catalog-group+.catalog-group{padding-top:22px}
+ .catalog-group-head{align-items:flex-start}
+ .catalog-group-head h3{font-size:23px}
+ .group-count{font-size:10px;padding:6px 9px}
+ .group-products .product-exclusive{grid-column:span 2}
+ .product-exclusive .art--exclusive{height:233px}
+ .product-exclusive h3{font-size:21px}
+ .exclusive-strip{padding:15px;align-items:stretch;flex-direction:column}
+ .exclusive-strip button{width:100%}
+}
+
 </style>
 <script defer src="./catalog.js"></script>
 <script defer src="./app.js"></script>
@@ -70,14 +119,15 @@
 <section class="page active" id="page-home">
 <div class="hero"><div class="hero-copy"><div class="eyebrow">Sua próxima fragrância favorita</div><h1>Uma fragrância para <span>cada momento.</span></h1><p>Conheça a coleção Moments Paris, descubra suas inspirações olfativas e escolha os produtos que combinam com você.</p><button class="btn" data-tab="products">Explorar perfumes</button></div><div class="hero-art" role="img" aria-label="Fragrâncias Moments Paris"></div></div>
 <div class="intro-row"><div><strong>Sem cadastro para explorar</strong>Veja fotos e preços imediatamente.</div><div><strong>15 ml por R$ 50</strong>Preço final da coleção de perfumes de bolso.</div><div><strong>Pedido pelo WhatsApp</strong>Informe seus dados apenas no primeiro pedido.</div></div>
-<div class="section-top"><div><div class="eyebrow">Encontre o seu estilo</div><h2>Explore as coleções</h2></div><button class="textlink" data-tab="products">Ver todos os produtos</button></div>
+<div class="section-top"><div><div class="eyebrow">Encontre o seu estilo</div><h2>Explore as coleções</h2></div><button class="textlink" data-collection="Todos">Ver todos os produtos</button></div>
 <div class="tile-grid">
 <button class="tile" data-collection="Perfumes Femininos 15 ml"><span class="tile-icon">✦</span><b>Perfumes femininos</b><span>Fragrâncias de bolso • 15 ml</span></button>
 <button class="tile" data-collection="Perfumes Masculinos 15 ml"><span class="tile-icon">◆</span><b>Perfumes masculinos</b><span>Fragrâncias de bolso • 15 ml</span></button>
 <button class="tile" data-collection="Perfumes 100 ml"><span class="tile-icon">◈</span><b>Perfumes 100 ml</b><span>Marcantes e sofisticados</span></button>
 <button class="tile" data-collection="Body Splash"><span class="tile-icon">❋</span><b>Cuidados pessoais</b><span>Body splash e outras linhas</span></button>
 </div>
-<div class="section-top"><div><div class="eyebrow">Seleção para você</div><h2>Destaques 15 ml</h2></div><button class="textlink" data-tab="products">Ver catálogo completo</button></div><div id="featured" class="product-grid"><div class="loading">Carregando catálogo...</div></div>
+<div class="exclusive-strip"><div><strong>Exclusivos Moments Paris</strong><p>Conheça Verus e Venerata, fragrâncias autorais.</p></div><button class="btn secondary" data-collection="Exclusivos Moments">Conhecer exclusivos</button></div>
+<div class="section-top"><div><div class="eyebrow">Seleção para você</div><h2>Destaques 15 ml</h2></div><button class="textlink" data-collection="15 ml">Ver todos os 15 ml</button></div><div id="featured" class="product-grid"><div class="loading">Carregando catálogo...</div></div>
 </section>
 <section class="page" id="page-products"><div class="section-top"><div><div class="eyebrow">Moments Paris</div><h2>Todos os produtos</h2><p>Escolha o que você ama e monte seu pedido.</p></div></div>
 <div class="catalog-tools"><input class="search" id="search" type="search" placeholder="Busque por perfume, nome ou referência..." aria-label="Buscar produtos"><select id="categorySelect" aria-label="Filtrar categoria"><option>Todos</option></select></div>
