@@ -39,11 +39,23 @@ function setTab(name){if(['home','products','campaigns'].indexOf(name)<0)return;
 function changeCategory(name){category=categories.includes(name)?name:'Todos';document.getElementById('categorySelect').value=category;setTab('products')}
 function add(id){if(!byId[id])return;cart[id]=Math.min(99,qty(id)+1);saveCart();toast('Adicionado ao pedido: '+byId[id].name);if(overlay.classList.contains('open')&&sheet.dataset.mode==='cart')showCart()}
 function changeQty(id,delta){if(!byId[id])return;var n=Math.max(0,Math.min(99,qty(id)+delta));if(n)cart[id]=n;else delete cart[id];saveCart();showCart()}
+/* Se um fornecedor bloquear a foto, testar imagem reserva antes de exibir o aviso. */
+window.momentsReferenceFallback=function(img){
+ var backup=img.getAttribute('data-backup');
+ if(backup&&img.getAttribute('data-backup-tried')!=='1'){
+   img.setAttribute('data-backup-tried','1');
+   img.src=backup;
+   return;
+ }
+ img.hidden=true;
+ var next=img.nextElementSibling;
+ if(next)next.hidden=false;
+};
 function art(p){
  var mainFallback=fallbackImage(p,'Moments Paris');
  var img=p.image?'<img loading="lazy" src="'+esc(p.image)+'" alt="Perfume Moments Paris '+esc(p.name)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="main-fallback" hidden>'+mainFallback+'</div>':mainFallback;
  if(p.reference&&p.referenceImage){
-   var reference='<img loading="lazy" src="'+esc(p.referenceImage)+'" alt="Frasco original '+esc(p.reference)+' de '+esc(p.referenceBrand)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="reference-fallback" hidden><span>✦</span><strong>'+esc(p.reference)+'</strong><small>Foto de referência indisponível</small></div>';
+   var reference='<img loading="lazy" src="'+esc(p.referenceImage)+'" data-backup="'+esc(p.referenceImageBackup||'')+'" alt="Frasco original '+esc(p.reference)+' de '+esc(p.referenceBrand)+'" onerror="window.momentsReferenceFallback(this)"><div class="reference-fallback" hidden><span>✦</span><strong>'+esc(p.reference)+'</strong><small>Foto de referência indisponível</small></div>';
    return '<div class="art art--duo"><div class="moments-stage"><span class="stage-eyebrow">MOMENTS PARIS</span>'+img+'</div><div class="reference-stage"><span class="ref-heading">INSPIRAÇÃO OLFATIVA</span>'+reference+'<span class="ref-name">'+esc(p.reference)+'</span><small>'+esc(p.referenceBrand)+'</small></div></div>';
  }
  return '<div class="art'+(p.autoral?' art--exclusive':'')+'">'+img+'</div>';
@@ -94,7 +106,7 @@ function closeSheet(){overlay.classList.remove('open');overlay.setAttribute('ari
 function header(title){return '<div class="sheet-head"><div><div class="eyebrow">Moments Paris</div><h2>'+esc(title)+'</h2></div><button type="button" class="x" data-close aria-label="Fechar">×</button></div>'}
 function detail(id){
  var p=byId[id];if(!p)return;
- var ref=p.reference?'<div class="detail-ref"><strong>Inspiração olfativa: '+esc(p.reference)+'</strong><span>'+esc(p.referenceBrand)+'</span><p class="small">A inspiração indica um perfil aromático semelhante. O produto vendido é Moments Paris, não o perfume da marca citada.</p>'+(p.referenceImage?'<img class="reference-detail-img" loading="lazy" src="'+esc(p.referenceImage)+'" alt="Imagem da inspiração olfativa '+esc(p.reference)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><p class="small" hidden>Imagem da referência indisponível. Consulte a descrição acima.</p>':'')+'</div>':'';
+ var ref=p.reference?'<div class="detail-ref"><strong>Inspiração olfativa: '+esc(p.reference)+'</strong><span>'+esc(p.referenceBrand)+'</span><p class="small">A inspiração indica um perfil aromático semelhante. O produto vendido é Moments Paris, não o perfume da marca citada.</p>'+(p.referenceImage?'<img class="reference-detail-img" loading="lazy" src="'+esc(p.referenceImage)+'" data-backup="'+esc(p.referenceImageBackup||'')+'" alt="Imagem da inspiração olfativa '+esc(p.reference)+'" onerror="window.momentsReferenceFallback(this)"><p class="small" hidden>Imagem da referência indisponível. Consulte a descrição acima.</p>':'')+'</div>':'';
  var exclusive=p.autoral?'<div class="detail-ref"><strong>Exclusivo Moments Paris</strong><p class="small">Fragrância própria da Moments Paris, apresentada sem comparação com perfume de outra marca.</p></div>':'';
  var main=p.image?'<img class="detail-img" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div hidden class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>':'<div class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>';
  openSheet('detail',header(p.name)+main+'<p class="category" style="margin-top:16px">'+esc(p.category)+'</p><div class="price">'+money(p.price)+'</div>'+ref+exclusive+'<button class="btn full" data-add="'+esc(id)+'">Adicionar ao pedido</button><p class="small">Preço final ao consumidor. Disponibilidade e entrega são confirmadas pelo vendedor.</p>');
