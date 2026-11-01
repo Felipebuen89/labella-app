@@ -3,9 +3,9 @@
 'use strict';
 var products=Array.isArray(window.MOMENTS_CLIENT_PRODUCTS)?window.MOMENTS_CLIENT_PRODUCTS:[];
 var byId=Object.fromEntries(products.map(function(p){return [p.id,p]}));
-var categories=['15 ml','Perfumes Femininos 15 ml','Perfumes Masculinos 15 ml','Exclusivos Moments','Todos'].concat(Array.from(new Set(products.map(function(p){return p.category}))).filter(function(c){return c!=='Perfumes Femininos 15 ml'&&c!=='Perfumes Masculinos 15 ml'}));
+var categories=['Todos','15 ml','Perfumes Femininos 15 ml','Perfumes Masculinos 15 ml','Exclusivos Moments'].concat(Array.from(new Set(products.map(function(p){return p.category}))).filter(function(c){return c!=='Perfumes Femininos 15 ml'&&c!=='Perfumes Masculinos 15 ml'}));
 /* Ordem editorial de exibição: não representa classificação de vendas reais. */
-var femaleOrder=["15ml-best-girl","15ml-best-girl-velvet","15ml-la-yali","15ml-mily","15ml-412-rose","15ml-412-sexy-woman","15ml-412-vip-woman","15ml-la-bella","15ml-coco-paris","15ml-livre","15ml-olimpica","15ml-khloe","15ml-celina","15ml-blue-girl","15ml-love-red","15ml-luxuosa","15ml-glamourosa","15ml-lady-fabulosa","15ml-dualite","15ml-divine","15ml-cherry-woman","15ml-fantastico","15ml-adorado","15ml-glamour","15ml-venerata"];
+var femaleOrder=["15ml-best-girl","15ml-best-girl-velvet","15ml-dualite","15ml-la-yali","15ml-mily","15ml-412-rose","15ml-412-sexy-woman","15ml-412-vip-woman","15ml-la-bella","15ml-coco-paris","15ml-livre","15ml-olimpica","15ml-khloe","15ml-celina","15ml-blue-girl","15ml-love-red","15ml-luxuosa","15ml-glamourosa","15ml-lady-fabulosa","15ml-divine","15ml-cherry-woman","15ml-fantastico","15ml-adorado","15ml-glamour","15ml-venerata"];
 var maleOrder=["15ml-412-top-men","15ml-creedence","15ml-rebel-boy","15ml-comander","15ml-comander-victory","15ml-milionere","15ml-acqua-boy","15ml-412-elite-black","15ml-412-homem","15ml-blue-home","15ml-titan-black","15ml-be-myself","15ml-ynot","15ml-aysad","15ml-zaki-gold","15ml-sheikh-s-secret","15ml-amber-monarch","15ml-aquatic-blue","15ml-aquatic-green","15ml-good-black","15ml-rustic-home","15ml-du-chef","15ml-x-plore","15ml-robot-man","15ml-canibal","15ml-black-cat","15ml-silvestre","15ml-leather","15ml-alina-royal","15ml-baraccat","15ml-selvagem","15ml-verus"];
 var highlights=femaleOrder.slice(0,8).concat(maleOrder.slice(0,8));
 var allPerfumeIds=femaleOrder.concat(maleOrder);
@@ -24,7 +24,7 @@ var storageOrders='moments_client_drafts_v1';
 function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));return v&&typeof v==='object'?v:fallback}catch(e){return fallback}}
 var cart=read(storageCart,{});
 var customer=read(storageCustomer,null);
-var activeTab='home',category='15 ml',search='',lastMessage='';
+var activeTab='home',category='Todos',search='',lastMessage='';
 var overlay=document.getElementById('overlay'),sheet=document.getElementById('sheet'),toasts=document.getElementById('toast-area');
 var fmt=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 function money(v){return fmt.format(Number(v)||0)}
@@ -59,7 +59,7 @@ function filtered(){
  var q=search.trim().toLocaleLowerCase('pt-BR');
  return sortProducts(products.filter(function(p){
    var inCat=category==='Todos'||(category==='15 ml'&&is15(p))||category===p.category||(category==='Exclusivos Moments'&&p.autoral);
-   var inText=!q||[p.name,p.category,p.reference||'',p.referenceBrand||''].join(' ').toLocaleLowerCase('pt-BR').includes(q);
+   var inText=!q||[p.name,p.category,p.reference||'',p.referenceBrand||'',(p.referenceBrand||'')+' '+(p.reference||'')].join(' ').toLocaleLowerCase('pt-BR').includes(q);
    return inCat&&inText;
  }));
 }
