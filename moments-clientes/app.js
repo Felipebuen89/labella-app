@@ -3,14 +3,28 @@
 'use strict';
 var products=Array.isArray(window.MOMENTS_CLIENT_PRODUCTS)?window.MOMENTS_CLIENT_PRODUCTS:[];
 var byId=Object.fromEntries(products.map(function(p){return [p.id,p]}));
-var categories=['Todos','15 ml'].concat(Array.from(new Set(products.map(function(p){return p.category}))));
+var categories=['15 ml','Perfumes Femininos 15 ml','Perfumes Masculinos 15 ml','Exclusivos Moments','Todos'].concat(Array.from(new Set(products.map(function(p){return p.category}))).filter(function(c){return c!=='Perfumes Femininos 15 ml'&&c!=='Perfumes Masculinos 15 ml'}));
+/* Ordem editorial de exibição: não representa classificação de vendas reais. */
+var femaleOrder=["15ml-best-girl","15ml-best-girl-velvet","15ml-la-yali","15ml-mily","15ml-412-rose","15ml-412-sexy-woman","15ml-412-vip-woman","15ml-la-bella","15ml-coco-paris","15ml-livre","15ml-olimpica","15ml-khloe","15ml-celina","15ml-blue-girl","15ml-love-red","15ml-luxuosa","15ml-glamourosa","15ml-lady-fabulosa","15ml-dualite","15ml-divine","15ml-cherry-woman","15ml-fantastico","15ml-adorado","15ml-glamour","15ml-venerata"];
+var maleOrder=["15ml-412-top-men","15ml-creedence","15ml-rebel-boy","15ml-comander","15ml-comander-victory","15ml-milionere","15ml-acqua-boy","15ml-412-elite-black","15ml-412-homem","15ml-blue-home","15ml-titan-black","15ml-be-myself","15ml-ynot","15ml-aysad","15ml-zaki-gold","15ml-sheikh-s-secret","15ml-amber-monarch","15ml-aquatic-blue","15ml-aquatic-green","15ml-good-black","15ml-rustic-home","15ml-du-chef","15ml-x-plore","15ml-robot-man","15ml-canibal","15ml-black-cat","15ml-silvestre","15ml-leather","15ml-alina-royal","15ml-baraccat","15ml-selvagem","15ml-verus"];
+var highlights=femaleOrder.slice(0,8).concat(maleOrder.slice(0,8));
+var allPerfumeIds=femaleOrder.concat(maleOrder);
+var perfumeRank=new Map(allPerfumeIds.map(function(id,i){return [id,i]}));
+function is15(p){return /^Perfumes (Masculinos|Femininos) 15 ml$/.test(p.category)}
+function sortProducts(a){return a.slice().sort(function(x,y){
+ var a15=is15(x),b15=is15(y);if(a15!==b15)return a15?-1:1;
+ if(a15&&b15)return (perfumeRank.get(x.id)??999)-(perfumeRank.get(y.id)??999);
+ return products.indexOf(x)-products.indexOf(y);
+ })}
+function isHighlight(p){return highlights.indexOf(p.id)!==-1}
+function fallbackImage(p,label){return '<div class="image-fallback" role="img" aria-label="Foto indisponível"><span>✦</span><strong>'+esc(label)+'</strong><small>Imagem temporariamente indisponível</small></div>'}
 var storageCart='moments_client_cart_v1';
 var storageCustomer='moments_client_customer_v1';
 var storageOrders='moments_client_drafts_v1';
 function read(key,fallback){try{var v=JSON.parse(localStorage.getItem(key));return v&&typeof v==='object'?v:fallback}catch(e){return fallback}}
 var cart=read(storageCart,{});
 var customer=read(storageCustomer,null);
-var activeTab='home',category='Todos',search='',lastMessage='';
+var activeTab='home',category='15 ml',search='',lastMessage='';
 var overlay=document.getElementById('overlay'),sheet=document.getElementById('sheet'),toasts=document.getElementById('toast-area');
 var fmt=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 function money(v){return fmt.format(Number(v)||0)}
@@ -26,21 +40,65 @@ function changeCategory(name){category=categories.includes(name)?name:'Todos';do
 function add(id){if(!byId[id])return;cart[id]=Math.min(99,qty(id)+1);saveCart();toast('Adicionado ao pedido: '+byId[id].name);if(overlay.classList.contains('open')&&sheet.dataset.mode==='cart')showCart()}
 function changeQty(id,delta){if(!byId[id])return;var n=Math.max(0,Math.min(99,qty(id)+delta));if(n)cart[id]=n;else delete cart[id];saveCart();showCart()}
 function art(p){
- var img=p.image?'<img loading="lazy" src="'+esc(p.image)+'" alt="Perfume Moments Paris '+esc(p.name)+'" onerror="this.style.opacity=0">':'<div class="placeholder">Moments Paris</div>';
+ var mainFallback=fallbackImage(p,'Moments Paris');
+ var img=p.image?'<img loading="lazy" src="'+esc(p.image)+'" alt="Perfume Moments Paris '+esc(p.name)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="main-fallback" hidden>'+mainFallback+'</div>':mainFallback;
  if(p.reference&&p.referenceImage){
-  return '<div class="art art--duo"><div class="moments-stage"><span class="stage-eyebrow">MOMENTS PARIS</span>'+img+'</div><div class="reference-stage"><span class="ref-heading">INSPIRAÇÃO OLFATIVA</span><img loading="lazy" src="'+esc(p.referenceImage)+'" alt="Frasco original '+esc(p.reference)+' da '+esc(p.referenceBrand)+'" onerror="this.style.display=\'none\'"><span class="ref-name">'+esc(p.reference)+'</span><small>'+esc(p.referenceBrand)+'</small></div></div>';
+   var reference='<img loading="lazy" src="'+esc(p.referenceImage)+'" alt="Frasco original '+esc(p.reference)+' de '+esc(p.referenceBrand)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="reference-fallback" hidden><span>✦</span><strong>'+esc(p.reference)+'</strong><small>Foto de referência indisponível</small></div>';
+   return '<div class="art art--duo"><div class="moments-stage"><span class="stage-eyebrow">MOMENTS PARIS</span>'+img+'</div><div class="reference-stage"><span class="ref-heading">INSPIRAÇÃO OLFATIVA</span>'+reference+'<span class="ref-name">'+esc(p.reference)+'</span><small>'+esc(p.referenceBrand)+'</small></div></div>';
  }
- return '<div class="art">'+img+'</div>';
+ return '<div class="art'+(p.autoral?' art--exclusive':'')+'">'+img+'</div>';
 }
-function card(p){return '<article class="product'+(p.referenceImage?' product-duo':'')+'">'+art(p)+'<div class="cardbody"><div class="category">'+esc(p.category)+'</div><h3>'+esc(p.name)+'</h3><div class="price">'+money(p.price)+'</div><div class="card-actions"><button data-add="'+esc(p.id)+'">+ Adicionar</button><button class="more" data-detail="'+esc(p.id)+'" aria-label="Ver detalhes de '+esc(p.name)+'">Ver</button></div></div></article>'}
-function renderFeatured(){var preferred=["15ml-best-girl","15ml-best-girl-velvet","15ml-la-yali","15ml-mily","15ml-412-rose","15ml-412-sexy-woman","15ml-412-vip-woman","15ml-adorado","15ml-baraccat","15ml-blue-girl"];var order=preferred.map(function(id){return byId[id]}).filter(Boolean);document.getElementById('featured').innerHTML=order.map(card).join('')}
-function filtered(){var q=search.trim().toLocaleLowerCase('pt-BR');return products.filter(function(p){var inCat=category==='Todos'||(category==='15 ml'&&/^Perfumes (Masculinos|Femininos) 15 ml$/.test(p.category))||p.category===category;var inText=!q||[p.name,p.category,p.reference||'',p.referenceBrand||''].join(' ').toLocaleLowerCase('pt-BR').includes(q);return inCat&&inText})}
-function renderProducts(){document.querySelectorAll('#chips button').forEach(function(btn){btn.classList.toggle('active',btn.dataset.filter===category)});var a=filtered();document.getElementById('catalogCount').textContent=a.length+' produto'+(a.length===1?'':'s')+' encontrado'+(a.length===1?'':'s');document.getElementById('productsGrid').innerHTML=a.length?a.map(card).join(''):'<div class="empty">Nenhum produto corresponde à busca. Tente outra categoria ou nome.</div>'}
+function productBadge(p){if(p.autoral)return '<span class="product-flag product-flag-exclusive">Exclusivo Moments Paris</span>';return isHighlight(p)?'<span class="product-flag">Destaque</span>':''}
+function card(p){return '<article class="product'+(p.referenceImage?' product-duo':'')+(p.autoral?' product-exclusive':'')+'">'+art(p)+'<div class="cardbody">'+productBadge(p)+'<div class="category">'+esc(p.category)+'</div><h3>'+esc(p.name)+'</h3><div class="price">'+money(p.price)+'</div><div class="card-actions"><button data-add="'+esc(p.id)+'">+ Adicionar</button><button class="more" data-detail="'+esc(p.id)+'" aria-label="Ver detalhes de '+esc(p.name)+'">Ver</button></div></div></article>'}
+function renderFeatured(){
+ var ids=femaleOrder.slice(0,4).concat(maleOrder.slice(0,4));
+ var chosen=ids.map(function(id){return byId[id]}).filter(Boolean);
+ document.getElementById('featured').innerHTML=chosen.map(card).join('');
+}
+function filtered(){
+ var q=search.trim().toLocaleLowerCase('pt-BR');
+ return sortProducts(products.filter(function(p){
+   var inCat=category==='Todos'||(category==='15 ml'&&is15(p))||category===p.category||(category==='Exclusivos Moments'&&p.autoral);
+   var inText=!q||[p.name,p.category,p.reference||'',p.referenceBrand||''].join(' ').toLocaleLowerCase('pt-BR').includes(q);
+   return inCat&&inText;
+ }));
+}
+function groupHtml(title,kicker,description,items){
+ if(!items.length)return '';
+ return '<section class="catalog-group"><div class="catalog-group-head"><div><span class="eyebrow">'+esc(kicker)+'</span><h3>'+esc(title)+'</h3><p>'+esc(description)+'</p></div><span class="group-count">'+items.length+' produtos</span></div><div class="product-grid group-products">'+items.map(card).join('')+'</div></section>';
+}
+function renderProducts(){
+ document.querySelectorAll('#chips button').forEach(function(btn){btn.classList.toggle('active',btn.dataset.filter===category)});
+ document.getElementById('categorySelect').value=category;
+ var a=filtered(), grouped=category==='15 ml'&&!search.trim();
+ document.getElementById('catalogCount').textContent=a.length+' produto'+(a.length===1?'':'s')+' encontrado'+(a.length===1?'':'s');
+ var grid=document.getElementById('productsGrid');
+ grid.classList.toggle('grouped-catalog',grouped);
+ if(grouped){
+   var top=highlights.map(function(id){return byId[id]}).filter(Boolean);
+   var featuredSet=new Set(highlights);
+   var women=femaleOrder.map(function(id){return byId[id]}).filter(function(p){return p&&!p.autoral&&!featuredSet.has(p.id)});
+   var men=maleOrder.map(function(id){return byId[id]}).filter(function(p){return p&&!p.autoral&&!featuredSet.has(p.id)});
+   var authorial=[byId['15ml-verus'],byId['15ml-venerata']].filter(Boolean);
+   grid.innerHTML=groupHtml('Destaques 15 ml','Seleção Moments','Fragrâncias selecionadas para começar sua descoberta',top)
+      +groupHtml('Perfumes femininos','Coleção 15 ml','Explore as demais fragrâncias femininas',women)
+      +groupHtml('Perfumes masculinos','Coleção 15 ml','Explore as demais fragrâncias masculinas',men)
+      +groupHtml('Exclusivos Moments Paris','Criações próprias','Fragrâncias autorais, sem referência a outros perfumes',authorial);
+ }else{
+   grid.innerHTML=a.length?a.map(card).join(''):'<div class="empty">Nenhum produto corresponde à busca. Tente outra categoria ou nome.</div>';
+ }
+}
 function fillFilters(){document.getElementById('categorySelect').innerHTML=categories.map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+'</option>'}).join('');document.getElementById('chips').innerHTML=categories.map(function(c){return '<button data-filter="'+esc(c)+'">'+esc(c)+'</button>'}).join('');renderProducts()}
 function openSheet(mode,html){sheet.dataset.mode=mode;sheet.innerHTML=html;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';var close=sheet.querySelector('[data-close]');if(close)close.focus()}
 function closeSheet(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='';sheet.innerHTML=''}
 function header(title){return '<div class="sheet-head"><div><div class="eyebrow">Moments Paris</div><h2>'+esc(title)+'</h2></div><button type="button" class="x" data-close aria-label="Fechar">×</button></div>'}
-function detail(id){var p=byId[id];if(!p)return;var ref=p.reference?'<div class="detail-ref"><strong>Referência olfativa: '+esc(p.reference)+'</strong><span>'+esc(p.referenceBrand)+'</span><p class="small">Apenas uma inspiração de perfil aromático: o item vendido é Moments Paris, não o perfume da marca citada.</p>'+(p.referenceImage?'<img style="width:135px;max-height:140px;object-fit:contain" src="'+esc(p.referenceImage)+'" alt="Referência visual, não inclusa">':'')+'</div>':'';openSheet('detail',header(p.name)+(p.image?'<img class="detail-img" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.style.display=\'none\'">':'<div class="detail-img placeholder">Moments Paris</div>')+'<p class="category" style="margin-top:16px">'+esc(p.category)+'</p><div class="price">'+money(p.price)+'</div>'+ref+'<button class="btn full" data-add="'+esc(id)+'">Adicionar ao pedido</button><p class="small">Preço final ao consumidor. Disponibilidade e entrega são confirmadas pelo vendedor.</p>')}
+function detail(id){
+ var p=byId[id];if(!p)return;
+ var ref=p.reference?'<div class="detail-ref"><strong>Inspiração olfativa: '+esc(p.reference)+'</strong><span>'+esc(p.referenceBrand)+'</span><p class="small">A inspiração indica um perfil aromático semelhante. O produto vendido é Moments Paris, não o perfume da marca citada.</p>'+(p.referenceImage?'<img class="reference-detail-img" loading="lazy" src="'+esc(p.referenceImage)+'" alt="Imagem da inspiração olfativa '+esc(p.reference)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><p class="small" hidden>Imagem da referência indisponível. Consulte a descrição acima.</p>':'')+'</div>':'';
+ var exclusive=p.autoral?'<div class="detail-ref"><strong>Exclusivo Moments Paris</strong><p class="small">Fragrância própria da Moments Paris, apresentada sem comparação com perfume de outra marca.</p></div>':'';
+ var main=p.image?'<img class="detail-img" src="'+esc(p.image)+'" alt="'+esc(p.name)+'" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div hidden class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>':'<div class="detail-image-fallback">'+fallbackImage(p,'Moments Paris')+'</div>';
+ openSheet('detail',header(p.name)+main+'<p class="category" style="margin-top:16px">'+esc(p.category)+'</p><div class="price">'+money(p.price)+'</div>'+ref+exclusive+'<button class="btn full" data-add="'+esc(id)+'">Adicionar ao pedido</button><p class="small">Preço final ao consumidor. Disponibilidade e entrega são confirmadas pelo vendedor.</p>');
+}
 function showCart(){var keys=Object.keys(cart).filter(function(id){return byId[id]&&qty(id)>0});var items=keys.map(function(id){var p=byId[id];return '<div class="cart-line"><div class="grow"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' por unidade • '+money(qty(id)*p.price)+'</small></div><div class="qty"><button data-qty="'+esc(id)+'" data-delta="-1" aria-label="Remover uma unidade">−</button><strong>'+qty(id)+'</strong><button data-qty="'+esc(id)+'" data-delta="1" aria-label="Adicionar uma unidade">+</button></div></div>'}).join('');
 var c=customer&&customer.name&&customer.phone&&customer.city;
 var saved=c?'<div class="contact-summary"><strong>Seus dados neste aparelho</strong><div>'+esc(customer.name)+' • '+esc(customer.phone)+' • '+esc(customer.city)+'</div><button type="button" data-edit-customer>Alterar dados</button></div>':'';
