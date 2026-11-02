@@ -133,7 +133,7 @@ async function shareReady(){
 }
 function resultHTML(order){
  return '<div class="pdf-checkout"><div class="pdf-ready-icon">✦</div><h3>Seu pedido premium está pronto!</h3><p>O PDF foi criado com o logo Moments Paris, fotos dos produtos disponíveis, seus dados, quantidades e valor final.</p><div class="pdf-mini-summary"><span>Pedido '+esc(order.code)+'</span><strong>'+esc(brl(order.pricing.total))+'</strong></div>'+
- '<button type="button" class="btn full" data-pdf-share>Compartilhar PDF pelo WhatsApp</button>'+
+ '<button type="button" class="btn full" data-pdf-share>Compartilhar PDF pelo WhatsApp</button><p id="pdf-order-status" class="pdf-order-status" role="status" aria-live="polite"></p>'+
  '<button type="button" class="btn ghost full" data-pdf-download style="margin-top:9px">Baixar PDF do pedido</button>'+
  '<p class="small" style="margin-top:14px">Ao compartilhar, selecione o WhatsApp e o contato desejado. O arquivo não é enviado sem sua confirmação.</p>'+
  '<button type="button" class="textlink" data-pdf-whatsapp style="margin-top:12px">Abrir WhatsApp para envio manual</button>'+
@@ -175,5 +175,5 @@ document.addEventListener("click",event=>{
  if(btn.hasAttribute("data-pdf-whatsapp")){if(ready){doDownload(ready.file);openWhatsAppText(ready.order);info("O PDF foi baixado. Anexe-o na conversa do WhatsApp.");}return}
 });
 const css=document.createElement("style");css.textContent=".pdf-checkout{text-align:center;padding:19px 0 15px}.pdf-checkout h3{font:600 29px 'Cormorant Garamond',Georgia,serif;color:#f1d39b;margin:7px 0}.pdf-checkout p{color:#c7bbae;line-height:1.6;font-size:13px}.pdf-ready-icon{font-size:38px;color:#e3c88b}.pdf-mini-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px;margin:20px 0 17px;background:#18150f;border:1px solid #6c542d;border-radius:11px;color:#ddc69a}.pdf-mini-summary strong{color:#f9e4b2;font-size:20px}.pdf-checkout .small{font-size:11px;color:#b8afa2}";
-document.head.appendChild(css);
+css.textContent+='.pdf-order-status{min-height:20px;color:#e3c88b!important;font-size:12px!important;margin:10px 0 0!important}';document.head.appendChild(css);
 })();
