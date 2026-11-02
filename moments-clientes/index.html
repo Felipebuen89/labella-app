@@ -397,6 +397,19 @@ header{background:rgba(0,0,0,.98);border-bottom-color:#463822}
   }
 }
 
+
+/* Acesso imediato ao recomendador no início do catálogo */
+.discover-cta{position:relative;overflow:hidden;border:1px solid #886a40;border-radius:22px;background:radial-gradient(ellipse at 50% 0%,#302414 0%,#100d09 50%,#050505 100%);margin:23px 0 9px;padding:37px 24px 39px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:0}
+.discover-cta:after{content:"";position:absolute;inset:10px;border:1px solid rgba(223,184,111,.15);border-radius:14px;pointer-events:none}
+.discover-cta-eyebrow{font-size:10px;letter-spacing:2.2px;color:#d9bc84;font-weight:800;text-transform:uppercase}
+.discover-cta h2{font:600 clamp(29px,4.2vw,42px)/1.1 'Cormorant Garamond',Georgia,serif;color:#f7edda;margin:10px 0 12px;max-width:610px}
+.discover-cta h2 em{font-weight:600;color:#e3c88b;font-style:normal}
+.discover-cta p{max-width:475px;color:#cec4b6;font-size:13px;line-height:1.7;margin:0 0 24px}
+.discover-cta-button{width:min(100%,310px);background:linear-gradient(135deg,#f1dfb6,#d6b073)!important;color:#1b130a!important;border:1px solid #f3ddb0!important;box-shadow:0 4px 24px rgba(195,147,62,.1);min-height:49px}
+.discover-cta-button span{margin-left:8px}
+.discover-cta+.section-top{margin-top:30px}
+@media(max-width:650px){.discover-cta{margin:19px 0 6px;padding:30px 18px 33px}.discover-cta h2{font-size:34px}.discover-cta p{font-size:12px;margin-bottom:22px}.discover-cta+.section-top{margin-top:27px}}
+
 </style>
 <script defer src="./catalog.js"></script>
 <script defer src="./app.js"></script>
@@ -411,8 +424,13 @@ header{background:rgba(0,0,0,.98);border-bottom-color:#463822}
 <main class="wrap">
 <section class="page active" id="page-home">
 <div class="hero"><div class="hero-copy"><div class="eyebrow">Sua próxima fragrância favorita</div><h1>Uma fragrância para <span>cada momento.</span></h1><p>Conheça a coleção Moments Paris, descubra suas inspirações olfativas e escolha os produtos que combinam com você.</p><button class="btn" data-tab="products">Explorar perfumes</button></div><div class="hero-art"><img src="https://moments-paris-demo-revendedores.onrender.com/assets/verus-eiffel-foto-aprovada.jpg?v=verus-final-31out" alt="Perfume Verus da Moments Paris com a Torre Eiffel ao fundo" loading="eager" decoding="async"></div></div>
-<div class="intro-row"><div><strong>Sem cadastro para explorar</strong>Veja fotos e preços imediatamente.</div><div><strong>15 ml por R$ 50</strong>Preço final da coleção de perfumes de bolso.</div><div><strong>Pedido pelo WhatsApp</strong>Informe seus dados apenas no primeiro pedido.</div></div>
-<div class="home-promo"><div><div class="eyebrow">Promoção Moments Paris</div><strong>Escolha 3 perfumes e ganhe 15% OFF.<span> Ou 5 e ganhe 20% OFF.</span></strong><p>Crie seu kit com fragrâncias de 15 ml ou 100 ml.</p></div><button class="btn secondary" data-tab="campaigns">Montar meu kit</button></div>
+<section class="discover-cta" aria-label="Descubra seu perfume ideal">
+  <div class="discover-cta-eyebrow">UMA EXPERIÊNCIA MOMENTS PARIS</div>
+  <h2>Descubra qual perfume <em>combina mais com você.</em></h2>
+  <p>Conte o que você gosta em uma fragrância e descubra uma seleção personalizada para o seu estilo.</p>
+  <button type="button" class="btn discover-cta-button" data-finder-open="1" aria-label="Abrir a aba Seu perfume">Seu perfume <span aria-hidden="true">✦</span></button>
+</section>
+<div class="section-top"><div><div class="eyebrow">Seleção para você</div><h2>Destaques 15 ml</h2></div><button class="textlink" data-collection="15 ml">Ver todos os 15 ml</button></div><div id="featured" class="product-grid"><div class="loading">Carregando catálogo...</div></div>
 <div class="section-top"><div><div class="eyebrow">Encontre o seu estilo</div><h2>Explore as coleções</h2></div><button class="textlink" data-collection="Todos">Ver todos os produtos</button></div>
 <div class="tile-grid">
 <button class="tile" data-collection="Perfumes Femininos 15 ml"><span class="tile-icon">✦</span><b>Perfumes femininos</b><span>Fragrâncias de bolso • 15 ml</span></button>
@@ -421,7 +439,6 @@ header{background:rgba(0,0,0,.98);border-bottom-color:#463822}
 <button class="tile" data-collection="Body Splash"><span class="tile-icon">❋</span><b>Cuidados pessoais</b><span>Body splash e outras linhas</span></button>
 </div>
 <div class="exclusive-strip"><div><strong>Exclusivos Moments Paris</strong><p>Conheça Verus e Venerata, fragrâncias autorais.</p></div><button class="btn secondary" data-collection="Exclusivos Moments">Conhecer exclusivos</button></div>
-<div class="section-top"><div><div class="eyebrow">Seleção para você</div><h2>Destaques 15 ml</h2></div><button class="textlink" data-collection="15 ml">Ver todos os 15 ml</button></div><div id="featured" class="product-grid"><div class="loading">Carregando catálogo...</div></div>
 </section>
 <section class="page" id="page-products"><div class="section-top"><div><div class="eyebrow">Moments Paris</div><h2>Todos os produtos</h2><p>Escolha o que você ama e monte seu pedido.</p></div></div>
 <div class="catalog-tools"><input class="search" id="search" type="search" placeholder="Busque por perfume, nome ou referência..." aria-label="Buscar produtos"><select id="categorySelect" aria-label="Filtrar categoria"><option>Todos</option></select></div>
